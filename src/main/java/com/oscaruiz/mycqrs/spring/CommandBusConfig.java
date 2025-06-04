@@ -12,7 +12,9 @@ public class CommandBusConfig {
 
     @Bean
     public CommandBus commandBus() {
-        return new SimpleCommandBus();
+        var bus = new SimpleCommandBus();
+        bus.addInterceptor(new ValidationCommandInterceptor()); // Validation interceptor
+        return bus;
     }
 
     @Bean
