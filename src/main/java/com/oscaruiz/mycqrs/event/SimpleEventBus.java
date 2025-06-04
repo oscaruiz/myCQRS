@@ -13,6 +13,13 @@ public class SimpleEventBus implements EventBus {
 
     private final Map<Class<? extends Event>, List<EventHandler<? extends Event>>> handlers = new ConcurrentHashMap<>();
 
+    private EventBus eventBus;
+
+    public void setEventBus(EventBus eventBus) {
+        this.eventBus = eventBus;
+    }
+
+
     @Override
     public void publish(Event event) {
         List<EventHandler<? extends Event>> registeredHandlers = handlers.get(event.getClass());

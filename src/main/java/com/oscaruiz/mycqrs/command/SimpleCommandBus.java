@@ -1,5 +1,7 @@
 package com.oscaruiz.mycqrs.command;
 
+import com.oscaruiz.mycqrs.event.EventBus;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +14,13 @@ public class SimpleCommandBus implements CommandBus {
 
     private final Map<Class<? extends Command>, CommandHandler<?, ?>> handlers = new ConcurrentHashMap<>();
     private final List<CommandInterceptor> interceptors = new CopyOnWriteArrayList<>();
+
+    private EventBus eventBus;
+
+    public void setEventBus(EventBus eventBus) {
+        this.eventBus = eventBus;
+    }
+
 
     @Override
     public <CommandType extends Command, ReturnType> ReturnType send(CommandType command) {
@@ -63,4 +72,5 @@ public class SimpleCommandBus implements CommandBus {
     public void addInterceptor(CommandInterceptor interceptor) {
         interceptors.add(interceptor);
     }
+
 }

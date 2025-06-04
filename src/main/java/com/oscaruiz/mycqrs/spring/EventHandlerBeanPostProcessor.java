@@ -20,31 +20,21 @@ public class EventHandlerBeanPostProcessor implements BeanPostProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        if (!(bean instanceof EventHandler<?>)) {
+        if (!(bean instanceof EventHandler<?> handler)) {
             return bean;
         }
 
+        // Resuelve el tipo concreto del evento
         ResolvableType resolvableType = ResolvableType.forClass(bean.getClass()).as(EventHandler.class);
-        Class<?> rawEventType = resolvableType.getGeneric(0).resolve();
+        Class<?> eventType = resolvableType.getGeneric(0).resolve();
 
-        if (rawEventType == null || !Event.class.isAssignableFrom(rawEventType)) {
-            return bean;
+        if (eventType != null && Event.class.isAssignableFrom(eventType)) {
+            eventBus.registerHandler((Class<? extends Event>) eventType, event -> {
+                ((EventHandler<Event>) handler).on(event);
+            });
+            System.out.println("📣 Registered event handler for: " + eventType.getSimpleName());
         }
-
-        registerHandler(rawEventType, (EventHandler<?>) bean);
 
         return bean;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <E extends Event> void registerHandler(
-            Class<?> rawType,
-            EventHandler<?> rawHandler
-    ) {
-        Class<E> eventType = (Class<E>) rawType;
-        EventHandler<E> handler = (EventHandler<E>) rawHandler;
-
-        eventBus.registerHandler(eventType, handler);
-        System.out.println("📣 Registered event handler for: " + eventType.getSimpleName());
     }
 }

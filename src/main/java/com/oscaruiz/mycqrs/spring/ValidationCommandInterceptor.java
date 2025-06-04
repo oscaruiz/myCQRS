@@ -3,14 +3,17 @@ package com.oscaruiz.mycqrs.spring;
 import com.oscaruiz.mycqrs.command.Command;
 import com.oscaruiz.mycqrs.command.CommandInterceptor;
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 
 import java.util.Set;
 
 public class ValidationCommandInterceptor implements CommandInterceptor {
 
-    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    private final Validator validator;
+
+    public ValidationCommandInterceptor(Validator validator) {
+        this.validator = validator;
+    }
 
     @Override
     public Object intercept(Command command, CommandHandlerInvoker next) {
