@@ -1,7 +1,9 @@
 package com.oscaruiz.mycqrs.examples;
 
 import com.oscaruiz.mycqrs.event.EventHandler;
+import com.oscaruiz.mycqrs.spring.EventHandlerComponent;
 
+@EventHandlerComponent
 public class BookCreatedEventHandler implements EventHandler<BookCreatedEvent> {
 
     @Override
@@ -9,3 +11,4 @@ public class BookCreatedEventHandler implements EventHandler<BookCreatedEvent> {
         System.out.printf("✅ Event received: Book '%s' by %s created.%n", event.getTitle(), event.getAuthor());
     }
 }
+

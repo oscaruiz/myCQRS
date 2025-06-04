@@ -2,7 +2,9 @@ package com.oscaruiz.mycqrs.examples;
 
 import com.oscaruiz.mycqrs.command.CommandHandler;
 import com.oscaruiz.mycqrs.event.EventBus;
+import com.oscaruiz.mycqrs.spring.CommandHandlerComponent;
 
+@CommandHandlerComponent
 public class CreateBookCommandHandler implements CommandHandler<CreateBookCommand, Void> {
 
     private final EventBus eventBus;

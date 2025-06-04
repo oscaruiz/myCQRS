@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.event;
 
 /**
- * Generic interface for handling events.
+ * Interface for handling events.
  *
  * @param <EventType> the type of event
  */
