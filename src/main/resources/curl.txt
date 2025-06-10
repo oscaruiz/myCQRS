@@ -1,0 +1,5 @@
+curl -X POST http://localhost:8080/books \
+     -H "Content-Type: application/json" \
+     -d '{"title": "Clean Architecture", "author": "Robert C. Martin"}'
+
+http://localhost:8080/query/book?title=Clean%20Code

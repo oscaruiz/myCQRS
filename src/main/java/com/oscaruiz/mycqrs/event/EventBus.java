@@ -10,7 +10,7 @@ public interface EventBus {
      *
      * @param event the event to publish
      */
-    void publish(Event event);
+    <T extends Event> void publish(T event);
 
     /**
      * Registers a handler for a specific event type.

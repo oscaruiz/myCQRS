@@ -24,9 +24,15 @@ public class CommandBusConfig {
 
     @Bean
     public CommandBus commandBus(Validator validator, EventBus eventBus) {
+        // TODO - REVISE
         var bus = new SimpleCommandBus();
         bus.setEventBus(eventBus);
         bus.addInterceptor(new ValidationCommandInterceptor(validator));
         return bus;
+    }
+
+    @Bean
+    public EventHandlerBeanPostProcessor eventHandlerBeanPostProcessor(EventBus eventBus) {
+        return new EventHandlerBeanPostProcessor(eventBus);
     }
 }

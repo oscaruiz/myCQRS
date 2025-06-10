@@ -11,34 +11,22 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class SimpleEventBus implements EventBus {
 
-    private final Map<Class<? extends Event>, List<EventHandler<? extends Event>>> handlers = new ConcurrentHashMap<>();
-
-    private EventBus eventBus;
-
-    public void setEventBus(EventBus eventBus) {
-        this.eventBus = eventBus;
-    }
-
+    private final Map<Class<? extends Event>, CopyOnWriteArrayList<EventHandler<? extends Event>>> handlers = new ConcurrentHashMap<>();
 
     @Override
-    public void publish(Event event) {
-        List<EventHandler<? extends Event>> registeredHandlers = handlers.get(event.getClass());
-
-        if (registeredHandlers != null) {
-            for (EventHandler handler : registeredHandlers) {
-                //noinspection unchecked
-                handler.on(event);
+    public <T extends Event> void publish(T event) {
+        CopyOnWriteArrayList<EventHandler<? extends Event>> eventHandlers = handlers.get(event.getClass());
+        if (eventHandlers != null) {
+            for (EventHandler<? extends Event> handler : eventHandlers) {
+                @SuppressWarnings("unchecked")
+                EventHandler<T> typedHandler = (EventHandler<T>) handler;
+                typedHandler.on(event);
             }
         }
     }
 
     @Override
-    public <EventType extends Event> void registerHandler(
-            Class<EventType> eventType,
-            EventHandler<EventType> handler
-    ) {
-        handlers
-                .computeIfAbsent(eventType, key -> new CopyOnWriteArrayList<>())
-                .add(handler);
+    public <T extends Event> void registerHandler(Class<T> type, EventHandler<T> handler) {
+        handlers.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>()).add(handler);
     }
 }
