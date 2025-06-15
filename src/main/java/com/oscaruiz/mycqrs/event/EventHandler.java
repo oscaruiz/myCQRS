@@ -7,5 +7,5 @@ package com.oscaruiz.mycqrs.event;
  */
 @FunctionalInterface
 public interface EventHandler<EventType extends Event> {
-    void on(EventType event);
+    void handle(EventType event);
 }

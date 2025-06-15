@@ -20,7 +20,7 @@ public class SimpleEventBus implements EventBus {
             for (EventHandler<? extends Event> handler : eventHandlers) {
                 @SuppressWarnings("unchecked")
                 EventHandler<T> typedHandler = (EventHandler<T>) handler;
-                typedHandler.on(event);
+                typedHandler.handle(event);
             }
         }
     }

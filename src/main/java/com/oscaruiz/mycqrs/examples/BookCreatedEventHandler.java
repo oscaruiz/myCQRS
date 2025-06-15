@@ -7,7 +7,7 @@ import com.oscaruiz.mycqrs.spring.EventHandlerComponent;
 public class BookCreatedEventHandler implements EventHandler<BookCreatedEvent> {
 
     @Override
-    public void on(BookCreatedEvent event) {
+    public void handle(BookCreatedEvent event) {
         System.out.printf("✅ Event received: Book '%s' by %s created.%n", event.getTitle(), event.getAuthor());
     }
 }

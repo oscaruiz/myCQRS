@@ -24,13 +24,12 @@ public class EventHandlerBeanPostProcessor implements BeanPostProcessor {
             return bean;
         }
 
-        // Resuelve el tipo concreto del evento
         ResolvableType resolvableType = ResolvableType.forClass(bean.getClass()).as(EventHandler.class);
         Class<?> eventType = resolvableType.getGeneric(0).resolve();
 
         if (eventType != null && Event.class.isAssignableFrom(eventType)) {
             eventBus.registerHandler((Class<? extends Event>) eventType, event -> {
-                ((EventHandler<Event>) handler).on(event);
+                ((EventHandler<Event>) handler).handle(event);
             });
             System.out.println("📣 Registered event handler for: " + eventType.getSimpleName());
         }
