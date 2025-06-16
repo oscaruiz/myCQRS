@@ -1,7 +1,6 @@
-package com.oscaruiz.mycqrs.spring;
-
-import com.oscaruiz.mycqrs.command.Command;
-import com.oscaruiz.mycqrs.command.CommandInterceptor;
+package com.oscaruiz.mycqrs.core.infrastructure.spring;
+import com.oscaruiz.mycqrs.core.domain.command.Command;
+import com.oscaruiz.mycqrs.core.domain.command.CommandInterceptor;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 

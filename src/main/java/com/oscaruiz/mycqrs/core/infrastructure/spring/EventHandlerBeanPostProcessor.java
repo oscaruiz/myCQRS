@@ -1,8 +1,8 @@
-package com.oscaruiz.mycqrs.spring;
+package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
-import com.oscaruiz.mycqrs.event.Event;
-import com.oscaruiz.mycqrs.event.EventBus;
-import com.oscaruiz.mycqrs.event.EventHandler;
+import com.oscaruiz.mycqrs.core.domain.event.Event;
+import com.oscaruiz.mycqrs.core.domain.event.EventBus;
+import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.ResolvableType;

@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.spring;
+package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
 import org.springframework.stereotype.Component;
 
@@ -8,5 +8,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Component
-public @interface CommandHandlerComponent {
+public @interface EventHandlerComponent {
 }

@@ -1,10 +1,10 @@
-package com.oscaruiz.mycqrs.api;
+package com.oscaruiz.mycqrs.demo.infastructure.api;
 
-import com.oscaruiz.mycqrs.command.CommandBus;
-import com.oscaruiz.mycqrs.examples.CreateBookCommand;
-import com.oscaruiz.mycqrs.query.QueryBus;
-import com.oscaruiz.mycqrs.examples.FindBookByTitleQuery;
-import com.oscaruiz.mycqrs.examples.Book;
+import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
+import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
+import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
+import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
+import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
