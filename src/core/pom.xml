@@ -9,18 +9,21 @@
         <groupId>com.oscaruiz</groupId>
         <artifactId>mycqrs</artifactId>
         <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>core</artifactId>
     <packaging>jar</packaging>
-
     <name>mycqrs-core</name>
 
     <dependencies>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-            <version>3.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
         </dependency>
     </dependencies>
 

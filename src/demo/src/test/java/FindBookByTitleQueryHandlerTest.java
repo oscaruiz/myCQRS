@@ -1,9 +1,9 @@
-package com.oscaruiz.mycqrs.demo.application.query;
-
+import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
+import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQueryHandler;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 

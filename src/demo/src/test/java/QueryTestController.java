@@ -1,5 +1,3 @@
-package com.oscaruiz.mycqrs.demo.infastructure.api.test;
-
 import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.query.GetBookByTitleQuery;
 import org.springframework.web.bind.annotation.GetMapping;
