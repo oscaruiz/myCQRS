@@ -1,4 +1,8 @@
-package com.oscaruiz.mycqrs.core.domain.query;
+package com.oscaruiz.mycqrs.core.infrastructure.bus.query;
+
+import com.oscaruiz.mycqrs.core.domain.query.Query;
+import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
+import com.oscaruiz.mycqrs.core.domain.query.QueryHandler;
 
 import java.util.HashMap;
 import java.util.Map;

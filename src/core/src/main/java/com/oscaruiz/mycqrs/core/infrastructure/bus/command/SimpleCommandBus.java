@@ -1,4 +1,8 @@
-package com.oscaruiz.mycqrs.core.domain.command;
+package com.oscaruiz.mycqrs.core.infrastructure.bus.command;
+import com.oscaruiz.mycqrs.core.domain.command.Command;
+import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
+import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
+import com.oscaruiz.mycqrs.core.domain.command.CommandInterceptor;
 import com.oscaruiz.mycqrs.core.domain.event.EventBus;
 
 import java.util.List;

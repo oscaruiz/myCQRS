@@ -2,7 +2,7 @@ package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
 
 import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
-import com.oscaruiz.mycqrs.core.domain.query.SimpleQueryBus;
+import com.oscaruiz.mycqrs.core.infrastructure.bus.query.SimpleQueryBus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

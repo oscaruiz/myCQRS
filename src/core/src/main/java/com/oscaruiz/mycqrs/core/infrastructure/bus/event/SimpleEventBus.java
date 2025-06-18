@@ -1,4 +1,8 @@
-package com.oscaruiz.mycqrs.core.domain.event;
+package com.oscaruiz.mycqrs.core.infrastructure.bus.event;
+import com.oscaruiz.mycqrs.core.domain.event.Event;
+import com.oscaruiz.mycqrs.core.domain.event.EventBus;
+import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
