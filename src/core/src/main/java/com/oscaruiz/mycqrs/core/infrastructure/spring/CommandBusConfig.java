@@ -1,21 +1,22 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
-
 import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.command.SimpleCommandBus;
 import com.oscaruiz.mycqrs.core.domain.event.EventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
 public class CommandBusConfig {
 
     @Bean
     public Validator validator() {
-        return Validation.buildDefaultValidatorFactory().getValidator();
+        LocalValidatorFactoryBean factoryBean = new LocalValidatorFactoryBean();
+        factoryBean.afterPropertiesSet(); // <-- Forzamos inicialización
+        return factoryBean;
     }
 
     @Bean
@@ -25,7 +26,6 @@ public class CommandBusConfig {
 
     @Bean
     public CommandBus commandBus(Validator validator, EventBus eventBus) {
-        // TODO - REVISE
         var bus = new SimpleCommandBus();
         bus.setEventBus(eventBus);
         bus.addInterceptor(new ValidationCommandInterceptor(validator));

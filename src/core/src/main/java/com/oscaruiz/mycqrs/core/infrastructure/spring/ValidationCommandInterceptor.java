@@ -1,4 +1,5 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring;
+
 import com.oscaruiz.mycqrs.core.domain.command.Command;
 import com.oscaruiz.mycqrs.core.domain.command.CommandInterceptor;
 import jakarta.validation.ConstraintViolation;
@@ -17,13 +18,12 @@ public class ValidationCommandInterceptor implements CommandInterceptor {
     @Override
     public Object intercept(Command command, CommandHandlerInvoker next) {
         Set<ConstraintViolation<Command>> violations = validator.validate(command);
-
         if (!violations.isEmpty()) {
-            String message = violations.stream()
-                    .map(v -> v.getPropertyPath() + ": " + v.getMessage())
-                    .reduce((m1, m2) -> m1 + "; " + m2)
-                    .orElse("Validation error");
-            throw new IllegalArgumentException("🚫 Invalid command: " + message);
+            StringBuilder sb = new StringBuilder("Validation failed: ");
+            for (ConstraintViolation<Command> v : violations) {
+                sb.append(String.format("[%s: %s] ", v.getPropertyPath(), v.getMessage()));
+            }
+            throw new IllegalArgumentException(sb.toString());
         }
 
         return next.invoke(command);
