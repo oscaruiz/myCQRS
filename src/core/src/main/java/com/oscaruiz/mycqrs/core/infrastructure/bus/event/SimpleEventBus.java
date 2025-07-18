@@ -17,6 +17,7 @@ public class SimpleEventBus implements EventBus {
 
     @Override
     public <T extends Event> void publish(T event) {
+        System.out.print("POSTING EVENT: "+event);
         CopyOnWriteArrayList<EventHandler<? extends Event>> eventHandlers = handlers.get(event.getClass());
         if (eventHandlers != null) {
             for (EventHandler<? extends Event> handler : eventHandlers) {
@@ -29,6 +30,7 @@ public class SimpleEventBus implements EventBus {
 
     @Override
     public <T extends Event> void registerHandler(Class<T> type, EventHandler<T> handler) {
+        System.out.print("REGISTERING HANDLER: "+handler);
         handlers.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>()).add(handler);
     }
 }

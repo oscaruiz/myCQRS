@@ -4,5 +4,7 @@ curl -X POST http://localhost:8080/books \
 
 curl -X GET "http://localhost:8080/books/Clean%20Architecture" -H "Accept: application/json"
 
-
 http://localhost:8080/query/book?title=Clean%20Code
+
+docker exec -it mycqrs-postgres psql -U postgres -d mycqrsdb
+SELECT * FROM book_entity;

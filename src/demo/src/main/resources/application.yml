@@ -1,4 +1,9 @@
 spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: mycqrs_read
   datasource:
     url: jdbc:postgresql://localhost:5432/mycqrsdb
     username: postgres

@@ -1,5 +1,10 @@
 version: '3.8'
 services:
+  mongo:
+    image: mongo:7
+    container_name: mycqrs-mongo
+    ports:
+      - "27017:27017"
   postgres:
     image: postgres:15
     container_name: mycqrs-postgres

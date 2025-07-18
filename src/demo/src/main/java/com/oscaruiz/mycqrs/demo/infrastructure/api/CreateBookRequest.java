@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.infastructure.api;
+package com.oscaruiz.mycqrs.demo.infrastructure.api;
 
 public class CreateBookRequest {
     private String title;

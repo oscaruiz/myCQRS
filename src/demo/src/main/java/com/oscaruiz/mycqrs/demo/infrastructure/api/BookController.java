@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.infastructure.api;
+package com.oscaruiz.mycqrs.demo.infrastructure.api;
 
 import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
 import com.oscaruiz.mycqrs.core.domain.query.QueryBus;

@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.infastructure.repository;
+package com.oscaruiz.mycqrs.demo.infrastructure.jpa;
 import com.oscaruiz.mycqrs.demo.domain.model.BookEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
