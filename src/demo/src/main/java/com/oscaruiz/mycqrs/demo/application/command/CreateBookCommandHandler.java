@@ -23,9 +23,13 @@ public class CreateBookCommandHandler implements CommandHandler<CreateBookComman
     public Void handle(CreateBookCommand command) {
 
         BookEntity entity = new BookEntity(command.getTitle(), command.getAuthor());
-        bookRepository.save(entity);
+        BookEntity saved = (BookEntity) bookRepository.save(entity);
 
-        eventBus.publish(new BookCreatedEvent(command.getTitle(), command.getAuthor()));
+        eventBus.publish(new BookCreatedEvent(
+                String.valueOf(saved.getId()),
+                saved.getTitle(),
+                saved.getAuthor()
+        ));
 
         return null;
     }
