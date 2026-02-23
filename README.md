@@ -1,1 +1,2 @@
-# myCQRS
+# myCQRS 
+# phase 1
