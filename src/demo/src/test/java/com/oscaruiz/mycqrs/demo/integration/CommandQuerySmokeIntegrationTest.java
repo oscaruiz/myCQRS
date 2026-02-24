@@ -5,7 +5,7 @@ import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
-import com.oscaruiz.mycqrs.demo.domain.model.BookEntity;
+import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -57,7 +57,8 @@ class CommandQuerySmokeIntegrationTest {
     @ComponentScan(basePackages = {
             "com.oscaruiz.mycqrs.core",
             "com.oscaruiz.mycqrs.demo.application",
-            "com.oscaruiz.mycqrs.demo.domain"
+            "com.oscaruiz.mycqrs.demo.domain",
+            "com.oscaruiz.mycqrs.demo.infrastructure"
     })
     @EnableJpaRepositories(basePackages = "com.oscaruiz.mycqrs.demo.infrastructure.jpa")
     @EntityScan(basePackageClasses = BookEntity.class)

@@ -1,25 +1,12 @@
 package com.oscaruiz.mycqrs.demo.domain.repository;
 
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
-import org.springframework.stereotype.Repository;
+import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
-@Repository
-public class BookRepository {
+public interface BookRepository {
 
-    private final Map<String, Book> books = new ConcurrentHashMap<>();
+    BookAggregate save(BookAggregate bookAggregate);
 
-    public void save(Book book) {
-        books.put(book.getTitle(), book);
-    }
-
-    public Book findByTitle(String title) {
-        return books.get(title);
-    }
-
-    public void clear() {
-        books.clear();
-    }
+    Optional<BookAggregate> findByTitle(String title);
 }

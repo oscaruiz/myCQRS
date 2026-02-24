@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.domain.model;
+package com.oscaruiz.mycqrs.demo.infrastructure.jpa;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,7 +24,11 @@ public class BookEntity {
         this.author = author;
     }
 
-    // Getters y setters
+    public void update(String title, String author) {
+        this.title = title;
+        this.author = author;
+    }
+
     public Long getId() {
         return id;
     }
