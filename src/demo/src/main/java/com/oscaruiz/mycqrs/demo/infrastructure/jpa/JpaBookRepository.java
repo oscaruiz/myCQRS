@@ -28,7 +28,9 @@ public class JpaBookRepository implements BookRepository {
         }
 
         BookEntity saved = springDataBookRepository.save(entity);
-        return toAggregate(saved);
+        bookAggregate.assignId(saved.getId());
+
+        return bookAggregate;
     }
 
     @Override

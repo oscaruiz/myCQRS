@@ -3,7 +3,6 @@ package com.oscaruiz.mycqrs.demo.application.command;
 import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
 import com.oscaruiz.mycqrs.core.domain.event.EventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.CommandHandlerComponent;
-import com.oscaruiz.mycqrs.demo.domain.event.BookCreatedEvent;
 import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 
@@ -25,11 +24,7 @@ public class CreateBookCommandHandler implements CommandHandler<CreateBookComman
         BookAggregate aggregate = BookAggregate.create(command.getTitle(), command.getAuthor());
         BookAggregate saved = bookRepository.save(aggregate);
 
-        eventBus.publish(new BookCreatedEvent(
-                String.valueOf(saved.getId()),
-                saved.getTitle(),
-                saved.getAuthor()
-        ));
+        saved.pullDomainEvents().forEach(eventBus::publish);
 
         return null;
     }
