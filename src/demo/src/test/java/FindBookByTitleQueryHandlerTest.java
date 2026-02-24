@@ -1,7 +1,7 @@
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQueryHandler;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
-import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
+import com.oscaruiz.mycqrs.demo.infrastructure.repository.BookReadRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,16 +9,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FindBookByTitleQueryHandlerTest {
 
-    private BookRepository bookRepository;
+    private BookReadRepository bookReadRepository;
     private FindBookByTitleQueryHandler handler;
 
     @BeforeEach
     void setUp() {
-        bookRepository = new BookRepository();
-        handler = new FindBookByTitleQueryHandler(bookRepository);
+        bookReadRepository = new BookReadRepository();
+        handler = new FindBookByTitleQueryHandler(bookReadRepository);
 
-        // Setup test data
-        bookRepository.save(new Book("Clean Code", "Robert C. Martin"));
+        bookReadRepository.save(new Book("Clean Code", "Robert C. Martin"));
     }
 
     @Test
