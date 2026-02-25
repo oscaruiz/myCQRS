@@ -3,25 +3,26 @@ package com.oscaruiz.mycqrs.demo.infrastructure.mongo;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.UUID;
-
 @Document(collection = "books")
 public class BookReadModel {
 
     @Id
-    private UUID id;
+    private String aggregateId;
     private String title;
     private String author;
 
     public BookReadModel() {
     }
 
-    public BookReadModel( UUID id, String title, String author) {
-        this.id = UUID.randomUUID();
+    public BookReadModel(String aggregateId, String title, String author) {
+        this.aggregateId = aggregateId;
         this.title = title;
         this.author = author;
     }
 
+    public String getAggregateId() {
+        return aggregateId;
+    }
 
     public String getTitle() {
         return title;

@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.domain.model;
+package com.oscaruiz.mycqrs.demo.infrastructure.jpa;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,17 +14,24 @@ public class BookEntity {
 
     private String title;
     private String author;
+    private boolean deleted;
 
     protected BookEntity() {
         // for JPA
     }
 
-    public BookEntity(String title, String author) {
+    public BookEntity(String title, String author, boolean deleted) {
         this.title = title;
         this.author = author;
+        this.deleted = deleted;
     }
 
-    // Getters y setters
+    public void update(String title, String author, boolean deleted) {
+        this.title = title;
+        this.author = author;
+        this.deleted = deleted;
+    }
+
     public Long getId() {
         return id;
     }
@@ -35,5 +42,9 @@ public class BookEntity {
 
     public String getAuthor() {
         return author;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
     }
 }

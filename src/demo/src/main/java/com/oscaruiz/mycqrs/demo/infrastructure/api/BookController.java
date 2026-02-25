@@ -3,8 +3,11 @@ package com.oscaruiz.mycqrs.demo.infrastructure.api;
 import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
 import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
+import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
+import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +25,18 @@ public class BookController {
     @PostMapping
     public void createBook(@RequestBody CreateBookCommand command) {
         commandBus.send(command);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateBook(@PathVariable Long id, @RequestBody UpdateBookRequest request) {
+        commandBus.send(new UpdateBookCommand(id, request.getTitle(), request.getAuthor()));
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        commandBus.send(new DeleteBookCommand(id));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{title}")
