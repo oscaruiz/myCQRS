@@ -1,0 +1,159 @@
+# MyCQRS Demo
+
+Demo application built on top of a custom CQRS framework (without Axon), using:
+
+- Spring Boot
+- PostgreSQL (Write Side)
+- MongoDB (Read Side)
+- Docker
+
+---
+
+# 🚀 Quickstart
+
+## 1️⃣ Compile demo module
+
+```bash
+mvn -pl src/demo -am clean install
+```
+
+## 2️⃣ Run application
+
+```bash
+mvn spring-boot:run
+```
+
+Application runs on:
+
+```
+http://localhost:8080
+```
+
+---
+
+# 🐳 Databases
+
+## PostgreSQL (Write Side)
+
+Enter container:
+
+```bash
+docker exec -it mycqrs-postgres psql -U postgres -d mycqrsdb
+```
+
+Inside psql:
+
+```sql
+SELECT * FROM book_entity;
+\q
+```
+
+---
+
+## MongoDB (Read Side)
+
+Enter container:
+
+```bash
+docker exec -it <mongo_container_name> mongosh
+```
+
+Inside mongosh:
+
+```javascript
+use mycqrs_read
+show collections
+```
+
+You should see:
+
+```
+books
+book_events
+```
+
+Inspect documents:
+
+```javascript
+db.books.find().pretty()
+db.book_events.find().pretty()
+```
+
+---
+
+# 🧹 Reset Databases (Development)
+
+## 1️⃣ Clean PostgreSQL
+
+```bash
+docker exec -it mycqrs-postgres psql -U postgres -d mycqrsdb
+```
+
+Inside:
+
+```sql
+DELETE FROM book_entity;
+SELECT * FROM book_entity;
+\q
+```
+
+---
+
+## 2️⃣ Clean MongoDB
+
+```bash
+docker exec -it <mongo_container_name> mongosh
+```
+
+Inside:
+
+```javascript
+use mycqrs_read
+db.books.deleteMany({})
+db.book_events.deleteMany({})
+
+db.books.find()
+db.book_events.find()
+```
+
+Both collections should be empty.
+
+---
+
+# 🔥 Smoke Test API
+
+## Create Book (Command)
+
+```bash
+curl -X POST http://localhost:8080/books \
+-H "Content-Type: application/json" \
+-d '{
+  "title": "Clean Architecture",
+  "author": "Robert C. Martin"
+}'
+```
+
+---
+
+## Update Book (Command)
+
+```bash
+curl -X PUT http://localhost:8080/books/30 \
+-H "Content-Type: application/json" \
+-d '{
+  "title": "Cleaner Architecture",
+  "author": "Roberto C. Martino"
+}'
+```
+
+---
+
+# 📌 Development Notes
+
+- Write side persists data in PostgreSQL
+- Events are published via your custom EventBus
+- Read side projections are stored in MongoDB
+- This project follows:
+  - CQRS
+  - Hexagonal Architecture
+  - DDD-inspired aggregates
