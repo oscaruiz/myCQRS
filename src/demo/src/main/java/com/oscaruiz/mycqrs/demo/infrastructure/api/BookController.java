@@ -3,6 +3,7 @@ package com.oscaruiz.mycqrs.demo.infrastructure.api;
 import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
 import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
+import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
@@ -30,6 +31,12 @@ public class BookController {
     public ResponseEntity<Void> updateBook(@PathVariable String id, @RequestBody UpdateBookRequest request) {
         commandBus.send(new UpdateBookCommand(id, request.getTitle(), request.getAuthor()));
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable String id) {
+        commandBus.send(new DeleteBookCommand(id));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{title}")
