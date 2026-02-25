@@ -1,18 +1,18 @@
 package com.oscaruiz.mycqrs.demo.application.command;
 
 import com.oscaruiz.mycqrs.core.domain.command.Command;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class DeleteBookCommand implements Command {
 
-    @NotBlank(message = "Aggregate id is required")
-    private final String aggregateId;
+    @NotNull(message = "Book id is required")
+    private final Long bookId;
 
-    public DeleteBookCommand(String aggregateId) {
-        this.aggregateId = aggregateId;
+    public DeleteBookCommand(Long bookId) {
+        this.bookId = bookId;
     }
 
-    public String getAggregateId() {
-        return aggregateId;
+    public Long getBookId() {
+        return bookId;
     }
 }

@@ -2,11 +2,12 @@ package com.oscaruiz.mycqrs.demo.application.command;
 
 import com.oscaruiz.mycqrs.core.domain.command.Command;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class UpdateBookCommand implements Command {
 
-    @NotBlank(message = "Aggregate id is required")
-    private final String aggregateId;
+    @NotNull(message = "Book id is required")
+    private final Long bookId;
 
     @NotBlank(message = "Title is required")
     private final String title;
@@ -14,14 +15,14 @@ public class UpdateBookCommand implements Command {
     @NotBlank(message = "Author is required")
     private final String author;
 
-    public UpdateBookCommand(String aggregateId, String title, String author) {
-        this.aggregateId = aggregateId;
+    public UpdateBookCommand(Long bookId, String title, String author) {
+        this.bookId = bookId;
         this.title = title;
         this.author = author;
     }
 
-    public String getAggregateId() {
-        return aggregateId;
+    public Long getBookId() {
+        return bookId;
     }
 
     public String getTitle() {

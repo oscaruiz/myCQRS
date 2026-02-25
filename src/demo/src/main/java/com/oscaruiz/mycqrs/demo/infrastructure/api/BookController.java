@@ -28,13 +28,13 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateBook(@PathVariable String id, @RequestBody UpdateBookRequest request) {
+    public ResponseEntity<Void> updateBook(@PathVariable Long id, @RequestBody UpdateBookRequest request) {
         commandBus.send(new UpdateBookCommand(id, request.getTitle(), request.getAuthor()));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable String id) {
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         commandBus.send(new DeleteBookCommand(id));
         return ResponseEntity.noContent().build();
     }
