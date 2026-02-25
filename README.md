@@ -3,7 +3,6 @@
 ![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
 ![Spring Boot 3.2.5](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
 ![Maven](https://img.shields.io/badge/Build-Maven-C71A36?logo=apachemaven&logoColor=white)
-![License MIT](https://img.shields.io/badge/License-MIT-blue)
 
 ## Purpose
 
@@ -73,7 +72,97 @@ Planned improvements include:
 - Cleanup of placeholder handlers and pending TODO items.
 - Logging and test layout cleanup.
 
+## Architecture Overview
+
+###  Hexagonal + CQRS + DDD Flow
+
+      HEXAGONAL MAP + CQRS + DDD
+
+                                  ┌──────────────────────────────┐
+                                  │           CLIENT             │
+                                  │     (HTTP / REST Call)       │
+                                  └──────────────┬───────────────┘
+                                                 │
+                                                 ▼
+                              ┌───────────────────────────────────┐
+                              │           CONTROLLER              │
+                              │  (Infra - HTTP Adapter)           │
+                              │  - Parse @PathVariable Long id    │
+                              │  - Build Command                  │
+                              └──────────────┬────────────────────┘
+                                             │
+                                             ▼
+                              ┌───────────────────────────────────┐
+                              │           COMMAND BUS             │
+                              │      (Core - Infra wiring)        │
+                              └──────────────┬────────────────────┘
+                                             │
+                                             ▼
+                        ┌────────────────────────────────────────────┐
+                        │           COMMAND HANDLER (App)            │
+                        │  - load aggregate via BookRepository       │
+                        │  - call domain behavior                    │
+                        │  - save aggregate                          │
+                        │  - publish pulled domain events            │
+                        └──────────────┬─────────────────────────────┘
+                                       │
+                                       ▼
+                        ┌────────────────────────────────────────────┐
+                        │              DOMAIN                        │
+                        │        BookAggregate                       │
+                        │                                            │
+                        │  State: id, title, author, deleted        │
+                        │  Methods: create/update/delete             │
+                        │  Emits: Domain Events                      │
+                        └──────────────┬─────────────────────────────┘
+                                       │
+                                       ▼
+                        ┌────────────────────────────────────────────┐
+                        │        BOOK REPOSITORY (PORT)              │
+                        │        (Domain interface)                  │
+                        └──────────────┬─────────────────────────────┘
+                                       │
+                                       ▼
+                        ┌────────────────────────────────────────────┐
+                        │      JPA BOOK REPOSITORY (ADAPTER)         │
+                        │  - Maps Aggregate ↔ Entity                 │
+                        │  - Implements load/save                    │
+                        └──────────────┬─────────────────────────────┘
+                                       │
+                                       ▼
+                        ┌────────────────────────────────────────────┐
+                        │             BOOK ENTITY (JPA)              │
+                        │   id | title | author | deleted            │
+                        └──────────────┬─────────────────────────────┘
+                                       │
+                                       ▼
+                                  ┌───────────────┐
+                                  │  POSTGRES DB  │
+                                  └───────────────┘
+
+------------------------------------------------------------------------
+
+###  Event Flow (CQRS Side)
+
+    Aggregate.recordEvent(...)
+              │
+              ▼
+    Handler pulls domainEvents
+              │
+              ▼
+    EventBus.publish(event)
+              │
+              ▼
+    Projection / Read Model
+              │
+              ▼
+    Mongo / InMemory / Query Model
+
+------------------------------------------------------------------------
+
 
 ## License
 
-This project is distributed under the MIT License. See `LICENSE` for details.
+This project is licensed under the **GNU General Public License v3.0**.
+
+See the [LICENSE](LICENSE) file for full details.
