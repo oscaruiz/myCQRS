@@ -14,19 +14,22 @@ public class BookEntity {
 
     private String title;
     private String author;
+    private boolean deleted;
 
     protected BookEntity() {
         // for JPA
     }
 
-    public BookEntity(String title, String author) {
+    public BookEntity(String title, String author, boolean deleted) {
         this.title = title;
         this.author = author;
+        this.deleted = deleted;
     }
 
-    public void update(String title, String author) {
+    public void update(String title, String author, boolean deleted) {
         this.title = title;
         this.author = author;
+        this.deleted = deleted;
     }
 
     public Long getId() {
@@ -39,5 +42,9 @@ public class BookEntity {
 
     public String getAuthor() {
         return author;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
     }
 }

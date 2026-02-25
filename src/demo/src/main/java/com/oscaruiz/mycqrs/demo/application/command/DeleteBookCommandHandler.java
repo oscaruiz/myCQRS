@@ -7,22 +7,21 @@ import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 
 @CommandHandlerComponent
-public class UpdateBookCommandHandler implements CommandHandler<UpdateBookCommand, Void> {
+public class DeleteBookCommandHandler implements CommandHandler<DeleteBookCommand, Void> {
 
     private final BookRepository bookRepository;
     private final EventBus eventBus;
 
-    public UpdateBookCommandHandler(BookRepository bookRepository, EventBus eventBus) {
+    public DeleteBookCommandHandler(BookRepository bookRepository, EventBus eventBus) {
         this.bookRepository = bookRepository;
         this.eventBus = eventBus;
     }
 
     @Override
-    public Void handle(UpdateBookCommand command) {
-        // Application layer orchestrates use-cases through domain ports.
+    public Void handle(DeleteBookCommand command) {
         Long id = parseAggregateId(command.getAggregateId());
         BookAggregate aggregate = bookRepository.load(id);
-        aggregate.updateIfPresent(command.getTitle(), command.getAuthor());
+        aggregate.delete();
         BookAggregate saved = bookRepository.save(aggregate);
 
         saved.pullDomainEvents().forEach(eventBus::publish);
