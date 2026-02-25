@@ -75,7 +75,7 @@ class BookCommandIntegrationTest {
         commandBus.send(new CreateBookCommand("Refactoring", "Martin Fowler"));
         BookAggregate existing = bookRepository.findByTitle("Refactoring").orElseThrow();
 
-        commandBus.send(new UpdateBookCommand(String.valueOf(existing.getId()), "Refactoring 2nd", "Martin Fowler"));
+        commandBus.send(new UpdateBookCommand(existing.getId(), "Refactoring 2nd", "Martin Fowler"));
 
         BookAggregate updated = bookRepository.load(existing.getId());
 
@@ -89,7 +89,7 @@ class BookCommandIntegrationTest {
         commandBus.send(new CreateBookCommand("Patterns", "GoF"));
         BookAggregate existing = bookRepository.findByTitle("Patterns").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(String.valueOf(existing.getId())));
+        commandBus.send(new DeleteBookCommand(existing.getId()));
 
         BookAggregate deleted = bookRepository.load(existing.getId());
 
@@ -101,10 +101,10 @@ class BookCommandIntegrationTest {
         commandBus.send(new CreateBookCommand("Effective Java", "Joshua Bloch"));
         BookAggregate existing = bookRepository.findByTitle("Effective Java").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(String.valueOf(existing.getId())));
+        commandBus.send(new DeleteBookCommand(existing.getId()));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new DeleteBookCommand(String.valueOf(existing.getId()))));
+                () -> commandBus.send(new DeleteBookCommand(existing.getId())));
     }
 
     @Test
@@ -112,10 +112,10 @@ class BookCommandIntegrationTest {
         commandBus.send(new CreateBookCommand("Clean Architecture", "Robert C. Martin"));
         BookAggregate existing = bookRepository.findByTitle("Clean Architecture").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(String.valueOf(existing.getId())));
+        commandBus.send(new DeleteBookCommand(existing.getId()));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new UpdateBookCommand(String.valueOf(existing.getId()), "Any", "Any")));
+                () -> commandBus.send(new UpdateBookCommand(existing.getId(), "Any", "Any")));
     }
 
 

@@ -20,21 +20,12 @@ public class UpdateBookCommandHandler implements CommandHandler<UpdateBookComman
     @Override
     public Void handle(UpdateBookCommand command) {
         // Application layer orchestrates use-cases through domain ports.
-        Long id = parseAggregateId(command.getAggregateId());
-        BookAggregate aggregate = bookRepository.load(id);
+        BookAggregate aggregate = bookRepository.load(command.getBookId());
         aggregate.updateIfPresent(command.getTitle(), command.getAuthor());
         BookAggregate saved = bookRepository.save(aggregate);
 
         saved.pullDomainEvents().forEach(eventBus::publish);
 
         return null;
-    }
-
-    private Long parseAggregateId(String aggregateId) {
-        try {
-            return Long.parseLong(aggregateId);
-        } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("Aggregate id must be a numeric value: " + aggregateId, exception);
-        }
     }
 }

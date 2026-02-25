@@ -19,21 +19,12 @@ public class DeleteBookCommandHandler implements CommandHandler<DeleteBookComman
 
     @Override
     public Void handle(DeleteBookCommand command) {
-        Long id = parseAggregateId(command.getAggregateId());
-        BookAggregate aggregate = bookRepository.load(id);
+        BookAggregate aggregate = bookRepository.load(command.getBookId());
         aggregate.delete();
         BookAggregate saved = bookRepository.save(aggregate);
 
         saved.pullDomainEvents().forEach(eventBus::publish);
 
         return null;
-    }
-
-    private Long parseAggregateId(String aggregateId) {
-        try {
-            return Long.parseLong(aggregateId);
-        } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException("Aggregate id must be a numeric value: " + aggregateId, exception);
-        }
     }
 }
