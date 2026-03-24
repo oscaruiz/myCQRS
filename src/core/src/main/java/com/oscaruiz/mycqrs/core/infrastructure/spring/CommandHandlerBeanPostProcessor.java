@@ -3,6 +3,8 @@ package com.oscaruiz.mycqrs.core.infrastructure.spring;
 import com.oscaruiz.mycqrs.core.domain.command.Command;
 import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
 import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.ResolvableType;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CommandHandlerBeanPostProcessor implements BeanPostProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(CommandHandlerBeanPostProcessor.class);
 
     private final CommandBus commandBus;
 
@@ -51,7 +55,7 @@ public class CommandHandlerBeanPostProcessor implements BeanPostProcessor {
         CommandHandler<C, R> handler = (CommandHandler<C, R>) handlerRaw;
 
         commandBus.registerHandler(commandType, handler);
-        System.out.println("✅ Registered handler for command: " + commandType.getSimpleName());
+        log.info("Registered handler for command: {}", commandType.getSimpleName());
     }
 
 }
