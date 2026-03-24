@@ -1,6 +1,8 @@
 package com.oscaruiz.mycqrs.demo.application.event;
 
 import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EventHandlerComponent;
 import com.oscaruiz.mycqrs.demo.domain.event.BookCreatedEvent;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
@@ -8,6 +10,8 @@ import com.oscaruiz.mycqrs.demo.infrastructure.repository.BookReadRepository;
 
 @EventHandlerComponent
 public class BookCreatedEventProjection implements EventHandler<BookCreatedEvent> {
+
+    private static final Logger log = LoggerFactory.getLogger(BookCreatedEventProjection.class);
 
     private final BookReadRepository bookReadRepository;
 
@@ -19,6 +23,6 @@ public class BookCreatedEventProjection implements EventHandler<BookCreatedEvent
     public void handle(BookCreatedEvent event) {
         Book book = new Book(event.getTitle(), event.getAuthor());
         bookReadRepository.save(book);
-        System.out.printf("📥 Proyección: libro '%s' guardado en BookReadRepository%n", event.getTitle());
+        log.info("Proyección: libro '{}' guardado en BookReadRepository", event.getTitle());
     }
 }

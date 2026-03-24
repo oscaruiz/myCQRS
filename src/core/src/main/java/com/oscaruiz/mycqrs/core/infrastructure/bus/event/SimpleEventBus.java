@@ -3,6 +3,9 @@ import com.oscaruiz.mycqrs.core.domain.event.Event;
 import com.oscaruiz.mycqrs.core.domain.event.EventBus;
 import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -13,11 +16,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class SimpleEventBus implements EventBus {
 
+    private static final Logger log = LoggerFactory.getLogger(SimpleEventBus.class);
+
     private final Map<Class<? extends Event>, CopyOnWriteArrayList<EventHandler<? extends Event>>> handlers = new ConcurrentHashMap<>();
 
     @Override
     public <T extends Event> void publish(T event) {
-        System.out.print("POSTING EVENT: "+event);
+        log.debug("POSTING EVENT: {}", event);
         CopyOnWriteArrayList<EventHandler<? extends Event>> eventHandlers = handlers.get(event.getClass());
         if (eventHandlers != null) {
             for (EventHandler<? extends Event> handler : eventHandlers) {
@@ -30,7 +35,7 @@ public class SimpleEventBus implements EventBus {
 
     @Override
     public <T extends Event> void registerHandler(Class<T> type, EventHandler<T> handler) {
-        System.out.print("REGISTERING HANDLER: "+handler);
+        log.debug("REGISTERING HANDLER: {}", handler);
         handlers.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>()).add(handler);
     }
 }
