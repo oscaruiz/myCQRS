@@ -35,6 +35,6 @@ public class Book {
 
     @Override
     public String toString() {
-        return "📘 Book{title='%s', author='%s'}".formatted(title, author);
+        return "Book{title='%s', author='%s'}".formatted(title, author);
     }
 }
