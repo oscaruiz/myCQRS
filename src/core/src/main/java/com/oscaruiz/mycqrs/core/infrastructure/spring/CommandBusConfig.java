@@ -15,7 +15,7 @@ public class CommandBusConfig {
     @Bean
     public Validator validator() {
         LocalValidatorFactoryBean factoryBean = new LocalValidatorFactoryBean();
-        factoryBean.afterPropertiesSet(); // <-- Forzamos inicialización
+        factoryBean.afterPropertiesSet();
         return factoryBean;
     }
 
