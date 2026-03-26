@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(mvn compile:*)",
+      "Bash(mvn test:*)",
+      "Bash(curl:*)",
+      "Bash(mvn spring-boot:run)",
+      "Bash(mvn -pl src/demo -am test)",
+      "Bash(mvn -pl src/demo -am clean compile -q)",
+      "Bash(docker exec:*)"
+    ]
+  }
+}
