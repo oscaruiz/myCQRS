@@ -3,8 +3,6 @@ import com.oscaruiz.mycqrs.core.domain.command.Command;
 import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
 import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
 import com.oscaruiz.mycqrs.core.domain.command.CommandInterceptor;
-import com.oscaruiz.mycqrs.core.domain.event.EventBus;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,13 +15,6 @@ public class SimpleCommandBus implements CommandBus {
 
     private final Map<Class<? extends Command>, CommandHandler<?, ?>> handlers = new ConcurrentHashMap<>();
     private final List<CommandInterceptor> interceptors = new CopyOnWriteArrayList<>();
-
-    private EventBus eventBus;
-
-    public void setEventBus(EventBus eventBus) {
-        this.eventBus = eventBus;
-    }
-
 
     @Override
     public <CommandType extends Command, ReturnType> ReturnType send(CommandType command) {

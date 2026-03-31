@@ -24,7 +24,7 @@ public class EventHandlerBeanPostProcessor implements BeanPostProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        log.debug("Post-procesando bean: {} ({})", beanName, bean.getClass().getSimpleName());
+        log.debug("Processing bean: {} ({})", beanName, bean.getClass().getSimpleName());
         if (!(bean instanceof EventHandler<?> handler)) {
             return bean;
         }
@@ -33,7 +33,7 @@ public class EventHandlerBeanPostProcessor implements BeanPostProcessor {
         Class<?> eventType = resolvableType.getGeneric(0).resolve();
 
         if (eventType != null && Event.class.isAssignableFrom(eventType)) {
-            log.info("Registrando handler para: {}", eventType.getSimpleName());
+            log.info("Registering event handler for: {}", eventType.getSimpleName());
             eventBus.registerHandler((Class<? extends Event>) eventType, event -> {
                 ((EventHandler<Event>) handler).handle(event);
             });
