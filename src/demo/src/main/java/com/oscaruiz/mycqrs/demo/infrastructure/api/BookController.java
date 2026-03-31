@@ -5,6 +5,7 @@ import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
+import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +28,11 @@ public class BookController {
         this.queryBus = queryBus;
     }
 
-    /*
     @GetMapping("/{id}")
-    public ResponseEntity<Book> getBookById(@PathVariable String id) {
+    public ResponseEntity<BookResponse> getBookById(@PathVariable String id) {
         Book book = queryBus.handle(new FindBookByIdQuery(id));
-        return ResponseEntity.ok(book);
-    }*/
+        return ResponseEntity.ok(BookResponse.from(book));
+    }
 
     @GetMapping
     public ResponseEntity<BookResponse> getBooksByTitle(@RequestParam String title) {

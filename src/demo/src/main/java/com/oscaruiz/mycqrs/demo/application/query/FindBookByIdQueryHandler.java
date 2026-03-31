@@ -16,8 +16,6 @@ public class FindBookByIdQueryHandler implements QueryHandler<FindBookByIdQuery,
 
     @Override
     public Book handle(FindBookByIdQuery query) {
-        // TODO
-        return null;
-        // return bookReadRepository.findById(query.getId()).orElse(null);
+        return bookReadRepository.findById(query.getId()).orElse(null);
     }
 }

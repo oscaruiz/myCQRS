@@ -15,7 +15,9 @@ public class BookReadRepository {
     }
 
     public Optional<Book> findById(String id) {
-        return Optional.ofNullable(books.get(id));
+        return books.values().stream()
+                .filter(book -> id.equals(book.getId()))
+                .findFirst();
     }
 
     public Optional<Book> findByTitle(String title) {

@@ -11,4 +11,7 @@ public class FindBookByIdQuery implements Query<Book> {
         this.id = id;
     }
 
+    public String getId() {
+        return id;
+    }
 }
