@@ -1,5 +1,5 @@
-import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
-import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQueryHandler;
+package com.oscaruiz.mycqrs.demo.application.query;
+
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import com.oscaruiz.mycqrs.demo.infrastructure.repository.BookReadRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +17,7 @@ class FindBookByTitleQueryHandlerTest {
         bookReadRepository = new BookReadRepository();
         handler = new FindBookByTitleQueryHandler(bookReadRepository);
 
-        bookReadRepository.save(new Book("Clean Code", "Robert C. Martin"));
+        bookReadRepository.save(new Book(null, "Clean Code", "Robert C. Martin"));
     }
 
     @Test

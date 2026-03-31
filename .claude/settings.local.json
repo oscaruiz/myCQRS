@@ -1,18 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git pull:*)",
-      "Bash(git rm:*)",
-      "Bash(git commit:*)",
-      "Bash(git checkout:*)",
-      "Bash(git stash:*)",
-      "Bash(mvn compile:*)",
+      "Bash(find /d/Dev/myCQRS -maxdepth 3 -type d -not -path */target/* -not -path */.git/*)",
       "Bash(mvn test:*)",
+      "Bash(mvn spring-boot:run -pl src/demo)",
       "Bash(curl:*)",
-      "Bash(mvn spring-boot:run)",
-      "Bash(mvn -pl src/demo -am test)",
-      "Bash(mvn -pl src/demo -am clean compile -q)",
-      "Bash(docker exec:*)"
+      "Bash(netstat -ano)",
+      "Bash(taskkill:*)"
     ]
   }
 }

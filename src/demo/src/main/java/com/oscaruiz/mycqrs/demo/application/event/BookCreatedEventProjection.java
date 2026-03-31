@@ -21,7 +21,7 @@ public class BookCreatedEventProjection implements EventHandler<BookCreatedEvent
 
     @Override
     public void handle(BookCreatedEvent event) {
-        Book book = new Book(event.getTitle(), event.getAuthor());
+        Book book = new Book(event.getAggregateId(), event.getTitle(), event.getAuthor());
         bookReadRepository.save(book);
         log.info("Projection: book '{}' saved to BookReadRepository", event.getTitle());
     }

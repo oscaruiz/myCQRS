@@ -4,6 +4,7 @@ import com.oscaruiz.mycqrs.core.domain.query.Query;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
 
 public class FindBookByTitleQuery implements Query<Book> {
+    
     private final String title;
 
     public FindBookByTitleQuery(String title) {
