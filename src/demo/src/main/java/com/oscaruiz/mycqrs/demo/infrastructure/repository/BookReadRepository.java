@@ -14,6 +14,10 @@ public class BookReadRepository {
         books.put(book.getTitle(), book);
     }
 
+    public Optional<Book> findById(String id) {
+        return Optional.ofNullable(books.get(id));
+    }
+
     public Optional<Book> findByTitle(String title) {
         return Optional.ofNullable(books.get(title));
     }

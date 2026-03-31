@@ -1,23 +1,18 @@
 package com.oscaruiz.mycqrs.demo.infrastructure.api;
 
-public class UpdateBookRequest {
+import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
+import jakarta.validation.constraints.NotBlank;
 
-    private String title;
-    private String author;
+public record UpdateBookRequest(
 
-    public String getTitle() {
-        return title;
-    }
+        @NotBlank(message = "Title is required")
+        String title,
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+        @NotBlank(message = "Author is required")
+        String author
 
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
+) {
+    public UpdateBookCommand toCommand(Long id) {
+        return new UpdateBookCommand(id, title, author);
     }
 }
