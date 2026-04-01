@@ -16,7 +16,7 @@ public class BookAggregate {
     private boolean deleted;
     private final List<Event> domainEvents = new ArrayList<>();
 
-    public BookAggregate(Long id, String title, String author, boolean deleted) {
+    private BookAggregate(Long id, String title, String author, boolean deleted) {
         this.id = id;
         this.title = title;
         this.author = author;
@@ -24,8 +24,13 @@ public class BookAggregate {
     }
 
     public static BookAggregate create(String title, String author) {
+
+        requireNonBlank(title, "title");
+        requireNonBlank(author, "author");
+
         BookAggregate aggregate = new BookAggregate(null, title, author, false);
         aggregate.recordEvent(new BookCreatedEvent(null, title, author));
+
         return aggregate;
     }
 
@@ -85,6 +90,18 @@ public class BookAggregate {
 
     public List<Event> pullDomainEvents() {
         List<Event> events = new ArrayList<>(domainEvents);
+
+        for (Event event : events) {
+            String aggregateId = event.getAggregateId();
+
+            if (aggregateId == null || aggregateId.isBlank()) {
+                throw new IllegalStateException(
+                        "Domain event " + event.getClass().getSimpleName() +
+                                " has no aggregateId"
+                );
+            }
+        }
+
         domainEvents.clear();
         return events;
     }
@@ -113,5 +130,11 @@ public class BookAggregate {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    private static void requireNonBlank(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " cannot be null or blank");
+        }
     }
 }
