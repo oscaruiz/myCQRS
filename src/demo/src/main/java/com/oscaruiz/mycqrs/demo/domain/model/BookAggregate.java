@@ -16,7 +16,7 @@ public class BookAggregate {
     private boolean deleted;
     private final List<Event> domainEvents = new ArrayList<>();
 
-    public BookAggregate(Long id, String title, String author, boolean deleted) {
+    private BookAggregate(Long id, String title, String author, boolean deleted) {
         this.id = id;
         this.title = title;
         this.author = author;
@@ -24,8 +24,13 @@ public class BookAggregate {
     }
 
     public static BookAggregate create(String title, String author) {
+
+        requireNonBlank(title, "title");
+        requireNonBlank(author, "author");
+
         BookAggregate aggregate = new BookAggregate(null, title, author, false);
         aggregate.recordEvent(new BookCreatedEvent(null, title, author));
+
         return aggregate;
     }
 
@@ -38,27 +43,20 @@ public class BookAggregate {
         backfillAggregateIdInDomainEvents();
     }
 
-    public void updateIfPresent(String title, String author) {
+    public void update(String title, String author) {
         if (deleted) {
             throw new IllegalStateException("Cannot update a deleted book");
         }
 
-        String nextTitle = this.title;
-        String nextAuthor = this.author;
+        requireNonBlank(title, "title");
+        requireNonBlank(author, "author");
 
-        if (title != null && !title.isBlank()) {
-            nextTitle = title;
-        }
-        if (author != null && !author.isBlank()) {
-            nextAuthor = author;
-        }
-
-        if (nextTitle.equals(this.title) && nextAuthor.equals(this.author)) {
+        if (this.title.equals(title) && this.author.equals(author)) {
             return;
         }
 
-        this.title = nextTitle;
-        this.author = nextAuthor;
+        this.title = title;
+        this.author = author;
 
         if (id == null) {
             throw new IllegalStateException("Cannot emit update event without aggregate id");
@@ -85,6 +83,18 @@ public class BookAggregate {
 
     public List<Event> pullDomainEvents() {
         List<Event> events = new ArrayList<>(domainEvents);
+
+        for (Event event : events) {
+            String aggregateId = event.getAggregateId();
+
+            if (aggregateId == null || aggregateId.isBlank()) {
+                throw new IllegalStateException(
+                        "Domain event " + event.getClass().getSimpleName() +
+                                " has no aggregateId"
+                );
+            }
+        }
+
         domainEvents.clear();
         return events;
     }
@@ -113,5 +123,11 @@ public class BookAggregate {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    private static void requireNonBlank(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " cannot be null or blank");
+        }
     }
 }

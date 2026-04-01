@@ -39,7 +39,7 @@ echo "[2/7] POST /books creates a book"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE_URL/books" \
   -H "Content-Type: application/json" \
   -d "{\"title\":\"$UNIQUE_TITLE\",\"author\":\"Smoke Author\"}")
-if [ "$HTTP_CODE" = "200" ]; then
+if [ "$HTTP_CODE" = "201" ]; then
   pass "POST /books -> $HTTP_CODE"
 else
   fail "POST /books -> $HTTP_CODE" "expected 200"
@@ -50,7 +50,7 @@ fi
 # ----------------------------------------------------------
 echo "[3/7] GET /books/{title} returns created book"
 ENCODED_TITLE=$(printf '%s' "$UNIQUE_TITLE" | sed 's/ /%20/g')
-BODY=$(curl -s "$BASE_URL/books/$ENCODED_TITLE")
+BODY=$(curl -s "$BASE_URL/books?title=$ENCODED_TITLE")
 if echo "$BODY" | grep -q "$UNIQUE_TITLE"; then
   pass "GET /books/$UNIQUE_TITLE returned book"
 else

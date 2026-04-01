@@ -32,16 +32,56 @@ class BookAggregateDomainEventsTest {
     void updateRecordsBookUpdatedEventOnlyWhenStateChanges() {
         BookAggregate aggregate = BookAggregate.rehydrate(10L, "Old", "Author", false);
 
-        aggregate.updateIfPresent("Old", "Author");
+        aggregate.update("Old", "Author");
         assertTrue(aggregate.pullDomainEvents().isEmpty());
 
-        aggregate.updateIfPresent("New", null);
+        aggregate.update("New", "Author");
         List<Event> events = aggregate.pullDomainEvents();
 
         assertEquals(1, events.size());
         BookUpdatedEvent event = (BookUpdatedEvent) events.get(0);
         assertEquals("10", event.getAggregateId());
         assertEquals("New", event.getTitle());
+    }
+
+    @Test
+    void updateThrowsWhenTitleIsNull() {
+        BookAggregate aggregate = BookAggregate.rehydrate(1L, "Title", "Author", false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> aggregate.update(null, "Author"));
+        assertEquals("title cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void updateThrowsWhenTitleIsBlank() {
+        BookAggregate aggregate = BookAggregate.rehydrate(1L, "Title", "Author", false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> aggregate.update("", "Author"));
+        assertEquals("title cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void updateThrowsWhenAuthorIsNull() {
+        BookAggregate aggregate = BookAggregate.rehydrate(1L, "Title", "Author", false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> aggregate.update("Title", null));
+        assertEquals("author cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void updateThrowsWhenAuthorIsBlank() {
+        BookAggregate aggregate = BookAggregate.rehydrate(1L, "Title", "Author", false);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> aggregate.update("Title", ""));
+        assertEquals("author cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void updateThrowsWhenAggregateIsDeleted() {
+        BookAggregate aggregate = BookAggregate.rehydrate(1L, "Title", "Author", true);
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> aggregate.update("New Title", "New Author"));
+        assertEquals("Cannot update a deleted book", ex.getMessage());
     }
 
     @Test
@@ -57,8 +97,37 @@ class BookAggregateDomainEventsTest {
     }
 
     @Test
+    void createThrowsWhenTitleIsNull() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BookAggregate.create(null, "Author"));
+        assertEquals("title cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void createThrowsWhenTitleIsBlank() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BookAggregate.create("  ", "Author"));
+        assertEquals("title cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void createThrowsWhenAuthorIsNull() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BookAggregate.create("Title", null));
+        assertEquals("author cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void createThrowsWhenAuthorIsBlank() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BookAggregate.create("Title", ""));
+        assertEquals("author cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
     void pullDomainEventsClearsRecordedEvents() {
         BookAggregate aggregate = BookAggregate.create("DDD", "Eric Evans");
+        aggregate.assignId(1L);
 
         aggregate.pullDomainEvents();
 

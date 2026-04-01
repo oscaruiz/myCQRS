@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find D:/Dev/myCQRS/src -path */target/* -prune -o -path */META-INF* -type f -print)"
+      "Bash(find D:/Dev/myCQRS/src -path */target/* -prune -o -path */META-INF* -type f -print)",
+      "Bash(mvn test:*)"
     ]
   }
 }

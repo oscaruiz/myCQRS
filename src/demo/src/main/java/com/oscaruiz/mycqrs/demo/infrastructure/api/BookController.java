@@ -2,9 +2,7 @@ package com.oscaruiz.mycqrs.demo.infrastructure.api;
 
 import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
 import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
-import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
-import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
@@ -14,7 +12,6 @@ import jakarta.validation.Valid;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/books")

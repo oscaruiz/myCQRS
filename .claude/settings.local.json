@@ -6,7 +6,16 @@
       "Bash(mvn spring-boot:run -pl src/demo)",
       "Bash(curl:*)",
       "Bash(netstat -ano)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(grep -E \"\\\\.\\(java|kt\\)$\")",
+      "Bash(xargs grep:*)",
+      "Bash(./mvnw spring-boot:run -pl src/demo)",
+      "Bash(ls D:/Dev/myCQRS/mvnw*)",
+      "Bash(ls D:/Dev/myCQRS/*.cmd)",
+      "Bash(mvn clean:*)",
+      "Bash(mvn spring-boot:run -pl src/demo -DskipTests)",
+      "Bash(mvn spring-boot:run -pl src/demo -DskipTests -Dspring-boot.run.arguments=\"--server.port=8081\")",
+      "Bash(bash scripts/smoke-test.sh http://localhost:8081)"
     ]
   }
 }
