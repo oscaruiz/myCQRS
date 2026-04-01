@@ -43,7 +43,7 @@ public class BookAggregate {
         backfillAggregateIdInDomainEvents();
     }
 
-    public void updateIfPresent(String title, String author) {
+    public void update(String title, String author) {
         if (deleted) {
             throw new IllegalStateException("Cannot update a deleted book");
         }
