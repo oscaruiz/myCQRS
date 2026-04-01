@@ -6,13 +6,10 @@ import jakarta.validation.constraints.NotNull;
 
 public class UpdateBookCommand implements Command {
 
-    @NotNull(message = "Book id is required")
     private final Long bookId;
 
-    @NotBlank(message = "Title is required")
     private final String title;
 
-    @NotBlank(message = "Author is required")
     private final String author;
 
     public UpdateBookCommand(Long bookId, String title, String author) {

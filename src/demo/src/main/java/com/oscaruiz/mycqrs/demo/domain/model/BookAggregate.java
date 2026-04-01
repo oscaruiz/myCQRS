@@ -48,22 +48,15 @@ public class BookAggregate {
             throw new IllegalStateException("Cannot update a deleted book");
         }
 
-        String nextTitle = this.title;
-        String nextAuthor = this.author;
+        requireNonBlank(title, "title");
+        requireNonBlank(author, "author");
 
-        if (title != null && !title.isBlank()) {
-            nextTitle = title;
-        }
-        if (author != null && !author.isBlank()) {
-            nextAuthor = author;
-        }
-
-        if (nextTitle.equals(this.title) && nextAuthor.equals(this.author)) {
+        if (this.title.equals(title) && this.author.equals(author)) {
             return;
         }
 
-        this.title = nextTitle;
-        this.author = nextAuthor;
+        this.title = title;
+        this.author = author;
 
         if (id == null) {
             throw new IllegalStateException("Cannot emit update event without aggregate id");
