@@ -3,6 +3,7 @@
 ![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
 ![Spring Boot 3.2.5](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
 ![Maven](https://img.shields.io/badge/Build-Maven-C71A36?logo=apachemaven&logoColor=white)
+![CI](https://github.com/oscaruiz/myCQRS/actions/workflows/ci.yml/badge.svg)
 
 ## Purpose
 
