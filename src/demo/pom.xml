@@ -78,6 +78,7 @@
     </dependencies>
 
     <build>
+        <finalName>mycqrs-demo</finalName>
         <plugins>
             <!-- Plugin Spring Boot -->
             <plugin>
