@@ -43,6 +43,38 @@ The write path in the demo is:
 
 Query handling is separate and goes through `QueryBus` and query handlers.
 
+## Running the application
+
+The project uses Spring Profiles to separate configuration by environment.
+
+**Dev (local):**
+
+```bash
+mvn spring-boot:run -pl src/demo
+```
+
+No flags needed — `application.yml` defaults to `profiles.active: dev`, which connects to local PostgreSQL and MongoDB.
+
+**Test:**
+
+```bash
+mvn test
+```
+
+Integration tests automatically use the `test` profile via `@ActiveProfiles("test")`. This profile uses H2 in-memory and excludes MongoDB.
+
+**Prod:**
+
+```bash
+SPRING_PROFILES_ACTIVE=prod java -jar mycqrs.jar
+```
+
+Or with a JVM flag:
+
+```bash
+java -Dspring.profiles.active=prod -jar mycqrs.jar
+```
+
 ## Current limitations
 
 Current known limitations are:

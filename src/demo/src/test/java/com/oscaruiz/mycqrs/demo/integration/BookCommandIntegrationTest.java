@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,14 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = BookCommandIntegrationTest.TestConfig.class)
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:h2:mem:command-tests;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
-        "spring.datasource.driverClassName=org.h2.Driver",
-        "spring.datasource.username=sa",
-        "spring.datasource.password=",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.jpa.show-sql=false"
-})
+@ActiveProfiles("test")
 class BookCommandIntegrationTest {
 
     @Autowired
@@ -141,7 +134,10 @@ class BookCommandIntegrationTest {
             "com.oscaruiz.mycqrs.demo.application",
             "com.oscaruiz.mycqrs.demo.domain",
             "com.oscaruiz.mycqrs.demo.infrastructure"
-    })
+    }, excludeFilters = @ComponentScan.Filter(
+            type = org.springframework.context.annotation.FilterType.REGEX,
+            pattern = "com\\.oscaruiz\\.mycqrs\\.demo\\.infrastructure\\.mongo\\..*"
+    ))
     @EnableJpaRepositories(basePackages = "com.oscaruiz.mycqrs.demo.infrastructure.jpa")
     @EntityScan(basePackageClasses = BookEntity.class)
     @Import(TestEventsConfig.class)
