@@ -1,0 +1,17 @@
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: mycqrs_read
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mycqrsdb
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
