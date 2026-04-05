@@ -9,11 +9,10 @@ public interface CommandInterceptor {
      *
      * @param command the command being sent
      * @param next function to invoke the actual handler
-     * @return the result of the command handler
      */
-    Object intercept(Command command, CommandHandlerInvoker next);
+    void intercept(Command command, CommandHandlerInvoker next);
 
     interface CommandHandlerInvoker {
-        Object invoke(Command command);
+        void invoke(Command command);
     }
 }

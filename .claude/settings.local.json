@@ -22,7 +22,9 @@
       "Bash(mvn dependency:tree)",
       "Bash(mvn dependency:tree -pl src/core)",
       "Bash(grep -E \"^\\\\[INFO\\\\] [|+ \\\\\\\\\\\\\\\\]\")",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(mvn compile:*)",
+      "Bash(./mvnw compile:*)"
     ]
   }
 }

@@ -16,7 +16,7 @@ public class ValidationCommandInterceptor implements CommandInterceptor {
     }
 
     @Override
-    public Object intercept(Command command, CommandHandlerInvoker next) {
+    public void intercept(Command command, CommandHandlerInvoker next) {
         Set<ConstraintViolation<Command>> violations = validator.validate(command);
         if (!violations.isEmpty()) {
             StringBuilder sb = new StringBuilder("Validation failed: ");
@@ -26,6 +26,6 @@ public class ValidationCommandInterceptor implements CommandInterceptor {
             throw new IllegalArgumentException(sb.toString());
         }
 
-        return next.invoke(command);
+        next.invoke(command);
     }
 }

@@ -6,12 +6,10 @@ import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
 
 @RestController
 @RequestMapping("/books")
@@ -39,16 +37,9 @@ public class BookController {
 
     @PostMapping
     public ResponseEntity<Void> createBook(@Valid @RequestBody CreateBookRequest request) {
-
-        String bookId = commandBus.send(request.toCommand());
-
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(bookId)
-                .toUri();
-
-        return ResponseEntity.created(location).build();
+        // TO-DO - Implement Location header with UUID logic
+        commandBus.send(request.toCommand());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("/{id}")
