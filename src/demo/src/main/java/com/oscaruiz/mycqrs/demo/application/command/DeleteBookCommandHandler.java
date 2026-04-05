@@ -7,7 +7,7 @@ import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 
 @CommandHandlerComponent
-public class DeleteBookCommandHandler implements CommandHandler<DeleteBookCommand, Void> {
+public class DeleteBookCommandHandler implements CommandHandler<DeleteBookCommand> {
 
     private final BookRepository bookRepository;
     private final EventBus eventBus;
@@ -18,13 +18,12 @@ public class DeleteBookCommandHandler implements CommandHandler<DeleteBookComman
     }
 
     @Override
-    public Void handle(DeleteBookCommand command) {
+    public void handle(DeleteBookCommand command) {
         BookAggregate aggregate = bookRepository.load(command.getBookId());
         aggregate.delete();
         BookAggregate saved = bookRepository.save(aggregate);
 
         saved.pullDomainEvents().forEach(eventBus::publish);
 
-        return null;
     }
 }

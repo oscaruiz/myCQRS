@@ -13,14 +13,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class SimpleCommandBus implements CommandBus {
 
-    private final Map<Class<? extends Command>, CommandHandler<?, ?>> handlers = new ConcurrentHashMap<>();
+    private final Map<Class<? extends Command>, CommandHandler<?>> handlers = new ConcurrentHashMap<>();
     private final List<CommandInterceptor> interceptors = new CopyOnWriteArrayList<>();
 
     @Override
-    public <CommandType extends Command, ReturnType> ReturnType send(CommandType command) {
+    public <CommandType extends Command> void send(CommandType command) {
         @SuppressWarnings("unchecked")
-        CommandHandler<CommandType, ReturnType> handler =
-                (CommandHandler<CommandType, ReturnType>) handlers.get(command.getClass());
+        CommandHandler<CommandType> handler =
+                (CommandHandler<CommandType>) handlers.get(command.getClass());
 
         if (handler == null) {
             throw new IllegalArgumentException("No handler registered for command type: " + command.getClass().getName());
@@ -30,11 +30,10 @@ public class SimpleCommandBus implements CommandBus {
         CommandInterceptor.CommandHandlerInvoker invoker = cmd -> handler.handle(command);
 
         // Wrap with interceptors
-        Object result = applyInterceptors(command, invoker);
-        return (ReturnType) result;
+        applyInterceptors(command, invoker);
     }
 
-    private Object applyInterceptors(Command command, CommandInterceptor.CommandHandlerInvoker target) {
+    private void applyInterceptors(Command command, CommandInterceptor.CommandHandlerInvoker target) {
         CommandInterceptor.CommandHandlerInvoker chain = target;
 
         for (int i = interceptors.size() - 1; i >= 0; i--) {
@@ -43,13 +42,13 @@ public class SimpleCommandBus implements CommandBus {
             chain = cmd -> interceptor.intercept(cmd, next);
         }
 
-        return chain.invoke(command);
+        chain.invoke(command);
     }
 
     @Override
-    public <CommandType extends Command, ReturnType> void registerHandler(
+    public <CommandType extends Command> void registerHandler(
             Class<CommandType> commandType,
-            CommandHandler<CommandType, ReturnType> handler
+            CommandHandler<CommandType> handler
     ) {
         if (handlers.containsKey(commandType)) {
             throw new IllegalStateException("Handler already registered for command type: " + commandType.getName());

@@ -27,21 +27,19 @@ public class CommandHandlerBeanPostProcessor implements BeanPostProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        if (!(bean instanceof CommandHandler<?, ?>)) {
+        if (!(bean instanceof CommandHandler<?>)) {
             return bean;
         }
 
         ResolvableType resolvableType = ResolvableType.forClass(bean.getClass()).as(CommandHandler.class);
 
-        // TODO REVIEW
         Class<?> genericCommandType = resolvableType.getGeneric(0).resolve();
-        Class<?> genericReturnType = resolvableType.getGeneric(1).resolve();
 
         if (genericCommandType == null || !Command.class.isAssignableFrom(genericCommandType)) {
             return bean;
         }
 
-        registerHandler(genericCommandType, (CommandHandler<?, ?>) bean);
+        registerHandler(genericCommandType, (CommandHandler<?>) bean);
 
         return bean;
     }
@@ -49,10 +47,10 @@ public class CommandHandlerBeanPostProcessor implements BeanPostProcessor {
     @SuppressWarnings("unchecked")
     private <C extends Command, R> void registerHandler(
             Class<?> commandTypeRaw,
-            CommandHandler<?, ?> handlerRaw
+            CommandHandler<?> handlerRaw
     ) {
         Class<C> commandType = (Class<C>) commandTypeRaw;
-        CommandHandler<C, R> handler = (CommandHandler<C, R>) handlerRaw;
+        CommandHandler<C> handler = (CommandHandler<C>) handlerRaw;
 
         commandBus.registerHandler(commandType, handler);
         log.info("Registered handler for command: {}", commandType.getSimpleName());

@@ -9,10 +9,9 @@ public interface CommandBus {
      *
      * @param command the command to send
      * @param <CommandType> the type of the command
-     * @param <ReturnType> the expected result type
      * @return the result from the command handler
      */
-    <CommandType extends Command, ReturnType> ReturnType send(CommandType command);
+    <CommandType extends Command> void send(CommandType command);
 
     /**
      * Registers a command handler for a specific command type.
@@ -20,10 +19,9 @@ public interface CommandBus {
      * @param commandType the class of the command
      * @param handler the handler to execute for this command
      * @param <CommandType> the command type
-     * @param <ReturnType> the result type
      */
-    <CommandType extends Command, ReturnType> void registerHandler(
+    <CommandType extends Command> void registerHandler(
             Class<CommandType> commandType,
-            CommandHandler<CommandType, ReturnType> handler
+            CommandHandler<CommandType> handler
     );
 }
