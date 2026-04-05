@@ -5,7 +5,18 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
+
+LABEL org.opencontainers.image.source="https://github.com/oscaruiz/myCQRS" \
+      org.opencontainers.image.description="myCQRS demo application" \
+      org.opencontainers.image.licenses="GPL-3.0"
+
+RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=build /app/src/demo/target/mycqrs-demo.jar app.jar
+RUN chown app:app app.jar
+
+USER app
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -23,98 +23,14 @@ The layering follows a hexagonal style:
 - Application: command/query/event handlers.
 - Infrastructure: API and persistence/projection adapters.
 
-## Module structure
-
-This is a multi-module Maven project:
-
-- `src/core`: reusable CQRS abstractions and in-memory bus infrastructure.
-- `src/demo`: runnable sample application built on top of `core`.
-
-## Command execution flow
-
-The write path in the demo is:
-
-1. REST endpoint receives a command request.
-2. Request is dispatched through `CommandBus`.
-3. Command handler creates/loads `BookAggregate` and executes domain behavior.
-4. Aggregate records domain events.
-5. Aggregate state is persisted.
-6. Emitted events are published through `EventBus`.
-7. Event handlers update read projections and audit storage.
-
-Query handling is separate and goes through `QueryBus` and query handlers.
-
-## Running the application
-
-The project uses Spring Profiles to separate configuration by environment.
-
-**Dev (local):**
-
-```bash
-mvn spring-boot:run -pl src/demo
-```
-
-No flags needed — `application.yml` defaults to `profiles.active: dev`, which connects to local PostgreSQL and MongoDB.
-
-**Test:**
-
-```bash
-mvn test
-```
-
-Integration tests automatically use the `test` profile via `@ActiveProfiles("test")`. This profile uses H2 in-memory and excludes MongoDB.
-
-**Prod:**
-
-```bash
-SPRING_PROFILES_ACTIVE=prod java -jar mycqrs.jar
-```
-
-Or with a JVM flag:
-
-```bash
-java -Dspring.profiles.active=prod -jar mycqrs.jar
-```
-
-## Current limitations
-
-Current known limitations are:
-
-- Event dispatch is synchronous and in-memory.
-- There is no outbox/transactional handoff for durable event publication.
-- Delete projection coverage is partial.
-- Some components still contain TODO or placeholder logic.
-- Infrastructure logging still uses direct standard output in parts of the core.
-
-## Testing approach
-
-Tests focus on behavior across layers:
-
-- Integration tests with Spring Boot and H2 for command-side flows.
-- A smoke integration test for command-to-query behavior.
-- Domain tests for aggregate invariants and domain event recording.
-- Query handler tests for read-side lookup behavior.
-
-## Future improvements
-
-Planned improvements include:
-
-- Asynchronous event dispatch.
-- Durable publication strategy (for example, outbox pattern).
-- Full delete projection support for read and audit models.
-- Cleanup of placeholder handlers and pending TODO items.
-- Logging and test layout cleanup.
-
-## Architecture Overview
-
-###  Hexagonal + CQRS + DDD Flow
+### Hexagonal + CQRS + DDD Flow
 
       HEXAGONAL MAP + CQRS + DDD
 
-                                  ┌──────────────────────────────┐
-                                  │           CLIENT             │
-                                  │     (HTTP / REST Call)       │
-                                  └──────────────┬───────────────┘
+                                  ┌──────────────────────────────────┐
+                                  │           CLIENT                 │
+                                  │     (HTTP / REST Call)           │
+                                  └──────────────┬───────────────────┘
                                                  │
                                                  ▼
                               ┌───────────────────────────────────┐
@@ -173,9 +89,7 @@ Planned improvements include:
                                   │  POSTGRES DB  │
                                   └───────────────┘
 
-------------------------------------------------------------------------
-
-###  Event Flow (CQRS Side)
+### Event Flow (CQRS Side)
 
     Aggregate.recordEvent(...)
               │
@@ -191,8 +105,87 @@ Planned improvements include:
               ▼
     Mongo / InMemory / Query Model
 
-------------------------------------------------------------------------
+## Module structure
 
+This is a multi-module Maven project:
+
+- `src/core`: reusable CQRS abstractions and in-memory bus infrastructure.
+- `src/demo`: runnable sample application built on top of `core`.
+
+## Command execution flow
+
+The write path in the demo is:
+
+1. REST endpoint receives a command request.
+2. Request is dispatched through `CommandBus`.
+3. Command handler creates/loads `BookAggregate` and executes domain behavior.
+4. Aggregate records domain events.
+5. Aggregate state is persisted.
+6. Emitted events are published through `EventBus`.
+7. Event handlers update read projections and audit storage.
+
+Query handling is separate and goes through `QueryBus` and query handlers.
+
+## Running the application
+
+The project uses Spring Profiles to separate configuration by environment.
+
+**Dev (local):**
+
+```bash
+./mvnw spring-boot:run -pl src/demo
+```
+
+No flags needed — `application.yml` defaults to `profiles.active: dev`, which connects to local PostgreSQL and MongoDB.
+
+**Test:**
+
+```bash
+./mvnw test
+```
+
+Integration tests automatically use the `test` profile via `@ActiveProfiles("test")`. This profile uses H2 in-memory and excludes MongoDB.
+
+**Prod:**
+
+```bash
+SPRING_PROFILES_ACTIVE=prod java -jar mycqrs.jar
+```
+
+Or with a JVM flag:
+
+```bash
+java -Dspring.profiles.active=prod -jar mycqrs.jar
+```
+
+## Current limitations
+
+Current known limitations are:
+
+- Event dispatch is synchronous and in-memory.
+- There is no outbox/transactional handoff for durable event publication.
+- Delete projection coverage is partial.
+- Some components still contain TODO or placeholder logic.
+- Infrastructure logging still uses direct standard output in parts of the core.
+
+## Testing approach
+
+Tests focus on behavior across layers:
+
+- Integration tests with Spring Boot and H2 for command-side flows.
+- A smoke integration test for command-to-query behavior.
+- Domain tests for aggregate invariants and domain event recording.
+- Query handler tests for read-side lookup behavior.
+
+## Future improvements
+
+Planned improvements include:
+
+- Asynchronous event dispatch.
+- Durable publication strategy (for example, outbox pattern).
+- Full delete projection support for read and audit models.
+- Cleanup of placeholder handlers and pending TODO items.
+- Logging and test layout cleanup.
 
 ## License
 

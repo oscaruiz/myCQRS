@@ -1,6 +1,16 @@
 **/target/
 .git
+.github
 .idea
+.claude
+.mvn
 *.iml
-README.md
+*.md
+.editorconfig
+.gitignore
+.dockerignore
+Dockerfile
+scripts
+mvnw
+mvnw.cmd
 LICENSE

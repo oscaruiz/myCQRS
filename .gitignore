@@ -50,3 +50,9 @@ Thumbs.db
 # Generated files
 generated/
 build/
+
+# Claude Code
+.claude/
+
+# Maven wrapper jar (properties file is tracked, jar is downloaded)
+.mvn/wrapper/maven-wrapper.jar

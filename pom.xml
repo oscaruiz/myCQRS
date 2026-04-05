@@ -18,12 +18,76 @@
     <packaging>pom</packaging>
 
     <name>mycqrs-parent</name>
+    <description>Custom CQRS infrastructure built from scratch with Spring Boot, exploring DDD and hexagonal architecture</description>
+    <url>https://github.com/oscaruiz/myCQRS</url>
+
+    <scm>
+        <connection>scm:git:git://github.com/oscaruiz/myCQRS.git</connection>
+        <developerConnection>scm:git:ssh://github.com:oscaruiz/myCQRS.git</developerConnection>
+        <url>https://github.com/oscaruiz/myCQRS</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>oscaruiz</id>
+            <name>Oscar Ruiz</name>
+            <url>https://github.com/oscaruiz</url>
+        </developer>
+    </developers>
 
     <properties>
         <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
+        <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
     </properties>
+
     <modules>
         <module>src/core</module>
         <module>src/demo</module>
     </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven-failsafe-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven-enforcer-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.8.0</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>21</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
