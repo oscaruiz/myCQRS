@@ -1,75 +1,75 @@
-# Demo - Guia de desarrollo
+# Demo - Development Guide
 
-## Requisitos previos
+## Prerequisites
 
-- Docker y Docker Compose
+- Docker and Docker Compose
 - Make
 - Java 17+
 
 ## Makefile
 
-Todos los comandos se ejecutan desde `src/demo/`.
+All commands are run from `src/demo/`.
 
-| Comando          | Descripcion                                      |
+| Command          | Description                                      |
 |------------------|--------------------------------------------------|
-| `make db-up`     | Levanta los contenedores de PostgreSQL y MongoDB  |
-| `make db-down`   | Detiene y elimina los contenedores                |
-| `make db-status` | Muestra el estado de los contenedores             |
-| `make db-pg`     | Abre una consola `psql` dentro de PostgreSQL      |
-| `make db-mongo`  | Abre una consola `mongosh` dentro de MongoDB      |
+| `make db-up`     | Start PostgreSQL and MongoDB containers           |
+| `make db-down`   | Stop and remove the containers                    |
+| `make db-status` | Show container status                             |
+| `make db-pg`     | Open a `psql` console inside PostgreSQL           |
+| `make db-mongo`  | Open a `mongosh` console inside MongoDB           |
 
-## Bases de datos
+## Databases
 
-El proyecto usa dos bases de datos siguiendo el patron CQRS:
+The project uses two databases following the CQRS pattern:
 
-- **PostgreSQL 15** (write side) - puerto `5432`
-- **MongoDB 7** (read side) - puerto `27017`
+- **PostgreSQL 15** (write side) - port `5432`
+- **MongoDB 7** (read side) - port `27017`
 
-### Levantar las bases de datos
+### Start the databases
 
 ```bash
 make db-up
 ```
 
-Verifica que esten corriendo:
+Verify they are running:
 
 ```bash
 make db-status
 ```
 
-### Conectarse a PostgreSQL
+### Connect to PostgreSQL
 
 ```bash
 # Via Makefile
 make db-pg
 
-# Manualmente
+# Manually
 docker exec -it mycqrs-postgres psql -U postgres -d mycqrsdb
 ```
 
-Credenciales:
+Credentials:
 
-| Campo    | Valor      |
+| Field    | Value      |
 |----------|------------|
 | Host     | localhost  |
-| Puerto   | 5432       |
-| Base     | mycqrsdb   |
-| Usuario  | postgres   |
+| Port     | 5432       |
+| Database | mycqrsdb   |
+| User     | postgres   |
 | Password | password   |
 
-### Conectarse a MongoDB
+### Connect to MongoDB
 
 ```bash
 # Via Makefile
 make db-mongo
 
-# Manualmente
+# Manually
 docker exec -it mycqrs-mongo mongosh
 ```
 
-La base de datos de lectura es `mycqrs_read` (se crea automaticamente al arrancar la app).
+The read database is `mycqrs_read` (created automatically when the app starts).
 
-### Detener las bases de datos
+### Stop the databases
 
 ```bash
 make db-down
