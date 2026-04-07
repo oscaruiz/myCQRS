@@ -47,11 +47,9 @@ public class SimpleCommandBus implements CommandBus {
         Class<CommandType> commandType,
         CommandHandler<CommandType> handler
     ) {
-        if (handlers.containsKey(commandType)) {
+        if (handlers.putIfAbsent(commandType, handler) != null) {
             throw new DuplicateCommandHandlerException(commandType);
         }
-
-        handlers.put(commandType, handler);
     }
 
     /**
