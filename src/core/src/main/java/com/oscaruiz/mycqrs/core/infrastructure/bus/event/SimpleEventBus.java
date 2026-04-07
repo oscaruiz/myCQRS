@@ -26,9 +26,15 @@ public class SimpleEventBus implements EventBus {
         CopyOnWriteArrayList<EventHandler<? extends Event>> eventHandlers = handlers.get(event.getClass());
         if (eventHandlers != null) {
             for (EventHandler<? extends Event> handler : eventHandlers) {
-                @SuppressWarnings("unchecked")
-                EventHandler<T> typedHandler = (EventHandler<T>) handler;
-                typedHandler.handle(event);
+                try {
+                    @SuppressWarnings("unchecked")
+                    EventHandler<T> typedHandler = (EventHandler<T>) handler;
+                    typedHandler.handle(event);
+                } catch (Exception e) {
+                    log.error("Event handler {} failed for event {}. Continuing with remaining handlers.",
+                        handler.getClass().getSimpleName(), event.getClass().getSimpleName(), e);
+                    // TODO: dead-letter / retry strategy
+                }
             }
         }
     }
