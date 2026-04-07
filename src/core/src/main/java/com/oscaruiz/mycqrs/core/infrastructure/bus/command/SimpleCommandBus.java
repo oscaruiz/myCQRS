@@ -1,10 +1,10 @@
 package com.oscaruiz.mycqrs.core.infrastructure.bus.command;
-import com.oscaruiz.mycqrs.core.domain.command.Command;
-import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
-import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
-import com.oscaruiz.mycqrs.core.domain.command.CommandInterceptor;
+
+import com.oscaruiz.mycqrs.core.domain.command.*;
+
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -19,12 +19,9 @@ public class SimpleCommandBus implements CommandBus {
     @Override
     public <CommandType extends Command> void send(CommandType command) {
         @SuppressWarnings("unchecked")
-        CommandHandler<CommandType> handler =
-                (CommandHandler<CommandType>) handlers.get(command.getClass());
-
-        if (handler == null) {
-            throw new IllegalArgumentException("No handler registered for command type: " + command.getClass().getName());
-        }
+        CommandHandler<CommandType> handler = (CommandHandler<CommandType>) Optional
+            .ofNullable(handlers.get(command.getClass()))
+            .orElseThrow(() -> new CommandHandlerNotFoundException(command.getClass()));
 
         // Define the core handler invocation
         CommandInterceptor.CommandHandlerInvoker invoker = cmd -> handler.handle(command);
@@ -47,11 +44,11 @@ public class SimpleCommandBus implements CommandBus {
 
     @Override
     public <CommandType extends Command> void registerHandler(
-            Class<CommandType> commandType,
-            CommandHandler<CommandType> handler
+        Class<CommandType> commandType,
+        CommandHandler<CommandType> handler
     ) {
         if (handlers.containsKey(commandType)) {
-            throw new IllegalStateException("Handler already registered for command type: " + commandType.getName());
+            throw new DuplicateCommandHandlerException(commandType);
         }
 
         handlers.put(commandType, handler);
