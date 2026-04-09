@@ -24,7 +24,8 @@ public class SimpleCommandBus implements CommandBus {
             .orElseThrow(() -> new CommandHandlerNotFoundException(command.getClass()));
 
         // Define the core handler invocation
-        CommandInterceptor.CommandHandlerInvoker invoker = cmd -> handler.handle(command);
+        @SuppressWarnings("unchecked")
+        CommandInterceptor.CommandHandlerInvoker invoker = cmd -> handler.handle((CommandType) cmd);
 
         // Wrap with interceptors
         applyInterceptors(command, invoker);

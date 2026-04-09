@@ -7,6 +7,10 @@ import com.oscaruiz.mycqrs.core.domain.command.DuplicateCommandHandlerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -75,16 +79,65 @@ class SimpleCommandBusTest {
     static class TestException extends RuntimeException {
     }
 
+    @Test
+    void interceptor_can_modify_command_before_handler_receives_it() {
+        FakeCommandHandler handler = new FakeCommandHandler();
+        bus.registerHandler(FakeCommand.class, handler);
+
+        bus.addInterceptor((command, next) -> {
+            FakeCommand original = (FakeCommand) command;
+            FakeCommand modified = new FakeCommand(original.value() + "-modified");
+            next.invoke(modified);
+        });
+
+        bus.send(new FakeCommand("original"));
+
+        assertThat(handler.received.value()).isEqualTo("original-modified");
+    }
+
+    @Test
+    void interceptors_execute_in_registration_order() {
+        FakeCommandHandler handler = new FakeCommandHandler();
+        bus.registerHandler(FakeCommand.class, handler);
+
+        List<String> markers = new ArrayList<>();
+
+        bus.addInterceptor((command, next) -> {
+            markers.add("first-before");
+            next.invoke(command);
+            markers.add("first-after");
+        });
+
+        bus.addInterceptor((command, next) -> {
+            markers.add("second-before");
+            next.invoke(command);
+            markers.add("second-after");
+        });
+
+        bus.send(new FakeCommand());
+
+        assertThat(markers).containsExactly(
+            "first-before", "second-before", "second-after", "first-after"
+        );
+    }
+
     static class FakeCommand implements Command {
+        private final String value;
+
+        FakeCommand() { this(null); }
+        FakeCommand(String value) { this.value = value; }
+        String value() { return value; }
     }
 
     static class FakeCommandHandler implements CommandHandler<FakeCommand> {
 
         boolean wasExecuted = false;
+        FakeCommand received;
 
         @Override
         public void handle(FakeCommand command) {
             wasExecuted = true;
+            received = command;
         }
     }
 }
