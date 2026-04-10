@@ -1,16 +1,10 @@
 package com.oscaruiz.mycqrs.demo.domain.event;
 
-import com.oscaruiz.mycqrs.core.domain.event.Event;
+import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 
-public class BookDeletedEvent implements Event {
-
-    private final String aggregateId;
+public class BookDeletedEvent extends DomainEvent {
 
     public BookDeletedEvent(String aggregateId) {
-        this.aggregateId = aggregateId;
-    }
-
-    public String getAggregateId() {
-        return aggregateId;
+        super(aggregateId);
     }
 }

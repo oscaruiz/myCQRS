@@ -1,21 +1,16 @@
 package com.oscaruiz.mycqrs.demo.domain.event;
 
-import com.oscaruiz.mycqrs.core.domain.event.Event;
+import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 
-public class BookUpdatedEvent implements Event {
+public class BookUpdatedEvent extends DomainEvent {
 
-    private final String aggregateId;
     private final String title;
     private final String author;
 
     public BookUpdatedEvent(String aggregateId, String title, String author) {
-        this.aggregateId = aggregateId;
+        super(aggregateId);
         this.title = title;
         this.author = author;
-    }
-
-    public String getAggregateId() {
-        return aggregateId;
     }
 
     public String getTitle() {
