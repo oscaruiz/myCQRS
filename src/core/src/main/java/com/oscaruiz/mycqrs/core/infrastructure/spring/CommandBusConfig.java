@@ -7,6 +7,7 @@ import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
 import jakarta.validation.Validator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
@@ -25,9 +26,14 @@ public class CommandBusConfig {
     }
 
     @Bean
-    public CommandBus commandBus(Validator validator) {
+    public CommandBus commandBus(Validator validator, PlatformTransactionManager transactionManager) {
         var bus = new SimpleCommandBus();
+        // Registration order == execution order: SimpleCommandBus.applyInterceptors
+        // wraps the chain from last to first, so the first registered interceptor
+        // ends up as the outermost wrapper. We want validation (cheap) before the
+        // transaction (expensive resource) so it is registered first.
         bus.addInterceptor(new ValidationCommandInterceptor(validator));
+        bus.addInterceptor(new TransactionalCommandInterceptor(transactionManager));
         return bus;
     }
 
