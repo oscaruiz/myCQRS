@@ -1,8 +1,8 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
-import com.oscaruiz.mycqrs.core.domain.command.Command;
-import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
-import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
+import com.oscaruiz.mycqrs.core.contracts.command.Command;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;

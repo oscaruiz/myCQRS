@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.domain.query;
+package com.oscaruiz.mycqrs.core.contracts.query;
 
 public interface QueryBus {
     <R, Q extends Query<R>> R handle(Q query);

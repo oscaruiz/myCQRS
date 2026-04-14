@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.domain.command;
+package com.oscaruiz.mycqrs.core.contracts.command;
 
 /**
  * Thrown when a command is dispatched through the {@link CommandBus} but no

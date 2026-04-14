@@ -1,8 +1,8 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
-import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.command.SimpleCommandBus;
-import com.oscaruiz.mycqrs.core.domain.event.EventBus;
+import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
 import jakarta.validation.Validator;
 import org.springframework.context.annotation.Bean;

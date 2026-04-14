@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.domain.command;
+package com.oscaruiz.mycqrs.core.contracts.command;
 /**
  * Generic interface for handling commands.
  *

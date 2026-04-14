@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.core.infrastructure.bus.event;
-import com.oscaruiz.mycqrs.core.domain.event.Event;
-import com.oscaruiz.mycqrs.core.domain.event.EventBus;
-import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+import com.oscaruiz.mycqrs.core.contracts.event.Event;
+import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
+import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

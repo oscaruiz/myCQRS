@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.core.infrastructure.bus.event;
 
-import com.oscaruiz.mycqrs.core.domain.event.Event;
-import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+import com.oscaruiz.mycqrs.core.contracts.event.Event;
+import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

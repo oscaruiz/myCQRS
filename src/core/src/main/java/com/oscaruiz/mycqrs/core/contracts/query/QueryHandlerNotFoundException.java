@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.domain.query;
+package com.oscaruiz.mycqrs.core.contracts.query;
 
 /**
  * Thrown when a query is dispatched through the {@link QueryBus} but no

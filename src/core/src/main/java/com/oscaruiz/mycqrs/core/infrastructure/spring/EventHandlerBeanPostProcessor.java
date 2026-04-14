@@ -1,8 +1,8 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
-import com.oscaruiz.mycqrs.core.domain.event.Event;
-import com.oscaruiz.mycqrs.core.domain.event.EventBus;
-import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+import com.oscaruiz.mycqrs.core.contracts.event.Event;
+import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
+import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
