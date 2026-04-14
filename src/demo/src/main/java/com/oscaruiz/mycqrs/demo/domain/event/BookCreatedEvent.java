@@ -19,4 +19,10 @@ public class BookCreatedEvent extends DomainEvent {
     public String getAuthor() {
         return author;
     }
+
+    public void bindTo(Long aggregateId) {
+        if (getAggregateId() == null || getAggregateId().isBlank()) {
+            setAggregateId(String.valueOf(aggregateId));
+        }
+    }
 }
