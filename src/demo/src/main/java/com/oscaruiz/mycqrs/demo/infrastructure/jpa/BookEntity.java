@@ -1,16 +1,15 @@
 package com.oscaruiz.mycqrs.demo.infrastructure.jpa;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+
+import java.util.UUID;
 
 @Entity
 public class BookEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     private String title;
     private String author;
@@ -20,7 +19,8 @@ public class BookEntity {
         // for JPA
     }
 
-    public BookEntity(String title, String author, boolean deleted) {
+    public BookEntity(UUID id, String title, String author, boolean deleted) {
+        this.id = id;
         this.title = title;
         this.author = author;
         this.deleted = deleted;
@@ -32,7 +32,7 @@ public class BookEntity {
         this.deleted = deleted;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

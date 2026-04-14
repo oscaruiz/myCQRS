@@ -12,7 +12,7 @@ public record UpdateBookRequest(
         String author
 
 ) {
-    public UpdateBookCommand toCommand(Long id) {
+    public UpdateBookCommand toCommand(String id) {
         return new UpdateBookCommand(id, title, author);
     }
 }

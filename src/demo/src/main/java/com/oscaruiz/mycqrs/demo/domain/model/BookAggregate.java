@@ -21,13 +21,15 @@ public class BookAggregate extends AggregateRoot<String> {
         this.deleted = deleted;
     }
 
-    public static BookAggregate create(String title, String author) {
+    public static BookAggregate create(String id, String title, String author) {
 
+        requireNonBlank(id, "id");
         requireNonBlank(title, "title");
         requireNonBlank(author, "author");
+        UUID.fromString(id);
 
-        BookAggregate aggregate = new BookAggregate(UUID.randomUUID().toString(), title, author, false);
-        aggregate.recordEvent(new BookCreatedEvent(aggregate.id, title, author));
+        BookAggregate aggregate = new BookAggregate(id, title, author, false);
+        aggregate.recordEvent(new BookCreatedEvent(id, title, author));
 
         return aggregate;
     }

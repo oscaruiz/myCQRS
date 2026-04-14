@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/books")
 public class BookController {
@@ -24,8 +26,8 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookResponse> getBookById(@PathVariable String id) {
-        Book book = queryBus.handle(new FindBookByIdQuery(id));
+    public ResponseEntity<BookResponse> getBookById(@PathVariable UUID id) {
+        Book book = queryBus.handle(new FindBookByIdQuery(id.toString()));
         return ResponseEntity.ok(BookResponse.from(book));
     }
 
@@ -35,22 +37,23 @@ public class BookController {
         return ResponseEntity.ok(bookResponse );
     }
 
-    @PostMapping
-    public ResponseEntity<Void> createBook(@Valid @RequestBody CreateBookRequest request) {
-        // TO-DO - Implement Location header with UUID logic
-        commandBus.send(request.toCommand());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> createBook(@PathVariable UUID id, @Valid @RequestBody CreateBookRequest request) {
+        commandBus.send(request.toCommand(id));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header("Location", "/books/" + id)
+                .build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> updateBook(@PathVariable Long id, @RequestBody UpdateBookRequest request) {
-        commandBus.send(request.toCommand(id));
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateBook(@PathVariable UUID id, @Valid @RequestBody UpdateBookRequest request) {
+        commandBus.send(request.toCommand(id.toString()));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
-        commandBus.send(new DeleteBookCommand(id));
+    public ResponseEntity<Void> deleteBook(@PathVariable UUID id) {
+        commandBus.send(new DeleteBookCommand(id.toString()));
         return ResponseEntity.noContent().build();
     }
 

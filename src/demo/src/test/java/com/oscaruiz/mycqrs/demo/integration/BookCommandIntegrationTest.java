@@ -10,7 +10,6 @@ import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -29,6 +28,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = BookCommandIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-@Disabled("Day 2: persistence migration to native UUID PK")
 class BookCommandIntegrationTest {
 
     @Autowired
@@ -56,74 +55,82 @@ class BookCommandIntegrationTest {
 
     @Test
     void createBookCommandSavesBook() {
-        commandBus.send(new CreateBookCommand("Domain-Driven Design", "Eric Evans"));
+        String id = UUID.randomUUID().toString();
+        commandBus.send(new CreateBookCommand(id, "Domain-Driven Design", "Eric Evans"));
 
         BookAggregate saved = bookRepository.findByTitle("Domain-Driven Design").orElseThrow();
 
+        assertEquals(id, saved.getId());
         assertEquals("Eric Evans", saved.getAuthor());
         assertFalse(saved.isDeleted());
-        assertTrue(Long.parseLong(saved.getId()) > 0);
     }
 
     @Test
     void updateBookCommandEmitsEventAndChangesValues() {
-        commandBus.send(new CreateBookCommand("Refactoring", "Martin Fowler"));
+        String id = UUID.randomUUID().toString();
+        commandBus.send(new CreateBookCommand(id, "Refactoring", "Martin Fowler"));
         BookAggregate existing = bookRepository.findByTitle("Refactoring").orElseThrow();
 
-        commandBus.send(new UpdateBookCommand(Long.parseLong(existing.getId()), "Refactoring 2nd", "Martin Fowler"));
+        commandBus.send(new UpdateBookCommand(existing.getId(), "Refactoring 2nd", "Martin Fowler"));
 
-        BookAggregate updated = bookRepository.load(Long.parseLong(existing.getId()));
+        BookAggregate updated = bookRepository.load(existing.getId());
 
         assertEquals("Refactoring 2nd", updated.getTitle());
         assertEquals(1, updatedEventRecorder.events().size());
-        assertEquals(String.valueOf(existing.getId()), updatedEventRecorder.events().get(0).getAggregateId());
+        assertEquals(existing.getId(), updatedEventRecorder.events().get(0).getAggregateId());
     }
 
     @Test
     void deleteBookCommandMarksAggregateDeleted() {
-        commandBus.send(new CreateBookCommand("Patterns", "GoF"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Patterns", "GoF"));
         BookAggregate existing = bookRepository.findByTitle("Patterns").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(Long.parseLong(existing.getId())));
+        commandBus.send(new DeleteBookCommand(existing.getId()));
 
-        BookAggregate deleted = bookRepository.load(Long.parseLong(existing.getId()));
+        BookAggregate deleted = bookRepository.load(existing.getId());
 
         assertTrue(deleted.isDeleted());
     }
 
     @Test
     void deleteTwiceThrowsException() {
-        commandBus.send(new CreateBookCommand("Effective Java", "Joshua Bloch"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Effective Java", "Joshua Bloch"));
         BookAggregate existing = bookRepository.findByTitle("Effective Java").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(Long.parseLong(existing.getId())));
+        commandBus.send(new DeleteBookCommand(existing.getId()));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new DeleteBookCommand(Long.parseLong(existing.getId()))));
+                () -> commandBus.send(new DeleteBookCommand(existing.getId())));
     }
 
     @Test
     void updateAfterDeleteThrowsException() {
-        commandBus.send(new CreateBookCommand("Clean Architecture", "Robert C. Martin"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Clean Architecture", "Robert C. Martin"));
         BookAggregate existing = bookRepository.findByTitle("Clean Architecture").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(Long.parseLong(existing.getId())));
+        commandBus.send(new DeleteBookCommand(existing.getId()));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new UpdateBookCommand(Long.parseLong(existing.getId()), "Any", "Any")));
+                () -> commandBus.send(new UpdateBookCommand(existing.getId(), "Any", "Any")));
     }
 
 
     @Test
-    void saveWithNonExistingIdOnUpdateThrowsException() {
-        BookAggregate detached = BookAggregate.rehydrate("88888", "Ghost", "Nobody", false);
+    void saveWithDetachedAggregateInsertsNewRow() {
+        String id = UUID.randomUUID().toString();
+        BookAggregate detached = BookAggregate.rehydrate(id, "Ghost", "Nobody", false);
 
-        assertThrows(NoSuchElementException.class, () -> bookRepository.save(detached));
+        bookRepository.save(detached);
+
+        BookAggregate loaded = bookRepository.load(id);
+        assertEquals("Ghost", loaded.getTitle());
+        assertEquals("Nobody", loaded.getAuthor());
     }
 
     @Test
     void loadNonExistingIdThrowsException() {
-        assertThrows(NoSuchElementException.class, () -> bookRepository.load(99999L));
+        assertThrows(NoSuchElementException.class,
+                () -> bookRepository.load(UUID.randomUUID().toString()));
     }
 
     @SpringBootConfiguration

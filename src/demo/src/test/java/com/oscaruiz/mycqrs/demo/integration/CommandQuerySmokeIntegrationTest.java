@@ -18,6 +18,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -33,7 +35,8 @@ class CommandQuerySmokeIntegrationTest {
 
     @Test
     void createCommandThenFindQueryReturnsCreatedBook() {
-        commandBus.send(new CreateBookCommand("Clean Architecture", "Robert C. Martin"));
+        String id = UUID.randomUUID().toString();
+        commandBus.send(new CreateBookCommand(id, "Clean Architecture", "Robert C. Martin"));
 
         Book found = queryBus.handle(new FindBookByTitleQuery("Clean Architecture"));
 

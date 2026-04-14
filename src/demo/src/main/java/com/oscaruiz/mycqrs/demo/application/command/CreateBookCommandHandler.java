@@ -18,13 +18,14 @@ public class CreateBookCommandHandler implements CommandHandler<CreateBookComman
         this.eventBus = eventBus;
     }
 
+    // Identity is known before persistence (client-generated UUID); no post-save rebinding needed.
     @Override
     public void handle(CreateBookCommand command) {
 
-        BookAggregate aggregate = BookAggregate.create(command.getTitle(), command.getAuthor());
-        BookAggregate saved = bookRepository.save(aggregate);
+        BookAggregate aggregate = BookAggregate.create(command.getId(), command.getTitle(), command.getAuthor());
+        bookRepository.save(aggregate);
 
-        saved.pullDomainEvents().forEach(eventBus::publish);
+        aggregate.pullDomainEvents().forEach(eventBus::publish);
 
     }
 }

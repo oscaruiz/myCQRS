@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class JpaBookRepository implements BookRepository {
@@ -18,26 +19,20 @@ public class JpaBookRepository implements BookRepository {
 
     @Override
     public BookAggregate save(BookAggregate bookAggregate) {
-        BookEntity entity;
-        // TODO Day 2: BookEntity PK becomes UUID; this parse-to-Long bridge disappears.
-        Long pk = tryParsePk(bookAggregate.getId());
-
-        if (pk == null) {
-            entity = new BookEntity(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
-        } else {
-            entity = springDataBookRepository.findById(pk)
-                    .orElseThrow(() -> new NoSuchElementException("Book with id " + pk + " was not found"));
-            entity.update(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
-        }
-
+        UUID id = UUID.fromString(bookAggregate.getId());
+        BookEntity entity = springDataBookRepository.findById(id)
+                .map(existing -> {
+                    existing.update(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
+                    return existing;
+                })
+                .orElseGet(() -> new BookEntity(id, bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted()));
         springDataBookRepository.save(entity);
-
         return bookAggregate;
     }
 
     @Override
-    public BookAggregate load(Long id) {
-        BookEntity entity = springDataBookRepository.findById(id)
+    public BookAggregate load(String id) {
+        BookEntity entity = springDataBookRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new NoSuchElementException("Book with id " + id + " was not found"));
         return toAggregate(entity);
     }
@@ -48,16 +43,6 @@ public class JpaBookRepository implements BookRepository {
     }
 
     private BookAggregate toAggregate(BookEntity entity) {
-        // TODO Day 2: entity PK is UUID String; no stringification needed.
-        return BookAggregate.rehydrate(String.valueOf(entity.getId()), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
-    }
-
-    // TODO Day 2: remove — aggregate id and entity PK will both be UUID Strings.
-    private Long tryParsePk(String aggregateId) {
-        try {
-            return Long.valueOf(aggregateId);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return BookAggregate.rehydrate(entity.getId().toString(), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
     }
 }

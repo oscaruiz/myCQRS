@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,15 +16,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class BookAggregateDomainEventsTest {
 
     @Test
-    void createRecordsBookCreatedEventWithValidUuidAggregateId() {
-        BookAggregate aggregate = BookAggregate.create("Clean Code", "Robert C. Martin");
+    void createRecordsBookCreatedEventWithProvidedId() {
+        String id = UUID.randomUUID().toString();
+        BookAggregate aggregate = BookAggregate.create(id, "Clean Code", "Robert C. Martin");
 
         List<DomainEvent> events = aggregate.pullDomainEvents();
 
         assertEquals(1, events.size());
         BookCreatedEvent event = (BookCreatedEvent) events.get(0);
-        assertDoesNotThrow(() -> UUID.fromString(event.getAggregateId()));
-        assertEquals(aggregate.getId(), event.getAggregateId());
+        assertEquals(id, aggregate.getId());
+        assertEquals(id, event.getAggregateId());
         assertEquals("Clean Code", event.getTitle());
         assertEquals("Robert C. Martin", event.getAuthor());
     }
@@ -101,36 +101,49 @@ class BookAggregateDomainEventsTest {
     }
 
     @Test
+    void createThrowsWhenIdIsNull() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> BookAggregate.create(null, "Title", "Author"));
+        assertEquals("id cannot be null or blank", ex.getMessage());
+    }
+
+    @Test
+    void createThrowsWhenIdIsNotAValidUuid() {
+        assertThrows(IllegalArgumentException.class,
+                () -> BookAggregate.create("pepito", "Title", "Author"));
+    }
+
+    @Test
     void createThrowsWhenTitleIsNull() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> BookAggregate.create(null, "Author"));
+                () -> BookAggregate.create(UUID.randomUUID().toString(), null, "Author"));
         assertEquals("title cannot be null or blank", ex.getMessage());
     }
 
     @Test
     void createThrowsWhenTitleIsBlank() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> BookAggregate.create("  ", "Author"));
+                () -> BookAggregate.create(UUID.randomUUID().toString(), "  ", "Author"));
         assertEquals("title cannot be null or blank", ex.getMessage());
     }
 
     @Test
     void createThrowsWhenAuthorIsNull() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> BookAggregate.create("Title", null));
+                () -> BookAggregate.create(UUID.randomUUID().toString(), "Title", null));
         assertEquals("author cannot be null or blank", ex.getMessage());
     }
 
     @Test
     void createThrowsWhenAuthorIsBlank() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> BookAggregate.create("Title", ""));
+                () -> BookAggregate.create(UUID.randomUUID().toString(), "Title", ""));
         assertEquals("author cannot be null or blank", ex.getMessage());
     }
 
     @Test
     void pullDomainEventsClearsRecordedEvents() {
-        BookAggregate aggregate = BookAggregate.create("DDD", "Eric Evans");
+        BookAggregate aggregate = BookAggregate.create(UUID.randomUUID().toString(), "DDD", "Eric Evans");
 
         aggregate.pullDomainEvents();
 
