@@ -15,11 +15,16 @@ public abstract class DomainEvent implements Event {
 
     private final String eventId;
     private final Instant occurredAt;
-    private final String aggregateId;
+    // TODO Week 3: revisit mutability of aggregateId once identity is known at construction time
+    private String aggregateId;
 
     protected DomainEvent(String aggregateId) {
         this.eventId = UUID.randomUUID().toString();
         this.occurredAt = Instant.now();
+        this.aggregateId = aggregateId;
+    }
+
+    protected void setAggregateId(String aggregateId) {
         this.aggregateId = aggregateId;
     }
 

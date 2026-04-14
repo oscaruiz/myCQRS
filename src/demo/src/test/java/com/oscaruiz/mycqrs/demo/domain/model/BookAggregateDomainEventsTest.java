@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.demo.domain.model;
 
-import com.oscaruiz.mycqrs.core.domain.event.Event;
+import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 import com.oscaruiz.mycqrs.demo.domain.event.BookCreatedEvent;
 import com.oscaruiz.mycqrs.demo.domain.event.BookDeletedEvent;
 import com.oscaruiz.mycqrs.demo.domain.event.BookUpdatedEvent;
@@ -19,7 +19,7 @@ class BookAggregateDomainEventsTest {
         BookAggregate aggregate = BookAggregate.create("Clean Code", "Robert C. Martin");
         aggregate.assignId(26L);
 
-        List<Event> events = aggregate.pullDomainEvents();
+        List<DomainEvent> events = aggregate.pullDomainEvents();
 
         assertEquals(1, events.size());
         BookCreatedEvent event = (BookCreatedEvent) events.get(0);
@@ -36,7 +36,7 @@ class BookAggregateDomainEventsTest {
         assertTrue(aggregate.pullDomainEvents().isEmpty());
 
         aggregate.update("New", "Author");
-        List<Event> events = aggregate.pullDomainEvents();
+        List<DomainEvent> events = aggregate.pullDomainEvents();
 
         assertEquals(1, events.size());
         BookUpdatedEvent event = (BookUpdatedEvent) events.get(0);
@@ -89,7 +89,7 @@ class BookAggregateDomainEventsTest {
         BookAggregate aggregate = BookAggregate.rehydrate(15L, "Book", "Author", false);
 
         aggregate.delete();
-        List<Event> events = aggregate.pullDomainEvents();
+        List<DomainEvent> events = aggregate.pullDomainEvents();
 
         assertEquals(1, events.size());
         assertEquals("15", ((BookDeletedEvent) events.get(0)).getAggregateId());
