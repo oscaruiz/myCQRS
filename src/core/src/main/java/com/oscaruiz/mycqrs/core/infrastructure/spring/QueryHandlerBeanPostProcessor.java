@@ -1,8 +1,8 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
-import com.oscaruiz.mycqrs.core.domain.query.Query;
-import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
-import com.oscaruiz.mycqrs.core.domain.query.QueryHandler;
+import com.oscaruiz.mycqrs.core.contracts.query.Query;
+import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
+import com.oscaruiz.mycqrs.core.contracts.query.QueryHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
-import com.oscaruiz.mycqrs.core.domain.command.Command;
-import com.oscaruiz.mycqrs.core.domain.command.CommandInterceptor.CommandHandlerInvoker;
+import com.oscaruiz.mycqrs.core.contracts.command.Command;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandInterceptor.CommandHandlerInvoker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

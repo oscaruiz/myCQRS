@@ -1,9 +1,9 @@
 package com.oscaruiz.mycqrs.core.infrastructure.bus.command;
 
-import com.oscaruiz.mycqrs.core.domain.command.Command;
-import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
-import com.oscaruiz.mycqrs.core.domain.command.CommandHandlerNotFoundException;
-import com.oscaruiz.mycqrs.core.domain.command.DuplicateCommandHandlerException;
+import com.oscaruiz.mycqrs.core.contracts.command.Command;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandHandler;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandHandlerNotFoundException;
+import com.oscaruiz.mycqrs.core.contracts.command.DuplicateCommandHandlerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

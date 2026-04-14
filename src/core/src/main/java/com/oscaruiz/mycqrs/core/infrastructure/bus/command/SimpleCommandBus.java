@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.core.infrastructure.bus.command;
 
-import com.oscaruiz.mycqrs.core.domain.command.*;
+import com.oscaruiz.mycqrs.core.contracts.command.*;
 
 import java.util.List;
 import java.util.Map;

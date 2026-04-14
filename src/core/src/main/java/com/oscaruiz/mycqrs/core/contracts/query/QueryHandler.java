@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.domain.query;
+package com.oscaruiz.mycqrs.core.contracts.query;
 
 @FunctionalInterface
 public interface QueryHandler<Q extends Query<R>, R> {

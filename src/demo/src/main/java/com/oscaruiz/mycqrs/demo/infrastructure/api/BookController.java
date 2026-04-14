@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.demo.infrastructure.api;
 
-import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
-import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
+import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;

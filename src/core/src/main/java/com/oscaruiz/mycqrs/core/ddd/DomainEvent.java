@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.core.ddd;
 
-import com.oscaruiz.mycqrs.core.domain.event.Event;
+import com.oscaruiz.mycqrs.core.contracts.event.Event;
 
 import java.time.Instant;
 import java.util.UUID;

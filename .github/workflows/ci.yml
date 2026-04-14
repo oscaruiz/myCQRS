@@ -20,6 +20,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Check package dependencies
+        run: bash scripts/check-package-deps.sh
+
       - name: Build and test
         run: ./mvnw verify --batch-mode
 

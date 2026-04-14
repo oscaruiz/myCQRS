@@ -1,10 +1,10 @@
 package com.oscaruiz.mycqrs.core.infrastructure.bus.query;
 
-import com.oscaruiz.mycqrs.core.domain.query.DuplicateQueryHandlerException;
-import com.oscaruiz.mycqrs.core.domain.query.Query;
-import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
-import com.oscaruiz.mycqrs.core.domain.query.QueryHandler;
-import com.oscaruiz.mycqrs.core.domain.query.QueryHandlerNotFoundException;
+import com.oscaruiz.mycqrs.core.contracts.query.DuplicateQueryHandlerException;
+import com.oscaruiz.mycqrs.core.contracts.query.Query;
+import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
+import com.oscaruiz.mycqrs.core.contracts.query.QueryHandler;
+import com.oscaruiz.mycqrs.core.contracts.query.QueryHandlerNotFoundException;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

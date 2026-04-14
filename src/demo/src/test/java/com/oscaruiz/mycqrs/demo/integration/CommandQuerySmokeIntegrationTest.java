@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.demo.integration;
 
-import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
-import com.oscaruiz.mycqrs.core.domain.query.QueryBus;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
+import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;

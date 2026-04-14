@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.domain.event;
+package com.oscaruiz.mycqrs.core.contracts.event;
 /**
  * Interface for handling events.
  *

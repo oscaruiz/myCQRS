@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.domain.query;
+package com.oscaruiz.mycqrs.core.contracts.query;
 
 /**
  * Thrown when an attempt is made to register a {@link QueryHandler} for a
