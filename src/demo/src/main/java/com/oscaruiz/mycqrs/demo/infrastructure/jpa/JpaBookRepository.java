@@ -18,22 +18,19 @@ public class JpaBookRepository implements BookRepository {
 
     @Override
     public BookAggregate save(BookAggregate bookAggregate) {
-        // Infrastructure maps and persists only. Domain lifecycle rules live in the aggregate.
         BookEntity entity;
+        // TODO Day 2: BookEntity PK becomes UUID; this parse-to-Long bridge disappears.
+        Long pk = tryParsePk(bookAggregate.getId());
 
-        if (bookAggregate.getId() == null) {
+        if (pk == null) {
             entity = new BookEntity(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
         } else {
-            entity = springDataBookRepository.findById(bookAggregate.getId())
-                    .orElseThrow(() -> new NoSuchElementException("Book with id " + bookAggregate.getId() + " was not found"));
+            entity = springDataBookRepository.findById(pk)
+                    .orElseThrow(() -> new NoSuchElementException("Book with id " + pk + " was not found"));
             entity.update(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
         }
 
-        BookEntity saved = springDataBookRepository.save(entity);
-
-        if (bookAggregate.getId() == null) {
-            bookAggregate.assignId(saved.getId());
-        }
+        springDataBookRepository.save(entity);
 
         return bookAggregate;
     }
@@ -51,6 +48,16 @@ public class JpaBookRepository implements BookRepository {
     }
 
     private BookAggregate toAggregate(BookEntity entity) {
-        return BookAggregate.rehydrate(entity.getId(), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
+        // TODO Day 2: entity PK is UUID String; no stringification needed.
+        return BookAggregate.rehydrate(String.valueOf(entity.getId()), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
+    }
+
+    // TODO Day 2: remove — aggregate id and entity PK will both be UUID Strings.
+    private Long tryParsePk(String aggregateId) {
+        try {
+            return Long.valueOf(aggregateId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
