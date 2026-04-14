@@ -36,7 +36,6 @@ public abstract class DomainEvent implements Event {
         return occurredAt;
     }
 
-    @Override
     public String getAggregateId() {
         return aggregateId;
     }

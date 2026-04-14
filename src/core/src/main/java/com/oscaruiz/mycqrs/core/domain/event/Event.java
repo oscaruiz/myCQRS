@@ -4,6 +4,4 @@ package com.oscaruiz.mycqrs.core.domain.event;
  */
 public interface Event {
 
-    String getAggregateId();
-
 }

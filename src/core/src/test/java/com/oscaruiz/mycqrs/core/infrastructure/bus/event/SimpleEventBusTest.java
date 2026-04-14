@@ -80,17 +80,11 @@ class SimpleEventBusTest {
     }
 
     static class FakeEvent implements Event {
-        @Override
-        public String getAggregateId() {
-            return "fake-aggregate-id";
-        }
+
     }
 
     static class AnotherFakeEvent implements Event {
-        @Override
-        public String getAggregateId() {
-            return "another-fake-aggregate-id";
-        }
+
     }
 
     static class RecordingEventHandler implements EventHandler<FakeEvent> {
