@@ -2,7 +2,7 @@ package com.oscaruiz.mycqrs.demo.infrastructure.mongo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EventHandlerComponent;
 import com.oscaruiz.mycqrs.demo.domain.event.BookUpdatedEvent;
 

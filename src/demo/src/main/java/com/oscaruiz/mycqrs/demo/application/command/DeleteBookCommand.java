@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.demo.application.command;
 
-import com.oscaruiz.mycqrs.core.domain.command.Command;
+import com.oscaruiz.mycqrs.core.contracts.command.Command;
 import jakarta.validation.constraints.NotNull;
 
 public class DeleteBookCommand implements Command {

@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.demo.application.event;
 
-import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EventHandlerComponent;

@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.demo.application.command;
 
-import com.oscaruiz.mycqrs.core.domain.command.CommandHandler;
-import com.oscaruiz.mycqrs.core.domain.event.EventBus;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandHandler;
+import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.CommandHandlerComponent;
 import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;

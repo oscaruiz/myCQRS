@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.demo.integration;
 
-import com.oscaruiz.mycqrs.core.domain.command.CommandBus;
-import com.oscaruiz.mycqrs.core.domain.event.EventHandler;
+import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
+import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
