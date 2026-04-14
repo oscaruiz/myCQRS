@@ -3,6 +3,8 @@ package com.oscaruiz.mycqrs.demo.infrastructure.api;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.UUID;
+
 public record CreateBookRequest(
 
         @NotBlank(message = "Title is required")
@@ -12,7 +14,7 @@ public record CreateBookRequest(
         String author
 
 ) {
-    public CreateBookCommand toCommand() {
-        return new CreateBookCommand(title, author);
+    public CreateBookCommand toCommand(UUID id) {
+        return new CreateBookCommand(id.toString(), title, author);
     }
 }

@@ -6,19 +6,19 @@ import jakarta.validation.constraints.NotNull;
 
 public class UpdateBookCommand implements Command {
 
-    private final Long bookId;
+    private final String bookId;
 
     private final String title;
 
     private final String author;
 
-    public UpdateBookCommand(Long bookId, String title, String author) {
+    public UpdateBookCommand(String bookId, String title, String author) {
         this.bookId = bookId;
         this.title = title;
         this.author = author;
     }
 
-    public Long getBookId() {
+    public String getBookId() {
         return bookId;
     }
 

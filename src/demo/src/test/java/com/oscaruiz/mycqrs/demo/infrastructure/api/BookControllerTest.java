@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -45,11 +46,13 @@ class BookControllerTest {
         @Test
         void createBook_withValidBody_returns201() throws Exception {
             CreateBookRequest request = new CreateBookRequest("Dune", "Frank Herbert");
+            UUID id = UUID.randomUUID();
 
-            mockMvc.perform(post("/books")
+            mockMvc.perform(put("/books/{id}", id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isCreated())
+                    .andExpect(header().string("Location", "/books/" + id));
 
             verify(commandBus, times(1)).send(any(CreateBookCommand.class));
         }
@@ -58,9 +61,21 @@ class BookControllerTest {
         void createBook_withInvalidBody_returns400() throws Exception {
             CreateBookRequest invalid = new CreateBookRequest("", "");
 
-            mockMvc.perform(post("/books")
+            mockMvc.perform(put("/books/{id}", UUID.randomUUID())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalid)))
+                    .andExpect(status().isBadRequest());
+
+            verify(commandBus, never()).send(any());
+        }
+
+        @Test
+        void createBook_withInvalidUuidInPath_returns400() throws Exception {
+            CreateBookRequest request = new CreateBookRequest("Dune", "Frank Herbert");
+
+            mockMvc.perform(put("/books/{id}", "not-a-uuid")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
 
             verify(commandBus, never()).send(any());
@@ -72,12 +87,13 @@ class BookControllerTest {
 
         @Test
         void getBook_whenExists_returns200() throws Exception {
-            Book book = new Book("42", "Dune", "Frank Herbert");
+            UUID id = UUID.randomUUID();
+            Book book = new Book(id.toString(), "Dune", "Frank Herbert");
             when(queryBus.handle(any(FindBookByIdQuery.class))).thenReturn(book);
 
-            mockMvc.perform(get("/books/{id}", "42"))
+            mockMvc.perform(get("/books/{id}", id))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value("42"))
+                    .andExpect(jsonPath("$.id").value(id.toString()))
                     .andExpect(jsonPath("$.title").value("Dune"))
                     .andExpect(jsonPath("$.author").value("Frank Herbert"));
         }
@@ -87,7 +103,7 @@ class BookControllerTest {
             when(queryBus.handle(any(FindBookByIdQuery.class)))
                     .thenThrow(new NoSuchElementException("Book not found"));
 
-            mockMvc.perform(get("/books/{id}", "999"))
+            mockMvc.perform(get("/books/{id}", UUID.randomUUID()))
                     .andExpect(status().isNotFound());
         }
     }
@@ -100,21 +116,22 @@ class BookControllerTest {
             doThrow(new NoSuchElementException("Book not found"))
                     .when(commandBus).send(any(DeleteBookCommand.class));
 
-            mockMvc.perform(delete("/books/{id}", 999L))
+            mockMvc.perform(delete("/books/{id}", UUID.randomUUID()))
                     .andExpect(status().isNotFound());
         }
 
         @Test
         void deleteThenGet_returns404() throws Exception {
+            UUID id = UUID.randomUUID();
             doNothing().when(commandBus).send(any(DeleteBookCommand.class));
 
-            mockMvc.perform(delete("/books/{id}", 1L))
+            mockMvc.perform(delete("/books/{id}", id))
                     .andExpect(status().isNoContent());
 
             when(queryBus.handle(any(FindBookByIdQuery.class)))
                     .thenThrow(new NoSuchElementException("Book not found"));
 
-            mockMvc.perform(get("/books/{id}", "1"))
+            mockMvc.perform(get("/books/{id}", id))
                     .andExpect(status().isNotFound());
         }
     }

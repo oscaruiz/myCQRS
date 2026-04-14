@@ -8,7 +8,7 @@ public interface BookRepository {
 
     BookAggregate save(BookAggregate bookAggregate);
 
-    BookAggregate load(Long id);
+    BookAggregate load(String id);
 
     Optional<BookAggregate> findByTitle(String title);
 }

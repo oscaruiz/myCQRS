@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class JpaBookRepository implements BookRepository {
@@ -18,29 +19,20 @@ public class JpaBookRepository implements BookRepository {
 
     @Override
     public BookAggregate save(BookAggregate bookAggregate) {
-        // Infrastructure maps and persists only. Domain lifecycle rules live in the aggregate.
-        BookEntity entity;
-
-        if (bookAggregate.getId() == null) {
-            entity = new BookEntity(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
-        } else {
-            entity = springDataBookRepository.findById(bookAggregate.getId())
-                    .orElseThrow(() -> new NoSuchElementException("Book with id " + bookAggregate.getId() + " was not found"));
-            entity.update(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
-        }
-
-        BookEntity saved = springDataBookRepository.save(entity);
-
-        if (bookAggregate.getId() == null) {
-            bookAggregate.assignId(saved.getId());
-        }
-
+        UUID id = UUID.fromString(bookAggregate.getId());
+        BookEntity entity = springDataBookRepository.findById(id)
+                .map(existing -> {
+                    existing.update(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
+                    return existing;
+                })
+                .orElseGet(() -> new BookEntity(id, bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted()));
+        springDataBookRepository.save(entity);
         return bookAggregate;
     }
 
     @Override
-    public BookAggregate load(Long id) {
-        BookEntity entity = springDataBookRepository.findById(id)
+    public BookAggregate load(String id) {
+        BookEntity entity = springDataBookRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new NoSuchElementException("Book with id " + id + " was not found"));
         return toAggregate(entity);
     }
@@ -51,6 +43,6 @@ public class JpaBookRepository implements BookRepository {
     }
 
     private BookAggregate toAggregate(BookEntity entity) {
-        return BookAggregate.rehydrate(entity.getId(), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
+        return BookAggregate.rehydrate(entity.getId().toString(), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
     }
 }

@@ -5,13 +5,13 @@ import jakarta.validation.constraints.NotNull;
 
 public class DeleteBookCommand implements Command {
 
-    private final Long bookId;
+    private final String bookId;
 
-    public DeleteBookCommand(Long bookId) {
+    public DeleteBookCommand(String bookId) {
         this.bookId = bookId;
     }
 
-    public Long getBookId() {
+    public String getBookId() {
         return bookId;
     }
 }
