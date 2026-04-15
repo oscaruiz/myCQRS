@@ -9,14 +9,13 @@ import com.oscaruiz.mycqrs.demo.domain.event.BookUpdatedEvent;
 import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
+import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -37,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = BookCommandIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class BookCommandIntegrationTest {
+class BookCommandIntegrationTest extends MongoTestcontainersTest {
 
     @Autowired
     private CommandBus commandBus;
@@ -134,19 +133,13 @@ class BookCommandIntegrationTest {
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration(exclude = {
-            MongoAutoConfiguration.class,
-            MongoDataAutoConfiguration.class
-    })
+    @EnableAutoConfiguration
     @ComponentScan(basePackages = {
             "com.oscaruiz.mycqrs.core",
             "com.oscaruiz.mycqrs.demo.application",
             "com.oscaruiz.mycqrs.demo.domain",
             "com.oscaruiz.mycqrs.demo.infrastructure"
-    }, excludeFilters = @ComponentScan.Filter(
-            type = org.springframework.context.annotation.FilterType.REGEX,
-            pattern = "com\\.oscaruiz\\.mycqrs\\.demo\\.infrastructure\\.mongo\\..*"
-    ))
+    })
     @EnableJpaRepositories(basePackages = "com.oscaruiz.mycqrs.demo.infrastructure.jpa")
     @EntityScan(basePackageClasses = BookEntity.class)
     @Import(TestEventsConfig.class)

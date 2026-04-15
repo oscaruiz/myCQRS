@@ -1,10 +1,5 @@
 package com.oscaruiz.mycqrs.demo.integration;
 
-import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
-import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
-import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
-import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
 import org.junit.jupiter.api.Test;
@@ -12,36 +7,36 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = CommandQuerySmokeIntegrationTest.TestConfig.class)
+@SpringBootTest(classes = BookQueryNotFoundIntegrationTest.TestConfig.class)
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
-class CommandQuerySmokeIntegrationTest extends MongoTestcontainersTest {
+class BookQueryNotFoundIntegrationTest extends MongoTestcontainersTest {
 
     @Autowired
-    private CommandBus commandBus;
-
-    @Autowired
-    private QueryBus queryBus;
+    private MockMvc mockMvc;
 
     @Test
-    void createCommandThenFindQueryReturnsCreatedBook() {
-        String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Clean Architecture", "Robert C. Martin"));
+    void getBookById_whenRepositoryEmpty_returns404() throws Exception {
+        mockMvc.perform(get("/books/{id}", UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
 
-        Book found = queryBus.handle(new FindBookByTitleQuery("Clean Architecture"));
-
-        assertNotNull(found);
-        assertEquals("Clean Architecture", found.getTitle());
-        assertEquals("Robert C. Martin", found.getAuthor());
+    @Test
+    void getBookByTitle_whenRepositoryEmpty_returns404() throws Exception {
+        mockMvc.perform(get("/books").param("title", "Nonexistent-" + UUID.randomUUID()))
+                .andExpect(status().isNotFound());
     }
 
     @SpringBootConfiguration

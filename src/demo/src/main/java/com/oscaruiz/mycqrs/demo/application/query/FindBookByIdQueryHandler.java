@@ -3,19 +3,22 @@ package com.oscaruiz.mycqrs.demo.application.query;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryHandler;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.QueryHandlerComponent;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
-import com.oscaruiz.mycqrs.demo.infrastructure.repository.BookReadRepository;
+
+import java.util.NoSuchElementException;
 
 @QueryHandlerComponent
 public class FindBookByIdQueryHandler implements QueryHandler<FindBookByIdQuery, Book> {
 
-    private final BookReadRepository bookReadRepository;
+    private final BookReadModelRepository bookReadModelRepository;
 
-    public FindBookByIdQueryHandler(BookReadRepository bookReadRepository) {
-        this.bookReadRepository = bookReadRepository;
+    public FindBookByIdQueryHandler(BookReadModelRepository bookReadModelRepository) {
+        this.bookReadModelRepository = bookReadModelRepository;
     }
 
     @Override
     public Book handle(FindBookByIdQuery query) {
-        return bookReadRepository.findById(query.getId()).orElse(null);
+        return bookReadModelRepository.findById(query.getId())
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Book with id " + query.getId() + " not found"));
     }
 }
