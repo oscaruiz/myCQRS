@@ -5,7 +5,10 @@ import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
+import com.oscaruiz.mycqrs.demo.application.query.BookReadModelRepository;
 import com.oscaruiz.mycqrs.demo.domain.event.BookUpdatedEvent;
+import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import java.util.Optional;
 import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
@@ -158,6 +161,21 @@ class BookCommandIntegrationTest {
         @Bean
         UpdatedEventRecorder updatedEventRecorder() {
             return new UpdatedEventRecorder();
+        }
+
+        @Bean
+        BookReadModelRepository emptyBookReadModelRepository() {
+            return new BookReadModelRepository() {
+                @Override
+                public Optional<Book> findById(String id) {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<Book> findByTitle(String title) {
+                    return Optional.empty();
+                }
+            };
         }
     }
 

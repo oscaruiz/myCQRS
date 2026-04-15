@@ -6,6 +6,7 @@ import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(classes = CommandQuerySmokeIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
+@Disabled("Re-enabled in Day 4b with Testcontainers: read model projection now lives in Mongo only, which is excluded from this test config")
 class CommandQuerySmokeIntegrationTest {
 
     @Autowired

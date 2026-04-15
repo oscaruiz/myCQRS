@@ -2,8 +2,9 @@ package com.oscaruiz.mycqrs.demo.infrastructure.mongo;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.Optional;
+
 
 public interface BookMongoRepository extends MongoRepository<BookReadModel, String> {
-    BookReadModel findFirstByTitle(String title);
+    Optional<BookReadModel> findFirstByTitle(String title);
 }
-
