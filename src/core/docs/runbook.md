@@ -122,10 +122,14 @@ Both collections should be empty.
 
 # 🔥 Smoke Test API
 
+Book IDs are client-assigned UUIDs. Generate one with `uuidgen` (or
+`cat /proc/sys/kernel/random/uuid` on Linux).
+
 ## Create Book (Command)
 
 ```bash
-curl -X POST http://localhost:8080/books \
+BOOK_ID=$(uuidgen)
+curl -X PUT "http://localhost:8080/books/$BOOK_ID" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Clean Architecture",
@@ -138,12 +142,29 @@ curl -X POST http://localhost:8080/books \
 ## Update Book (Command)
 
 ```bash
-curl -X PUT http://localhost:8080/books/30 \
+curl -X PATCH "http://localhost:8080/books/$BOOK_ID" \
 -H "Content-Type: application/json" \
 -d '{
   "title": "Cleaner Architecture",
   "author": "Roberto C. Martino"
 }'
+```
+
+---
+
+## Delete Book (Command)
+
+```bash
+curl -X DELETE "http://localhost:8080/books/$BOOK_ID"
+```
+
+---
+
+## Query Book (Read side)
+
+```bash
+curl "http://localhost:8080/books/$BOOK_ID"
+curl "http://localhost:8080/books?title=Clean%20Architecture"
 ```
 
 ---

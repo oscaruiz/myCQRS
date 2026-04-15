@@ -1,13 +1,17 @@
 package com.oscaruiz.mycqrs.demo.application.command;
 
 import com.oscaruiz.mycqrs.core.contracts.command.Command;
+import jakarta.validation.constraints.NotBlank;
 
 public class CreateBookCommand implements Command {
 
+    @NotBlank
     private final String id;
 
+    @NotBlank
     private final String title;
 
+    @NotBlank
     private final String author;
 
     public CreateBookCommand(String id, String title, String author) {
