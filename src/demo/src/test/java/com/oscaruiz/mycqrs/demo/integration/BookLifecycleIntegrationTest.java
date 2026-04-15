@@ -3,7 +3,9 @@ package com.oscaruiz.mycqrs.demo.integration;
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
-import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
+import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
+import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
+import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
@@ -17,14 +19,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest(classes = CommandQuerySmokeIntegrationTest.TestConfig.class)
+@SpringBootTest(classes = BookLifecycleIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class CommandQuerySmokeIntegrationTest extends MongoTestcontainersTest {
+class BookLifecycleIntegrationTest extends MongoTestcontainersTest {
 
     @Autowired
     private CommandBus commandBus;
@@ -33,15 +36,25 @@ class CommandQuerySmokeIntegrationTest extends MongoTestcontainersTest {
     private QueryBus queryBus;
 
     @Test
-    void createCommandThenFindQueryReturnsCreatedBook() {
+    void createThenUpdate_queryReflectsUpdate() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Clean Architecture", "Robert C. Martin"));
+        commandBus.send(new CreateBookCommand(id, "Original Title", "Author"));
+        commandBus.send(new UpdateBookCommand(id, "Updated Title", "Author"));
 
-        Book found = queryBus.handle(new FindBookByTitleQuery("Clean Architecture"));
+        Book book = queryBus.handle(new FindBookByIdQuery(id));
 
-        assertNotNull(found);
-        assertEquals("Clean Architecture", found.getTitle());
-        assertEquals("Robert C. Martin", found.getAuthor());
+        assertEquals("Updated Title", book.getTitle());
+        assertEquals("Author", book.getAuthor());
+    }
+
+    @Test
+    void createThenDelete_queryThrowsNotFound() {
+        String id = UUID.randomUUID().toString();
+        commandBus.send(new CreateBookCommand(id, "Soon to die", "Author"));
+        commandBus.send(new DeleteBookCommand(id));
+
+        assertThrows(NoSuchElementException.class,
+                () -> queryBus.handle(new FindBookByIdQuery(id)));
     }
 
     @SpringBootConfiguration
