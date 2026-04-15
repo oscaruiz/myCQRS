@@ -4,33 +4,33 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EventHandlerComponent;
-import com.oscaruiz.mycqrs.demo.domain.event.BookCreatedEvent;
+import com.oscaruiz.mycqrs.demo.domain.event.BookDeletedEvent;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
 
 @EventHandlerComponent
-public class BookCreatedAuditProjection implements EventHandler<BookCreatedEvent> {
+public class BookDeletedAuditProjection implements EventHandler<BookDeletedEvent> {
 
     private final BookEventLogRepository repository;
     private final ObjectMapper objectMapper;
 
-    public BookCreatedAuditProjection(BookEventLogRepository repository, ObjectMapper objectMapper) {
+    public BookDeletedAuditProjection(BookEventLogRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public void handle(BookCreatedEvent event) {
+    public void handle(BookDeletedEvent event) {
         String payload = serializeEvent(event);
 
         BookEventLog logEntry = new BookEventLog(
                 UUID.randomUUID().toString(),
                 event.getAggregateId(),
-                BookCreatedEvent.class.getSimpleName(),
+                BookDeletedEvent.class.getSimpleName(),
                 Instant.now(),
-                BookOperation.CREATE_BOOK.name(),
+                BookOperation.DELETE_BOOK.name(),
                 payload,
                 new HashMap<>()
         );
@@ -38,11 +38,11 @@ public class BookCreatedAuditProjection implements EventHandler<BookCreatedEvent
         repository.save(logEntry);
     }
 
-    private String serializeEvent(BookCreatedEvent event) {
+    private String serializeEvent(BookDeletedEvent event) {
         try {
             return objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Could not serialize BookCreatedEvent", exception);
+            throw new IllegalStateException("Could not serialize BookDeletedEvent", exception);
         }
     }
 }
