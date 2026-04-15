@@ -11,18 +11,31 @@ PASS=0
 FAIL=0
 UNIQUE_TITLE="SmokeTest-$(date +%s)"
 
+gen_uuid() {
+  if command -v uuidgen >/dev/null 2>&1; then
+    uuidgen | tr '[:upper:]' '[:lower:]'
+  elif [ -r /proc/sys/kernel/random/uuid ]; then
+    cat /proc/sys/kernel/random/uuid
+  else
+    python3 -c 'import uuid; print(uuid.uuid4())'
+  fi
+}
+
+BOOK_ID=$(gen_uuid)
+
 pass() { PASS=$((PASS + 1)); echo "  PASS: $1"; }
 fail() { FAIL=$((FAIL + 1)); echo "  FAIL: $1 — $2"; }
 
 echo "=== myCQRS Smoke Tests ==="
-echo "Target: $BASE_URL"
+echo "Target:  $BASE_URL"
+echo "Book ID: $BOOK_ID"
 echo ""
 
 # ----------------------------------------------------------
 # 1. App is alive
 # ----------------------------------------------------------
 echo "[1/7] App starts without errors"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/books/nonexistent" 2>/dev/null || echo "000")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/books/$(gen_uuid)" 2>/dev/null || echo "000")
 if [ "$HTTP_CODE" != "000" ]; then
   pass "App responding (HTTP $HTTP_CODE)"
 else
@@ -33,55 +46,41 @@ else
 fi
 
 # ----------------------------------------------------------
-# 2. POST /books — create
+# 2. PUT /books/{id} — create
 # ----------------------------------------------------------
-echo "[2/7] POST /books creates a book"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE_URL/books" \
+echo "[2/7] PUT /books/{id} creates a book"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$BASE_URL/books/$BOOK_ID" \
   -H "Content-Type: application/json" \
   -d "{\"title\":\"$UNIQUE_TITLE\",\"author\":\"Smoke Author\"}")
 if [ "$HTTP_CODE" = "201" ]; then
-  pass "POST /books -> $HTTP_CODE"
+  pass "PUT /books/$BOOK_ID -> $HTTP_CODE"
 else
-  fail "POST /books -> $HTTP_CODE" "expected 200"
+  fail "PUT /books/$BOOK_ID -> $HTTP_CODE" "expected 201"
 fi
 
 # ----------------------------------------------------------
-# 3. GET /books/{title} — read
+# 3. GET /books?title= — read
 # ----------------------------------------------------------
-echo "[3/7] GET /books/{title} returns created book"
+echo "[3/7] GET /books?title= returns created book"
 ENCODED_TITLE=$(printf '%s' "$UNIQUE_TITLE" | sed 's/ /%20/g')
 BODY=$(curl -s "$BASE_URL/books?title=$ENCODED_TITLE")
 if echo "$BODY" | grep -q "$UNIQUE_TITLE"; then
-  pass "GET /books/$UNIQUE_TITLE returned book"
+  pass "GET /books?title=$UNIQUE_TITLE returned book"
 else
-  fail "GET /books/$UNIQUE_TITLE" "body: $BODY"
+  fail "GET /books?title=$UNIQUE_TITLE" "body: $BODY"
 fi
 
 # ----------------------------------------------------------
-# Get the book ID from the database for remaining tests
+# 4. PATCH /books/{id} — update
 # ----------------------------------------------------------
-BOOK_ID=$(docker exec mycqrs-postgres psql -U postgres -d mycqrsdb -t -A \
-  -c "SELECT id FROM book_entity WHERE title='$UNIQUE_TITLE' LIMIT 1;" 2>/dev/null | tr -d '[:space:]')
-
-if [ -z "$BOOK_ID" ]; then
-  fail "Could not retrieve book ID from database" "skipping PUT/DELETE tests"
-  echo ""
-  echo "RESULT: $PASS passed, $FAIL failed"
-  exit 1
-fi
-echo "       (book id=$BOOK_ID)"
-
-# ----------------------------------------------------------
-# 4. PUT /books/{id} — update
-# ----------------------------------------------------------
-echo "[4/7] PUT /books/{id} updates book on write-side"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$BASE_URL/books/$BOOK_ID" \
+echo "[4/7] PATCH /books/{id} updates book on write-side"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH "$BASE_URL/books/$BOOK_ID" \
   -H "Content-Type: application/json" \
   -d "{\"title\":\"${UNIQUE_TITLE}-Updated\",\"author\":\"Smoke Author Updated\"}")
 if [ "$HTTP_CODE" = "200" ]; then
-  pass "PUT /books/$BOOK_ID -> $HTTP_CODE"
+  pass "PATCH /books/$BOOK_ID -> $HTTP_CODE"
 else
-  fail "PUT /books/$BOOK_ID -> $HTTP_CODE" "expected 200"
+  fail "PATCH /books/$BOOK_ID -> $HTTP_CODE" "expected 200"
 fi
 
 # ----------------------------------------------------------
@@ -90,9 +89,8 @@ fi
 echo "[5/7] DELETE /books/{id} sets deleted=true"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE_URL/books/$BOOK_ID")
 if [ "$HTTP_CODE" = "204" ]; then
-  # Verify deleted=true in DB
   DELETED=$(docker exec mycqrs-postgres psql -U postgres -d mycqrsdb -t -A \
-    -c "SELECT deleted FROM book_entity WHERE id=$BOOK_ID;" 2>/dev/null | tr -d '[:space:]')
+    -c "SELECT deleted FROM book_entity WHERE id='$BOOK_ID';" 2>/dev/null | tr -d '[:space:]')
   if [ "$DELETED" = "t" ]; then
     pass "DELETE /books/$BOOK_ID -> 204, deleted=true in DB"
   else
@@ -117,13 +115,13 @@ fi
 # 7. Update after delete — should fail
 # ----------------------------------------------------------
 echo "[7/7] Update after delete fails with business error"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$BASE_URL/books/$BOOK_ID" \
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH "$BASE_URL/books/$BOOK_ID" \
   -H "Content-Type: application/json" \
   -d '{"title":"Should Fail","author":"No"}')
 if [ "$HTTP_CODE" = "500" ] || [ "$HTTP_CODE" = "409" ] || [ "$HTTP_CODE" = "400" ]; then
-  pass "PUT after DELETE /books/$BOOK_ID -> $HTTP_CODE (business error)"
+  pass "PATCH after DELETE /books/$BOOK_ID -> $HTTP_CODE (business error)"
 else
-  fail "PUT after DELETE /books/$BOOK_ID -> $HTTP_CODE" "expected 4xx/5xx error"
+  fail "PATCH after DELETE /books/$BOOK_ID -> $HTTP_CODE" "expected 4xx/5xx error"
 fi
 
 # ----------------------------------------------------------
