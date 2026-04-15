@@ -16,6 +16,8 @@ gen_uuid() {
     uuidgen | tr '[:upper:]' '[:lower:]'
   elif [ -r /proc/sys/kernel/random/uuid ]; then
     cat /proc/sys/kernel/random/uuid
+  elif command -v powershell.exe >/dev/null 2>&1; then
+    powershell.exe -NoProfile -Command "[guid]::NewGuid().ToString()" | tr -d '\r'
   else
     python3 -c 'import uuid; print(uuid.uuid4())'
   fi
