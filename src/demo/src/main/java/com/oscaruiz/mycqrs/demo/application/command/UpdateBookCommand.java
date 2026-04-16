@@ -2,14 +2,16 @@ package com.oscaruiz.mycqrs.demo.application.command;
 
 import com.oscaruiz.mycqrs.core.contracts.command.Command;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class UpdateBookCommand implements Command {
 
+    @NotBlank
     private final String bookId;
 
+    @NotBlank
     private final String title;
 
+    @NotBlank
     private final String author;
 
     public UpdateBookCommand(String bookId, String title, String author) {

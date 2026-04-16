@@ -37,7 +37,7 @@ public class BookDeletedAuditProjection implements EventHandler<BookDeletedEvent
                 event.getAggregateId(),
                 BookDeletedEvent.class.getSimpleName(),
                 Instant.now(),
-                "DELETE_BOOK",
+                BookOperation.DELETE_BOOK.name(),
                 payload,
                 new HashMap<>()
         );

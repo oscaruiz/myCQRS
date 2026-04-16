@@ -164,9 +164,14 @@ Current known limitations are:
 
 - Event dispatch is synchronous and in-memory.
 - There is no outbox/transactional handoff for durable event publication.
-- Delete projection coverage is partial.
-- Some components still contain TODO or placeholder logic.
-- Infrastructure logging still uses direct standard output in parts of the core.
+- No optimistic locking on aggregates yet (`@Version` pending).
+
+## Architecture decisions
+
+Key architectural decisions are documented as ADRs in `docs/adr/`:
+
+- **ADR 0001** — Core package structure: separation of `contracts`, `infrastructure`, `spring`, and `ddd` following an API/SPI layering pattern.
+- **ADR 0002** — Read model strategy: unified read store on MongoDB accessed via `BookReadModelRepository` port; hard delete in read model with retention in the audit log.
 
 ## Testing approach
 
@@ -181,11 +186,11 @@ Tests focus on behavior across layers:
 
 Planned improvements include:
 
+- Outbox pattern for durable event publication (Week 4).
+- Optimistic locking on aggregates via `@Version` (Week 4).
+- Event Sourcing considered and documented as ADR (Week 4, intentionally not implemented).
+- Migration of write-side integration tests from H2 to Postgres via Testcontainers.
 - Asynchronous event dispatch.
-- Durable publication strategy (for example, outbox pattern).
-- Full delete projection support for read and audit models.
-- Cleanup of placeholder handlers and pending TODO items.
-- Logging and test layout cleanup.
 
 ## License
 

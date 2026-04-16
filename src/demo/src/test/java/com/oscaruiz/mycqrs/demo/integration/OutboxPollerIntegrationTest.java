@@ -10,6 +10,8 @@ import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.oscaruiz.mycqrs.core.spring.EnableCqrs;
+import com.oscaruiz.mycqrs.demo.infrastructure.jpa.SpringDataBookRepository;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -107,13 +109,13 @@ class OutboxPollerIntegrationTest extends MongoTestcontainersTest {
 
     @SpringBootConfiguration
     @EnableAutoConfiguration
+    @EnableCqrs
     @ComponentScan(basePackages = {
-            "com.oscaruiz.mycqrs.core",
             "com.oscaruiz.mycqrs.demo.application",
             "com.oscaruiz.mycqrs.demo.domain",
             "com.oscaruiz.mycqrs.demo.infrastructure"
     })
-    @EnableJpaRepositories(basePackages = "com.oscaruiz.mycqrs.demo.infrastructure.jpa")
+    @EnableJpaRepositories(basePackageClasses = SpringDataBookRepository.class)
     @EntityScan(basePackageClasses = BookEntity.class)
     @Import(OutboxPollerIntegrationTest.RecorderConfig.class)
     static class TestConfig {

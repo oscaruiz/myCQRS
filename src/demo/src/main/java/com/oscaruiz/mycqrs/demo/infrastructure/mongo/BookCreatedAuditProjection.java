@@ -37,7 +37,7 @@ public class BookCreatedAuditProjection implements EventHandler<BookCreatedEvent
                 event.getAggregateId(),
                 BookCreatedEvent.class.getSimpleName(),
                 Instant.now(),
-                "CREATE_BOOK",
+                BookOperation.CREATE_BOOK.name(),
                 payload,
                 new HashMap<>()
         );

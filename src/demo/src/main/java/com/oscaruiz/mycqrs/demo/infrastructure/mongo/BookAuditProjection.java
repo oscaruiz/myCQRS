@@ -37,7 +37,7 @@ public class BookAuditProjection implements EventHandler<BookUpdatedEvent> {
                 event.getAggregateId(),
                 BookUpdatedEvent.class.getSimpleName(),
                 Instant.now(),
-                "UPDATE_BOOK",
+                BookOperation.UPDATE_BOOK.name(),
                 payload,
                 new HashMap<>()
         );
