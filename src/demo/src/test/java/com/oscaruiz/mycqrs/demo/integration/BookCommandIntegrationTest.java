@@ -9,9 +9,9 @@ import com.oscaruiz.mycqrs.demo.domain.event.BookUpdatedEvent;
 import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
+import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxPoller;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -46,6 +46,9 @@ class BookCommandIntegrationTest extends MongoTestcontainersTest {
     private BookRepository bookRepository;
 
     @Autowired
+    private OutboxPoller outboxPoller;
+
+    @Autowired
     private UpdatedEventRecorder updatedEventRecorder;
 
     @BeforeEach
@@ -65,14 +68,16 @@ class BookCommandIntegrationTest extends MongoTestcontainersTest {
         assertFalse(saved.isDeleted());
     }
 
-    @Disabled("Reactivated in Day 8 when the outbox poller drives projections")
     @Test
     void updateBookCommandEmitsEventAndChangesValues() {
         String id = UUID.randomUUID().toString();
         commandBus.send(new CreateBookCommand(id, "Refactoring", "Martin Fowler"));
+        outboxPoller.poll();
+
         BookAggregate existing = bookRepository.findByTitle("Refactoring").orElseThrow();
 
         commandBus.send(new UpdateBookCommand(existing.getId(), "Refactoring 2nd", "Martin Fowler"));
+        outboxPoller.poll();
 
         BookAggregate updated = bookRepository.load(existing.getId());
 
