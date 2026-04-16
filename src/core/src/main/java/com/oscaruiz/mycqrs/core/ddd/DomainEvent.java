@@ -13,9 +13,15 @@ import java.util.UUID;
  */
 public abstract class DomainEvent implements Event {
 
-    private final String eventId;
-    private final Instant occurredAt;
-    private final String aggregateId;
+    private String eventId;
+    private Instant occurredAt;
+    private String aggregateId;
+
+    /**
+     * No-arg constructor for Jackson deserialization (outbox poller).
+     */
+    protected DomainEvent() {
+    }
 
     protected DomainEvent(String aggregateId) {
         if (aggregateId == null || aggregateId.isBlank()) {

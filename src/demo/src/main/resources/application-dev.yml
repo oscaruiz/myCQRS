@@ -18,3 +18,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+mycqrs:
+  outbox:
+    poll-interval: 1000

@@ -4,13 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EventHandlerComponent;
-import com.oscaruiz.mycqrs.demo.domain.event.BookCreatedEvent;
+import com.oscaruiz.mycqrs.demo.domain.event.BookDeletedEvent;
 
 import java.time.Instant;
 import java.util.HashMap;
 
 /**
- * Writes a BookEventLog entry for every BookCreatedEvent.
+ * Writes a BookEventLog entry for every BookDeletedEvent.
  *
  * Idempotency: the event ID is used as the Mongo document _id, so re-processing
  * the same event (after an outbox retry) silently upserts rather than creating
@@ -18,26 +18,26 @@ import java.util.HashMap;
  * table's attempts column.
  */
 @EventHandlerComponent
-public class BookCreatedAuditProjection implements EventHandler<BookCreatedEvent> {
+public class BookDeletedAuditProjection implements EventHandler<BookDeletedEvent> {
 
     private final BookEventLogRepository repository;
     private final ObjectMapper objectMapper;
 
-    public BookCreatedAuditProjection(BookEventLogRepository repository, ObjectMapper objectMapper) {
+    public BookDeletedAuditProjection(BookEventLogRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public void handle(BookCreatedEvent event) {
+    public void handle(BookDeletedEvent event) {
         String payload = serializeEvent(event);
 
         BookEventLog logEntry = new BookEventLog(
                 event.getEventId(),
                 event.getAggregateId(),
-                BookCreatedEvent.class.getSimpleName(),
+                BookDeletedEvent.class.getSimpleName(),
                 Instant.now(),
-                "CREATE_BOOK",
+                "DELETE_BOOK",
                 payload,
                 new HashMap<>()
         );
@@ -45,11 +45,11 @@ public class BookCreatedAuditProjection implements EventHandler<BookCreatedEvent
         repository.save(logEntry);
     }
 
-    private String serializeEvent(BookCreatedEvent event) {
+    private String serializeEvent(BookDeletedEvent event) {
         try {
             return objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Could not serialize BookCreatedEvent", exception);
+            throw new IllegalStateException("Could not serialize BookDeletedEvent", exception);
         }
     }
 }

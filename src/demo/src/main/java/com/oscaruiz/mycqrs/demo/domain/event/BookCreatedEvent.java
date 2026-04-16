@@ -3,8 +3,11 @@ package com.oscaruiz.mycqrs.demo.domain.event;
 import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 
 public class BookCreatedEvent extends DomainEvent {
-    private final String title;
-    private final String author;
+    private String title;
+    private String author;
+
+    protected BookCreatedEvent() {
+    }
 
     public BookCreatedEvent(String aggregateId, String title, String author) {
         super(aggregateId);

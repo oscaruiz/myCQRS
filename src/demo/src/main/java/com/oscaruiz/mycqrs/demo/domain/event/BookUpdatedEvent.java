@@ -4,8 +4,11 @@ import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 
 public class BookUpdatedEvent extends DomainEvent {
 
-    private final String title;
-    private final String author;
+    private String title;
+    private String author;
+
+    protected BookUpdatedEvent() {
+    }
 
     public BookUpdatedEvent(String aggregateId, String title, String author) {
         super(aggregateId);
