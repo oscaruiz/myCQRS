@@ -2,8 +2,6 @@ package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.command.SimpleCommandBus;
-import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
-import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
 import jakarta.validation.Validator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,11 +19,6 @@ public class CommandBusConfig {
     }
 
     @Bean
-    public EventBus eventBus() {
-        return new SimpleEventBus();
-    }
-
-    @Bean
     public CommandBus commandBus(Validator validator, PlatformTransactionManager transactionManager) {
         var bus = new SimpleCommandBus();
         // Registration order == execution order: SimpleCommandBus.applyInterceptors
@@ -35,10 +28,5 @@ public class CommandBusConfig {
         bus.addInterceptor(new ValidationCommandInterceptor(validator));
         bus.addInterceptor(new TransactionalCommandInterceptor(transactionManager));
         return bus;
-    }
-
-    @Bean
-    public EventHandlerBeanPostProcessor eventHandlerBeanPostProcessor(EventBus eventBus) {
-        return new EventHandlerBeanPostProcessor(eventBus);
     }
 }

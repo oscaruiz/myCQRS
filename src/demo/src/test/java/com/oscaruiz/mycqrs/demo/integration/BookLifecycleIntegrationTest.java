@@ -12,6 +12,7 @@ import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLog;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLogRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookOperation;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Disabled("Reactivated in Day 8 when the outbox poller drives projections")
 @SpringBootTest(classes = BookLifecycleIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
 class BookLifecycleIntegrationTest extends MongoTestcontainersTest {

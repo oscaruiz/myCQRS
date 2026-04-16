@@ -1,13 +1,11 @@
 package com.oscaruiz.mycqrs.demo.integration;
 
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
-import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
-import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -16,34 +14,47 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Disabled("Reactivated in Day 8 when the outbox poller drives projections")
-@SpringBootTest(classes = CommandQuerySmokeIntegrationTest.TestConfig.class)
+@SpringBootTest(classes = OutboxWriterIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class CommandQuerySmokeIntegrationTest extends MongoTestcontainersTest {
+class OutboxWriterIntegrationTest extends MongoTestcontainersTest {
 
     @Autowired
     private CommandBus commandBus;
 
     @Autowired
-    private QueryBus queryBus;
+    private JdbcTemplate jdbc;
+
+    @Autowired
+    private BookRepository bookRepository;
+
+    @BeforeEach
+    void cleanOutbox() {
+        jdbc.execute("TRUNCATE TABLE outbox");
+    }
 
     @Test
-    void createCommandThenFindQueryReturnsCreatedBook() {
+    void successfulCommand_writesOneRowToOutbox() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Clean Architecture", "Robert C. Martin"));
+        commandBus.send(new CreateBookCommand(id, "Happy", "Author"));
 
-        Book found = queryBus.handle(new FindBookByTitleQuery("Clean Architecture"));
+        Integer count = jdbc.queryForObject(
+            "SELECT COUNT(*) FROM outbox WHERE aggregate_id = ?",
+            Integer.class, id);
+        assertThat(count).isEqualTo(1);
 
-        assertNotNull(found);
-        assertEquals("Clean Architecture", found.getTitle());
-        assertEquals("Robert C. Martin", found.getAuthor());
+        String eventType = jdbc.queryForObject(
+            "SELECT event_type FROM outbox WHERE aggregate_id = ?",
+            String.class, id);
+        assertThat(eventType).endsWith("BookCreatedEvent");
+
+        assertThat(bookRepository.findByTitle("Happy")).isPresent();
     }
 
     @SpringBootConfiguration
