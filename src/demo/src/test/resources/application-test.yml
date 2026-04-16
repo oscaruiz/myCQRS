@@ -17,3 +17,7 @@ spring:
 
   flyway:
     enabled: false
+
+mycqrs:
+  outbox:
+    poll-interval: 60000

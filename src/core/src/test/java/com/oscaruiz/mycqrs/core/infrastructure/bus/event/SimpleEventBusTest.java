@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SimpleEventBusTest {
@@ -55,7 +56,7 @@ class SimpleEventBusTest {
     }
 
     @Test
-    void shouldInvokeRemainingHandlers_whenOneHandlerThrows() {
+    void shouldPropagateException_andSkipRemainingHandlers_whenOneHandlerThrows() {
         RecordingEventHandler first = new RecordingEventHandler();
         RecordingEventHandler third = new RecordingEventHandler();
 
@@ -63,10 +64,10 @@ class SimpleEventBusTest {
         bus.registerHandler(FakeEvent.class, new FailingEventHandler());
         bus.registerHandler(FakeEvent.class, third);
 
-        assertDoesNotThrow(() -> bus.publish(new FakeEvent()));
+        assertThrows(RuntimeException.class, () -> bus.publish(new FakeEvent()));
 
         assertTrue(first.wasCalled);
-        assertTrue(third.wasCalled);
+        assertFalse(third.wasCalled);
     }
 
     @Test

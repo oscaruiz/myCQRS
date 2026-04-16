@@ -3,9 +3,11 @@ package com.oscaruiz.mycqrs.demo;
 import com.oscaruiz.mycqrs.core.spring.EnableCqrs;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableCqrs
+@EnableScheduling
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

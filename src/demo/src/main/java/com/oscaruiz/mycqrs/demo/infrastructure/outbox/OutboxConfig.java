@@ -13,13 +13,17 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 /**
  * Wiring for the outbox-based event publication strategy.
  *
- * - outboxEventBus is @Primary: command handlers receive it as the EventBus
- *   dependency. Calls to publish() go to the outbox table within the active
- *   transaction.
+ * - outboxEventBus is {@code @Primary}: because internalEventBus (SimpleEventBus)
+ *   also implements EventBus, {@code @Primary} is required to disambiguate
+ *   injection points that request EventBus without a qualifier. Both beans
+ *   satisfy {@code @ConditionalOnMissingBean(EventBus.class)} in
+ *   CqrsConfiguration, preventing the core default from being created.
+ *   Command handlers receive outboxEventBus. Calls to publish() go to the
+ *   outbox table within the active transaction.
  *
  * - internalEventBus (SimpleEventBus) is the bus that event handlers register
- *   against via EventHandlerBeanPostProcessor. The outbox poller (Day 8) will
- *   use this bus to dispatch events read from the outbox.
+ *   against via EventHandlerBeanPostProcessor. The OutboxPoller uses this bus
+ *   to dispatch events read from the outbox.
  *
  * See docs/adr/0003-outbox-pattern.md.
  */

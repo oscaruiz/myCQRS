@@ -10,6 +10,11 @@ import java.util.UUID;
  * (eventId, occurredAt, aggregateId) so concrete events only need to
  * declare their own payload. Enforces that every domain event is bound
  * to a non-blank aggregate identifier.
+ *
+ * Immutability: all fields are final. Infrastructure-layer deserializers
+ * (e.g., Jackson via mixins) use the three-arg reconstitution constructor;
+ * domain code uses the single-arg convenience constructor that auto-generates
+ * eventId and occurredAt.
  */
 public abstract class DomainEvent implements Event {
 
@@ -17,13 +22,22 @@ public abstract class DomainEvent implements Event {
     private final Instant occurredAt;
     private final String aggregateId;
 
-    protected DomainEvent(String aggregateId) {
+    /**
+     * Reconstitution constructor. Used by infrastructure-layer deserializers
+     * (e.g., Jackson via mixins) to rebuild an event from stored state.
+     * Domain code should use {@link #DomainEvent(String)}.
+     */
+    protected DomainEvent(String eventId, Instant occurredAt, String aggregateId) {
         if (aggregateId == null || aggregateId.isBlank()) {
             throw new IllegalArgumentException("aggregateId cannot be null or blank");
         }
-        this.eventId = UUID.randomUUID().toString();
-        this.occurredAt = Instant.now();
+        this.eventId = eventId != null ? eventId : UUID.randomUUID().toString();
+        this.occurredAt = occurredAt != null ? occurredAt : Instant.now();
         this.aggregateId = aggregateId;
+    }
+
+    protected DomainEvent(String aggregateId) {
+        this(null, null, aggregateId);
     }
 
     public String getEventId() {

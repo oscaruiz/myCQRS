@@ -8,8 +8,15 @@ import com.oscaruiz.mycqrs.demo.domain.event.BookDeletedEvent;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.UUID;
 
+/**
+ * Writes a BookEventLog entry for every BookDeletedEvent.
+ *
+ * Idempotency: the event ID is used as the Mongo document _id, so re-processing
+ * the same event (after an outbox retry) silently upserts rather than creating
+ * a duplicate log entry. Operational visibility of retries lives in the outbox
+ * table's attempts column.
+ */
 @EventHandlerComponent
 public class BookDeletedAuditProjection implements EventHandler<BookDeletedEvent> {
 
@@ -26,7 +33,7 @@ public class BookDeletedAuditProjection implements EventHandler<BookDeletedEvent
         String payload = serializeEvent(event);
 
         BookEventLog logEntry = new BookEventLog(
-                UUID.randomUUID().toString(),
+                event.getEventId(),
                 event.getAggregateId(),
                 BookDeletedEvent.class.getSimpleName(),
                 Instant.now(),

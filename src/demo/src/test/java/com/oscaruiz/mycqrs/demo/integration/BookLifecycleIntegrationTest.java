@@ -11,8 +11,8 @@ import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLog;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLogRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookOperation;
+import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxPoller;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.oscaruiz.mycqrs.core.spring.EnableCqrs;
@@ -33,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Disabled("Reactivated in Day 8 when the outbox poller drives projections")
 @SpringBootTest(classes = BookLifecycleIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
 class BookLifecycleIntegrationTest extends MongoTestcontainersTest {
@@ -45,13 +44,19 @@ class BookLifecycleIntegrationTest extends MongoTestcontainersTest {
     private QueryBus queryBus;
 
     @Autowired
+    private OutboxPoller outboxPoller;
+
+    @Autowired
     private BookEventLogRepository eventLogRepository;
 
     @Test
     void createThenUpdate_queryReflectsUpdate() {
         String id = UUID.randomUUID().toString();
         commandBus.send(new CreateBookCommand(id, "Original Title", "Author"));
+        outboxPoller.poll();
+
         commandBus.send(new UpdateBookCommand(id, "Updated Title", "Author"));
+        outboxPoller.poll();
 
         Book book = queryBus.handle(new FindBookByIdQuery(id));
 
@@ -63,7 +68,10 @@ class BookLifecycleIntegrationTest extends MongoTestcontainersTest {
     void createThenDelete_queryThrowsNotFound() {
         String id = UUID.randomUUID().toString();
         commandBus.send(new CreateBookCommand(id, "Soon to die", "Author"));
+        outboxPoller.poll();
+
         commandBus.send(new DeleteBookCommand(id));
+        outboxPoller.poll();
 
         assertThrows(NoSuchElementException.class,
                 () -> queryBus.handle(new FindBookByIdQuery(id)));
@@ -73,7 +81,10 @@ class BookLifecycleIntegrationTest extends MongoTestcontainersTest {
     void deleteEmitsAuditLogEntry() {
         String id = UUID.randomUUID().toString();
         commandBus.send(new CreateBookCommand(id, "Audit Target", "Author"));
+        outboxPoller.poll();
+
         commandBus.send(new DeleteBookCommand(id));
+        outboxPoller.poll();
 
         List<BookEventLog> entriesForAggregate = eventLogRepository.findAll().stream()
                 .filter(entry -> id.equals(entry.getAggregateId()))

@@ -2,6 +2,8 @@ package com.oscaruiz.mycqrs.demo.domain.event;
 
 import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 
+import java.time.Instant;
+
 public class BookUpdatedEvent extends DomainEvent {
 
     private final String title;
@@ -9,6 +11,13 @@ public class BookUpdatedEvent extends DomainEvent {
 
     public BookUpdatedEvent(String aggregateId, String title, String author) {
         super(aggregateId);
+        this.title = title;
+        this.author = author;
+    }
+
+    protected BookUpdatedEvent(String eventId, Instant occurredAt, String aggregateId,
+                               String title, String author) {
+        super(eventId, occurredAt, aggregateId);
         this.title = title;
         this.author = author;
     }
