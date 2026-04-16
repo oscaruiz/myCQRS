@@ -5,12 +5,10 @@ import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-@Component
 public class QueryHandlerBeanPostProcessor implements BeanPostProcessor {
 
     private final QueryBus queryBus;
