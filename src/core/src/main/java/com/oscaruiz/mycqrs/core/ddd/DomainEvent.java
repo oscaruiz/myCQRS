@@ -1,7 +1,5 @@
 package com.oscaruiz.mycqrs.core.ddd;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.oscaruiz.mycqrs.core.contracts.event.Event;
 
 import java.time.Instant;
@@ -13,10 +11,10 @@ import java.util.UUID;
  * declare their own payload. Enforces that every domain event is bound
  * to a non-blank aggregate identifier.
  *
- * Immutability: all fields are final. Jackson deserialization uses the
- * three-arg {@link JsonCreator} constructor; domain code uses the
- * single-arg convenience constructor that auto-generates eventId and
- * occurredAt.
+ * Immutability: all fields are final. Infrastructure-layer deserializers
+ * (e.g., Jackson via mixins) use the three-arg reconstitution constructor;
+ * domain code uses the single-arg convenience constructor that auto-generates
+ * eventId and occurredAt.
  */
 public abstract class DomainEvent implements Event {
 
@@ -24,12 +22,12 @@ public abstract class DomainEvent implements Event {
     private final Instant occurredAt;
     private final String aggregateId;
 
-    @JsonCreator
-    protected DomainEvent(
-            @JsonProperty("eventId") String eventId,
-            @JsonProperty("occurredAt") Instant occurredAt,
-            @JsonProperty("aggregateId") String aggregateId
-    ) {
+    /**
+     * Reconstitution constructor. Used by infrastructure-layer deserializers
+     * (e.g., Jackson via mixins) to rebuild an event from stored state.
+     * Domain code should use {@link #DomainEvent(String)}.
+     */
+    protected DomainEvent(String eventId, Instant occurredAt, String aggregateId) {
         if (aggregateId == null || aggregateId.isBlank()) {
             throw new IllegalArgumentException("aggregateId cannot be null or blank");
         }

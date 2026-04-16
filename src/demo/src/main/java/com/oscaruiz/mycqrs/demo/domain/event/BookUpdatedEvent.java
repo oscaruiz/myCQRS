@@ -1,7 +1,5 @@
 package com.oscaruiz.mycqrs.demo.domain.event;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 
 import java.time.Instant;
@@ -17,14 +15,8 @@ public class BookUpdatedEvent extends DomainEvent {
         this.author = author;
     }
 
-    @JsonCreator
-    private BookUpdatedEvent(
-            @JsonProperty("eventId") String eventId,
-            @JsonProperty("occurredAt") Instant occurredAt,
-            @JsonProperty("aggregateId") String aggregateId,
-            @JsonProperty("title") String title,
-            @JsonProperty("author") String author
-    ) {
+    protected BookUpdatedEvent(String eventId, Instant occurredAt, String aggregateId,
+                               String title, String author) {
         super(eventId, occurredAt, aggregateId);
         this.title = title;
         this.author = author;
