@@ -8,12 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.ResolvableType;
-import org.springframework.stereotype.Component;
 
 /**
  * BeanPostProcessor that automatically registers CommandHandler implementations with the CommandBus.
  */
-@Component
 public class CommandHandlerBeanPostProcessor implements BeanPostProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(CommandHandlerBeanPostProcessor.class);
