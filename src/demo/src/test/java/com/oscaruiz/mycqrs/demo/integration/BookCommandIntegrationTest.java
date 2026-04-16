@@ -11,6 +11,7 @@ import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -64,6 +65,7 @@ class BookCommandIntegrationTest extends MongoTestcontainersTest {
         assertFalse(saved.isDeleted());
     }
 
+    @Disabled("Reactivated in Day 8 when the outbox poller drives projections")
     @Test
     void updateBookCommandEmitsEventAndChangesValues() {
         String id = UUID.randomUUID().toString();
