@@ -56,3 +56,10 @@ build/
 
 # Maven wrapper jar (properties file is tracked, jar is downloaded)
 .mvn/wrapper/maven-wrapper.jar
+
+# Ralph loop (local-only workflow)
+CLAUDE.md
+PRD.md
+progress.txt
+ralph.sh
+ralph-once.sh

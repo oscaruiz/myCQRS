@@ -2,6 +2,7 @@ package com.oscaruiz.mycqrs.demo.infrastructure.jpa;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import java.util.UUID;
 
@@ -14,6 +15,9 @@ public class BookEntity {
     private String title;
     private String author;
     private boolean deleted;
+
+    @Version
+    private Long version;
 
     protected BookEntity() {
         // for JPA

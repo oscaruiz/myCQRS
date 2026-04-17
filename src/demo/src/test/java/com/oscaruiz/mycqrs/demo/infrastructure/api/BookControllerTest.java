@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
+import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.application.query.BookResponse;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -77,6 +79,28 @@ class BookControllerTest {
                     .andExpect(status().isBadRequest());
 
             verify(commandBus, never()).send(any());
+        }
+    }
+
+    @Nested
+    class UpdateBook {
+
+        @Test
+        void updateBook_whenOptimisticLockConflict_returns409() throws Exception {
+            UpdateBookRequest request = new UpdateBookRequest("Dune", "Frank Herbert");
+            UUID id = UUID.randomUUID();
+
+            doThrow(new ObjectOptimisticLockingFailureException("BookEntity", id.toString()))
+                    .when(commandBus).send(any(UpdateBookCommand.class));
+
+            mockMvc.perform(patch("/books/{id}", id)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.status").value(409))
+                    .andExpect(jsonPath("$.error").value("Conflict"))
+                    .andExpect(jsonPath("$.message")
+                            .value("The resource was modified by another request. Please retry."));
         }
     }
 
