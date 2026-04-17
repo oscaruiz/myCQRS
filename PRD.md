@@ -76,7 +76,7 @@ Hibernate lanza jakarta.persistence.OptimisticLockException
 - Import: `org.springframework.orm.ObjectOptimisticLockingFailureException`.
 - Verificar que compila y tests existentes siguen verdes.
 
-### - [ ] 3. Test MockMvc: verificar HTTP 409
+### - [x] 3. Test MockMvc: verificar HTTP 409
 
 - Test en `BookControllerTest` (o clase nueva) que simula que
   `commandBus.send()` lanza `ObjectOptimisticLockingFailureException` y

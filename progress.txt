@@ -34,3 +34,20 @@ Feature: Optimistic Locking (@Version) en BookAggregate
 - Colocado junto al handler de `IllegalStateException` (también 409) por simetría.
 - Ejecutado `./mvnw -pl src/demo -am test`: 70 tests verdes (24 core + 46 demo).
 - No toca otros handlers ni el comportamiento existente.
+
+---
+
+## 2026-04-17 — Task 3: Test MockMvc HTTP 409
+
+- Añadido `@Nested UpdateBook` en `BookControllerTest` con
+  `updateBook_whenOptimisticLockConflict_returns409`.
+- Stub: `doThrow(new ObjectOptimisticLockingFailureException("BookEntity", id))`
+  sobre `commandBus.send(any(UpdateBookCommand.class))`, luego PATCH
+  `/books/{id}` con body válido.
+- Verificado status 409 + body `ApiError` con `status=409`, `error=Conflict` y
+  el mensaje exacto del handler.
+- PATCH es la ruta natural para el conflicto según el PRD (concurrentes
+  `PATCH /books/{id}`). `@WebMvcTest(BookController.class)` con MockBean del
+  `CommandBus` — el handler real (`@RestControllerAdvice`) sí se carga y
+  hace el mapeo.
+- Ejecutado `./mvnw -pl src/demo -am test`: 71 tests verdes (24 core + 47 demo).
