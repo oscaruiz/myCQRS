@@ -51,3 +51,27 @@ Feature: Optimistic Locking (@Version) en BookAggregate
   `CommandBus` — el handler real (`@RestControllerAdvice`) sí se carga y
   hace el mapeo.
 - Ejecutado `./mvnw -pl src/demo -am test`: 71 tests verdes (24 core + 47 demo).
+
+---
+
+## 2026-04-17 — Task 4: Test integración conflicto secuencial
+
+- Nuevo archivo `OptimisticLockingIntegrationTest` (`@SpringBootTest` + `@ActiveProfiles("test")`,
+  extiende `MongoTestcontainersTest` como el resto de tests de integración).
+- Autowire `SpringDataBookRepository` directamente (NO `BookRepository`/`JpaBookRepository`):
+  la adapter del puerto hace `findById` antes de `save`, lo que evita el conflicto a nivel
+  de aggregate. Para aislar el mecanismo de `@Version` hay que trabajar con `BookEntity`.
+- Flujo: `save()` inicial → dos `findById` (cada uno en su propia tx, devuelven entidades
+  detached con `version=0`) → `update()` + `save()` del primero (DB pasa a `version=1`) →
+  `update()` + `save()` del segundo lanza `ObjectOptimisticLockingFailureException`.
+- Assert adicional: tras el conflicto, el persistido sigue siendo el del primer writer
+  (verifica semántica "first writer wins").
+- Ejecutado `./mvnw -pl src/demo -am test`: 72 tests verdes (24 core + 48 demo).
+
+### Codebase Pattern aprendido
+
+- El adapter `JpaBookRepository.save()` siempre hace `findById` antes de mutar, por lo que
+  el conflicto optimista SOLO se observa bajo concurrencia real (dos tx simultáneas) o
+  bajando al `SpringDataBookRepository`. Para tests unitarios del mecanismo `@Version`,
+  trabajar a nivel de `BookEntity` directamente. Esto refuerza la decisión de diseño de
+  mantener `version` fuera del dominio.

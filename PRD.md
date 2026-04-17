@@ -84,7 +84,7 @@ Hibernate lanza jakarta.persistence.OptimisticLockException
 - Usar `@WebMvcTest` / MockMvc existente con `@MockBean CommandBus`.
 - Verificar con `mvn test`.
 
-### - [ ] 4. Test integración: detección de conflicto secuencial
+### - [x] 4. Test integración: detección de conflicto secuencial
 
 - Cargar el mismo `BookAggregate` dos veces (simulando dos requests que
   leyeron el mismo estado), mutar ambos, guardar el primero (éxito), guardar
