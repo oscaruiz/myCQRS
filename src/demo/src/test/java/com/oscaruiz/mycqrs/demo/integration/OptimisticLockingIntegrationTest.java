@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.demo.integration;
 
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
-import com.oscaruiz.mycqrs.core.spring.EnableCqrs;
+import com.oscaruiz.mycqrs.core.infrastructure.spring.EnableCqrs;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;

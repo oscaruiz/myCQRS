@@ -4,7 +4,7 @@ import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.oscaruiz.mycqrs.core.spring.EnableCqrs;
+import com.oscaruiz.mycqrs.core.infrastructure.spring.EnableCqrs;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.SpringDataBookRepository;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;

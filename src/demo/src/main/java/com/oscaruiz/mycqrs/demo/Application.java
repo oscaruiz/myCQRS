@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.demo;
 
-import com.oscaruiz.mycqrs.core.spring.EnableCqrs;
+import com.oscaruiz.mycqrs.core.infrastructure.spring.EnableCqrs;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
