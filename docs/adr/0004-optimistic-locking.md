@@ -19,8 +19,8 @@ client who wrote first never sees that their change was thrown away.
 
 `AGENTS.md` flagged this as a pending requirement, and the README listed it
 under "Future improvements". The architectural audit considered it latent
-data-integrity risk — tolerable under zero real concurrency, but a foot-gun
-the moment the service faces multiple clients or retries.
+data-integrity risk — harmless with a single client, but real data loss
+as soon as there is concurrency.
 
 The `TransactionalCommandInterceptor` already opens one JPA transaction per
 `commandBus.send(...)`, so concurrent commands already run in independent
@@ -133,8 +133,8 @@ belongs to the client.
 ### Positive
 
 - Lost updates on `PATCH /books/{id}` are detected and reported as
-  `HTTP 409 Conflict` instead of silent overwrites. The "first writer
-  wins" semantics is now an observable, testable property.
+  `HTTP 409 Conflict` instead of silent overwrites. "First writer wins"
+  is now enforced, not just assumed.
 - The mechanism is enforced at the row level inside a single SQL `UPDATE`,
   so it is correct even under the outbox pattern: a conflict rolls back
   the aggregate write and the outbox row together atomically.
@@ -151,8 +151,7 @@ belongs to the client.
 - Clients must handle `HTTP 409` explicitly. There is no automatic retry on
   the server side. Interactive UIs need to surface the conflict and guide
   the user through re-reading and re-submitting. This cost is deliberate:
-  automatic server-side retry would silently linearize concurrent intents
-  and hide the very conflict the mechanism was added to expose.
+  an automatic retry would hide the conflict we just made visible.
 - Semantic conflicts — two concurrent writers editing different fields of
   the same aggregate, each individually valid but incompatible together —
   are **not** resolved. The second writer gets a 409 even though a merge
