@@ -1,0 +1,24 @@
+# Ralph Progress Log
+Started: 2026-04-17
+Feature: Optimistic Locking (@Version) en BookAggregate
+
+## Codebase Patterns
+<!-- Patrones que el agente descubre durante las iteraciones -->
+
+- El perfil de tests (`application-test.yml`) usa Hibernate `ddl-auto: create-drop`
+  con Flyway deshabilitado. `schema.sql` de tests sólo contiene tablas NO-JPA
+  (actualmente `outbox`). `book_entity` lo genera Hibernate desde la @Entity, así
+  que cambios de esquema en la entidad (p.ej. @Version) NO requieren editar
+  `schema.sql`. La migración Flyway sí es necesaria para dev/prod.
+
+---
+
+## 2026-04-17 — Task 1: @Version en BookEntity + migración Flyway
+
+- Añadido `@Version private Long version` a `BookEntity` (campo sin getter/setter;
+  JPA lo gestiona por reflection).
+- Creada migración `V3__add_book_version.sql`:
+  `ALTER TABLE book_entity ADD COLUMN version BIGINT NOT NULL DEFAULT 0;`
+- `schema.sql` de tests NO tocado: `book_entity` no vive ahí (create-drop lo genera).
+- Ejecutado `./mvnw -pl src/demo -am test`: 70 tests verdes (24 core + 46 demo).
+- `BookAggregate`, `rehydrate()` y `toAggregate()` intactos (respeta decisión de diseño).
