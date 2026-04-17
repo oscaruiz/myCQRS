@@ -97,7 +97,7 @@ Hibernate lanza jakarta.persistence.OptimisticLockException
 - Usar `@SpringBootTest` con H2.
 - Verificar con `mvn test`.
 
-### - [ ] 5. Test integración: concurrencia real con CountDownLatch
+### - [x] 5. Test integración: concurrencia real con CountDownLatch
 
 - Dos hilos ejecutan `commandBus.send(new UpdateBookCommand(...))` al mismo
   libro simultáneamente.

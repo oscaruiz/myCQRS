@@ -75,3 +75,34 @@ Feature: Optimistic Locking (@Version) en BookAggregate
   bajando al `SpringDataBookRepository`. Para tests unitarios del mecanismo `@Version`,
   trabajar a nivel de `BookEntity` directamente. Esto refuerza la decisión de diseño de
   mantener `version` fuera del dominio.
+
+---
+
+## 2026-04-17 — Task 5: Test concurrencia real con CountDownLatch
+
+- Añadido `concurrentUpdateCommands_exactlyOneFailsWithOptimisticLock` en
+  `OptimisticLockingIntegrationTest` (reusa el `TestConfig` existente para compartir
+  contexto Spring con el test secuencial).
+- Flujo: `CreateBookCommand` inicial → `ExecutorService` de 2 hilos, cada uno espera
+  en `CountDownLatch(1)` → `start.countDown()` libera a ambos para ejecutar
+  `commandBus.send(UpdateBookCommand)` con títulos distintos.
+- Errores capturados por hilo en `AtomicReferenceArray<Throwable>`. Assertions:
+  exactamente 1 fallo, su cadena de causas contiene `ObjectOptimisticLockingFailureException`
+  (se navega con `getCause()` por si el bus la envolviera), y el estado persistido
+  proviene del writer ganador (`title` empieza por `Writer-`).
+- Timeout con `assertTimeoutPreemptively(Duration.ofSeconds(10), ...)` sobre el
+  `done.await(10, TimeUnit.SECONDS)` como pide el PRD.
+- `pool.shutdownNow()` en `finally` para no dejar hilos colgados si falla el test.
+- Ejecutado el test aislado 3 veces consecutivas — todas verdes (no flaky bajo H2 en mi máquina).
+- Ejecutado `./mvnw -pl src/demo -am test`: 73 tests verdes (24 core + 49 demo).
+
+### Codebase Pattern aprendido
+
+- `TransactionalCommandInterceptor` abre una tx por cada `commandBus.send(...)` usando
+  `PlatformTransactionManager` directamente (no `@Transactional`). Dos hilos ejecutando
+  `commandBus.send()` simultáneamente corren en transacciones independientes — esto es lo
+  que permite que el mecanismo `@Version` dispare bajo concurrencia real incluso con el
+  `findById` defensivo de `JpaBookRepository.save()`: si ambas tx leen version=0 antes de
+  que ninguna haya flusheado, la segunda en commitear falla en el `UPDATE ... WHERE version=?`.
+- H2 en `jdbc:h2:mem:...` soporta múltiples conexiones concurrentes (HikariCP con pool por
+  defecto) sin configuración extra, suficiente para tests de race conditions.
