@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.spring;
+package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
@@ -6,11 +6,6 @@ import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.command.SimpleCommandBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.query.SimpleQueryBus;
-import com.oscaruiz.mycqrs.core.infrastructure.spring.CommandHandlerBeanPostProcessor;
-import com.oscaruiz.mycqrs.core.infrastructure.spring.EventHandlerBeanPostProcessor;
-import com.oscaruiz.mycqrs.core.infrastructure.spring.QueryHandlerBeanPostProcessor;
-import com.oscaruiz.mycqrs.core.infrastructure.spring.TransactionalCommandInterceptor;
-import com.oscaruiz.mycqrs.core.infrastructure.spring.ValidationCommandInterceptor;
 import jakarta.validation.Validator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;

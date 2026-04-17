@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.spring;
+package com.oscaruiz.mycqrs.core.infrastructure.spring;
 
 import org.springframework.context.annotation.Import;
 
