@@ -6,7 +6,7 @@ import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import com.oscaruiz.mycqrs.demo.application.query.BookResponse;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLog;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLogRepository;
@@ -58,10 +58,10 @@ class BookLifecycleIntegrationTest extends MongoTestcontainersTest {
         commandBus.send(new UpdateBookCommand(id, "Updated Title", "Author"));
         outboxPoller.poll();
 
-        Book book = queryBus.handle(new FindBookByIdQuery(id));
+        BookResponse book = queryBus.handle(new FindBookByIdQuery(id));
 
-        assertEquals("Updated Title", book.getTitle());
-        assertEquals("Author", book.getAuthor());
+        assertEquals("Updated Title", book.title());
+        assertEquals("Author", book.author());
     }
 
     @Test

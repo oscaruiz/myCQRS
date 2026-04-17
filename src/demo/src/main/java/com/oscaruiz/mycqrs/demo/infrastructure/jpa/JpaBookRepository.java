@@ -18,7 +18,7 @@ public class JpaBookRepository implements BookRepository {
     }
 
     @Override
-    public BookAggregate save(BookAggregate bookAggregate) {
+    public void save(BookAggregate bookAggregate) {
         UUID id = UUID.fromString(bookAggregate.getId());
         BookEntity entity = springDataBookRepository.findById(id)
                 .map(existing -> {
@@ -27,7 +27,6 @@ public class JpaBookRepository implements BookRepository {
                 })
                 .orElseGet(() -> new BookEntity(id, bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted()));
         springDataBookRepository.save(entity);
-        return bookAggregate;
     }
 
     @Override

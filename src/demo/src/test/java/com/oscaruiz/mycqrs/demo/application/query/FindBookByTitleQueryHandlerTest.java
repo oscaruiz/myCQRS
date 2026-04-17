@@ -1,6 +1,5 @@
 package com.oscaruiz.mycqrs.demo.application.query;
 
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,17 +20,17 @@ class FindBookByTitleQueryHandlerTest {
         repository = new InMemoryBookReadModelRepository();
         handler = new FindBookByTitleQueryHandler(repository);
 
-        repository.save(new Book(null, "Clean Code", "Robert C. Martin"));
+        repository.save(new BookResponse(null, "Clean Code", "Robert C. Martin"));
     }
 
     @Test
     void shouldReturnBookByTitle() {
         FindBookByTitleQuery query = new FindBookByTitleQuery("Clean Code");
-        Book result = handler.handle(query);
+        BookResponse result = handler.handle(query);
 
         assertNotNull(result);
-        assertEquals("Clean Code", result.getTitle());
-        assertEquals("Robert C. Martin", result.getAuthor());
+        assertEquals("Clean Code", result.title());
+        assertEquals("Robert C. Martin", result.author());
     }
 
     @Test
@@ -42,21 +41,21 @@ class FindBookByTitleQueryHandlerTest {
     }
 
     private static class InMemoryBookReadModelRepository implements BookReadModelRepository {
-        private final Map<String, Book> byTitle = new HashMap<>();
+        private final Map<String, BookResponse> byTitle = new HashMap<>();
 
-        void save(Book book) {
-            byTitle.put(book.getTitle(), book);
+        void save(BookResponse book) {
+            byTitle.put(book.title(), book);
         }
 
         @Override
-        public Optional<Book> findById(String id) {
+        public Optional<BookResponse> findById(String id) {
             return byTitle.values().stream()
-                    .filter(b -> id.equals(b.getId()))
+                    .filter(b -> id.equals(b.id()))
                     .findFirst();
         }
 
         @Override
-        public Optional<Book> findByTitle(String title) {
+        public Optional<BookResponse> findByTitle(String title) {
             return Optional.ofNullable(byTitle.get(title));
         }
     }

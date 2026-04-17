@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public interface BookRepository {
 
-    BookAggregate save(BookAggregate bookAggregate);
+    void save(BookAggregate bookAggregate);
 
     BookAggregate load(String id);
 
