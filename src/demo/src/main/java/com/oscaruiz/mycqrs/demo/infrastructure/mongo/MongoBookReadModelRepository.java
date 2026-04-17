@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.demo.infrastructure.mongo;
 
 import com.oscaruiz.mycqrs.demo.application.query.BookReadModelRepository;
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import com.oscaruiz.mycqrs.demo.application.query.BookResponse;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -16,16 +16,16 @@ public class MongoBookReadModelRepository implements BookReadModelRepository {
     }
 
     @Override
-    public Optional<Book> findById(String id) {
-        return bookMongoRepository.findById(id).map(this::toBook);
+    public Optional<BookResponse> findById(String id) {
+        return bookMongoRepository.findById(id).map(this::toResponse);
     }
 
     @Override
-    public Optional<Book> findByTitle(String title) {
-        return bookMongoRepository.findFirstByTitle(title).map(this::toBook);
+    public Optional<BookResponse> findByTitle(String title) {
+        return bookMongoRepository.findFirstByTitle(title).map(this::toResponse);
     }
 
-    private Book toBook(BookReadModel model) {
-        return new Book(model.getAggregateId(), model.getTitle(), model.getAuthor());
+    private BookResponse toResponse(BookReadModel model) {
+        return new BookResponse(model.getAggregateId(), model.getTitle(), model.getAuthor());
     }
 }

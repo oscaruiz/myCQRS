@@ -21,9 +21,9 @@ public class DeleteBookCommandHandler implements CommandHandler<DeleteBookComman
     public void handle(DeleteBookCommand command) {
         BookAggregate aggregate = bookRepository.load(command.getBookId());
         aggregate.delete();
-        BookAggregate saved = bookRepository.save(aggregate);
+        bookRepository.save(aggregate);
 
-        saved.pullDomainEvents().forEach(eventBus::publish);
+        aggregate.pullDomainEvents().forEach(eventBus::publish);
 
     }
 }

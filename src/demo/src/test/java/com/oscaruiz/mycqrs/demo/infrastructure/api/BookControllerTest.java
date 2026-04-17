@@ -5,7 +5,7 @@ import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import com.oscaruiz.mycqrs.demo.application.query.BookResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +86,7 @@ class BookControllerTest {
         @Test
         void getBook_whenExists_returns200() throws Exception {
             UUID id = UUID.randomUUID();
-            Book book = new Book(id.toString(), "Dune", "Frank Herbert");
+            BookResponse book = new BookResponse(id.toString(), "Dune", "Frank Herbert");
             when(queryBus.handle(any(FindBookByIdQuery.class))).thenReturn(book);
 
             mockMvc.perform(get("/books/{id}", id))

@@ -4,7 +4,7 @@ import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
+import com.oscaruiz.mycqrs.demo.application.query.BookResponse;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxPoller;
 import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
@@ -45,11 +45,11 @@ class CommandQuerySmokeIntegrationTest extends MongoTestcontainersTest {
 
         outboxPoller.poll();
 
-        Book found = queryBus.handle(new FindBookByTitleQuery("Clean Architecture"));
+        BookResponse found = queryBus.handle(new FindBookByTitleQuery("Clean Architecture"));
 
         assertNotNull(found);
-        assertEquals("Clean Architecture", found.getTitle());
-        assertEquals("Robert C. Martin", found.getAuthor());
+        assertEquals("Clean Architecture", found.title());
+        assertEquals("Robert C. Martin", found.author());
     }
 
     @SpringBootConfiguration

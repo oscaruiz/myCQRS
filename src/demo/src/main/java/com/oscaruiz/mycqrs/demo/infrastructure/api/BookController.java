@@ -3,9 +3,9 @@ package com.oscaruiz.mycqrs.demo.infrastructure.api;
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
+import com.oscaruiz.mycqrs.demo.application.query.BookResponse;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.application.query.FindBookByTitleQuery;
-import com.oscaruiz.mycqrs.demo.domain.model.Book;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,14 +27,12 @@ public class BookController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookResponse> getBookById(@PathVariable UUID id) {
-        Book book = queryBus.handle(new FindBookByIdQuery(id.toString()));
-        return ResponseEntity.ok(BookResponse.from(book));
+        return ResponseEntity.ok(queryBus.handle(new FindBookByIdQuery(id.toString())));
     }
 
     @GetMapping
     public ResponseEntity<BookResponse> getBooksByTitle(@RequestParam String title) {
-        BookResponse bookResponse = BookResponse.from(queryBus.handle(new FindBookByTitleQuery(title)));
-        return ResponseEntity.ok(bookResponse );
+        return ResponseEntity.ok(queryBus.handle(new FindBookByTitleQuery(title)));
     }
 
     @PutMapping("/{id}")

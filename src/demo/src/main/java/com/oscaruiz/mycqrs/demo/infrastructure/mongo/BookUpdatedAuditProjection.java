@@ -18,12 +18,12 @@ import java.util.HashMap;
  * table's attempts column.
  */
 @EventHandlerComponent
-public class BookAuditProjection implements EventHandler<BookUpdatedEvent> {
+public class BookUpdatedAuditProjection implements EventHandler<BookUpdatedEvent> {
 
     private final BookEventLogRepository repository;
     private final ObjectMapper objectMapper;
 
-    public BookAuditProjection(BookEventLogRepository repository, ObjectMapper objectMapper) {
+    public BookUpdatedAuditProjection(BookEventLogRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
         this.objectMapper = objectMapper;
     }
