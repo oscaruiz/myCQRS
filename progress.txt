@@ -106,3 +106,24 @@ Feature: Optimistic Locking (@Version) en BookAggregate
   que ninguna haya flusheado, la segunda en commitear falla en el `UPDATE ... WHERE version=?`.
 - H2 en `jdbc:h2:mem:...` soporta múltiples conexiones concurrentes (HikariCP con pool por
   defecto) sin configuración extra, suficiente para tests de race conditions.
+
+---
+
+## 2026-04-17 — Task 6: ADR 0004 Optimistic Locking
+
+- Creado `docs/adr/0004-optimistic-locking.md` siguiendo el formato de ADRs 0001–0003
+  (Status, Date, Context, Decision, Alternatives considered and rejected, Consequences).
+- Contenido cubre los puntos exigidos por el PRD: por qué optimistic > pessimistic para
+  HTTP (locks de fila retenidos por request escalan mal y generan deadlocks), por qué
+  `version` vive en `BookEntity` y no en `BookAggregate` (persistence concern, YAGNI,
+  dominio sigue puro), qué implica un 409 para el cliente (GET + retry, nunca retry
+  automático del servidor), y qué queda fuera de alcance (conflictos semánticos /
+  merge por campos).
+- Alternativas rechazadas documentadas: pessimistic locking, field-level merge, CAS
+  con ETag/If-Match (aplazado para Day 16+), check a nivel de handler (TOCTOU),
+  y "do nothing" (el bug que se arregla).
+- Sección "Related work" enlaza con ADR 0003 (outbox atómico con el `UPDATE` del
+  agregado), Day 11 (Testcontainers Postgres → borrar `schema.sql` de version) y
+  Day 16+ (ETag sobre OpenAPI como follow-up ADR).
+- Cambio docs-only, pero ejecutado `./mvnw -pl src/demo -am test`: 73 tests verdes
+  (24 core + 49 demo). Sin regresiones.

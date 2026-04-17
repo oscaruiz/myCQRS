@@ -111,7 +111,7 @@ Hibernate lanza jakarta.persistence.OptimisticLockException
   Verificar el tipo raíz con `Throwable.getCause()` si es necesario.
 - Verificar con `mvn test`.
 
-### - [ ] 6. ADR 0004: Optimistic Locking
+### - [x] 6. ADR 0004: Optimistic Locking
 
 - Crear `docs/adr/0004-optimistic-locking.md` documentando:
     - **Por qué optimistic sobre pessimistic:** no queremos locks de DB
