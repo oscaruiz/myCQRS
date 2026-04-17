@@ -60,7 +60,7 @@ Hibernate lanza jakarta.persistence.OptimisticLockException
 - Verificar que `mvn test` sigue verde (no rompe tests existentes).
 - NO tocar `BookAggregate`, ni `rehydrate()`, ni el mapeo `toAggregate()`.
 
-### - [ ] 2. Exception handler: GlobalExceptionHandler → 409 Conflict
+### - [x] 2. Exception handler: GlobalExceptionHandler → 409 Conflict
 
 - Añadir handler para `ObjectOptimisticLockingFailureException` en
   `GlobalExceptionHandler` que devuelva HTTP 409 con body:
