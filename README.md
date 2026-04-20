@@ -1,199 +1,130 @@
 # myCQRS
 
-![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
-![Spring Boot 3.2.5](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
-![Maven](https://img.shields.io/badge/Build-Maven-C71A36?logo=apachemaven&logoColor=white)
+A DI-container-agnostic CQRS core in Java 21, with Spring Boot as the reference adapter.
+
 ![CI](https://github.com/oscaruiz/myCQRS/actions/workflows/ci.yml/badge.svg?branch=main)
 
-## Purpose
+## What is this?
 
-This repository explores CQRS and DDD concepts by implementing core infrastructure manually instead of delegating all behavior to framework conventions. The intent is educational: make command, query, and event orchestration explicit in code.
+A two-module Maven project built to demonstrate CQRS, DDD, and hexagonal architecture at a senior level without hiding the mechanics behind a framework. The `core` module provides the command, query, and event buses, interceptor chain, and handler auto-registration contracts as a reusable jar; Spring dependencies are declared `<optional>` and live only in a single adapter sub-package. The `demo` module wires that core into a Book bounded context backed by PostgreSQL (write side, Flyway), MongoDB (read side and audit log), and an outbox poller for eventual consistency. The repository doubles as a sandbox for architectural decisions that are documented, not improvised — including the ones that were rejected.
 
-## Architectural overview
+## Architecture
 
-The codebase is split between a small CQRS core and a demo book context.
+### Write flow
 
-In `core`, command, query, and event contracts are implemented with in-memory buses. Handler registration is automated via Spring `BeanPostProcessor` components, and command validation is applied through an interceptor.
+```
+HTTP request
+    │
+    ▼
+Controller ──► CommandBus ──► [ Validation ─► Transaction ─► Handler ]
+                                                                │
+                                                                ▼
+                                   Aggregate UPDATE + Outbox INSERT
+                                   (single PostgreSQL transaction)
+                                                                │
+                                                                ▼
+                                          OutboxPoller (scheduled)
+                                                                │
+                                                                ▼
+                                          EventBus (in-memory)
+                                                                │
+                                                                ▼
+                                          Projectors ──► MongoDB
+```
 
-In `demo`, domain behavior is centered on `BookAggregate`, which records domain events (`BookCreatedEvent`, `BookUpdatedEvent`, `BookDeletedEvent`) when state changes occur. Application handlers coordinate use cases through domain ports, and infrastructure adapters expose HTTP endpoints, persist write-side state with JPA, and update read/audit projections.
+### Read flow
 
-The layering follows a hexagonal style:
+```
+HTTP request ──► Controller ──► QueryBus ──► QueryHandler ──► MongoDB
+```
 
-- Domain: aggregate, events, repository port.
-- Application: command/query/event handlers.
-- Infrastructure: API and persistence/projection adapters.
+The outbox solves the dual-write problem. The aggregate row and the event envelope are written in the same PostgreSQL transaction, so either both commit or neither does. A scheduled poller drains the outbox, publishes each event through an internal in-memory bus, and the Mongo projectors update the read model. No distributed transaction, no lost events, no "publish first, hope the DB commits" ordering hazard.
 
-### Hexagonal + CQRS + DDD Flow
+## Modules
 
-      HEXAGONAL MAP + CQRS + DDD
+- **`src/core`** — reusable CQRS framework. Published as a jar; Spring is an `<optional>` dependency, not a transitive one.
+  - `core.contracts` — ports: `Command`, `CommandBus`, `CommandHandler`, `CommandInterceptor`, `Event`, `EventBus`, `EventHandler`, `Query`, `QueryBus`, `QueryHandler`. **Zero Spring imports.**
+  - `core.ddd` — `AggregateRoot<ID>`, `DomainEvent`. **Zero Spring imports.**
+  - `core.infrastructure.bus` — in-memory `SimpleCommandBus`, `SimpleQueryBus`, `SimpleEventBus`.
+  - `core.infrastructure.spring` — the Spring adapter: `@EnableCqrs`, `CqrsConfiguration`, `BeanPostProcessor`s that auto-register handlers, `ValidationCommandInterceptor`, `TransactionalCommandInterceptor`.
+- **`src/demo`** — Book bounded context in hexagonal style. PostgreSQL + Flyway on the write side, MongoDB on the read side, outbox poller in between.
 
-                                  ┌──────────────────────────────────┐
-                                  │           CLIENT                 │
-                                  │     (HTTP / REST Call)           │
-                                  └──────────────┬───────────────────┘
-                                                 │
-                                                 ▼
-                              ┌───────────────────────────────────┐
-                              │           CONTROLLER              │
-                              │  (Infra - HTTP Adapter)           │
-                              │  - Parse @PathVariable Long id    │
-                              │  - Build Command                  │
-                              └──────────────┬────────────────────┘
-                                             │
-                                             ▼
-                              ┌───────────────────────────────────┐
-                              │           COMMAND BUS             │
-                              │      (Core - Infra wiring)        │
-                              └──────────────┬────────────────────┘
-                                             │
-                                             ▼
-                        ┌────────────────────────────────────────────┐
-                        │           COMMAND HANDLER (App)            │
-                        │  - load aggregate via BookRepository       │
-                        │  - call domain behavior                    │
-                        │  - save aggregate                          │
-                        │  - publish pulled domain events            │
-                        └──────────────┬─────────────────────────────┘
-                                       │
-                                       ▼
-                        ┌────────────────────────────────────────────┐
-                        │              DOMAIN                        │
-                        │        BookAggregate                       │
-                        │                                            │
-                        │  State: id, title, author, deleted        │
-                        │  Methods: create/update/delete             │
-                        │  Emits: Domain Events                      │
-                        └──────────────┬─────────────────────────────┘
-                                       │
-                                       ▼
-                        ┌────────────────────────────────────────────┐
-                        │        BOOK REPOSITORY (PORT)              │
-                        │        (Domain interface)                  │
-                        └──────────────┬─────────────────────────────┘
-                                       │
-                                       ▼
-                        ┌────────────────────────────────────────────┐
-                        │      JPA BOOK REPOSITORY (ADAPTER)         │
-                        │  - Maps Aggregate ↔ Entity                 │
-                        │  - Implements load/save                    │
-                        └──────────────┬─────────────────────────────┘
-                                       │
-                                       ▼
-                        ┌────────────────────────────────────────────┐
-                        │             BOOK ENTITY (JPA)              │
-                        │   id | title | author | deleted            │
-                        └──────────────┬─────────────────────────────┘
-                                       │
-                                       ▼
-                                  ┌───────────────┐
-                                  │  POSTGRES DB  │
-                                  └───────────────┘
+## Stack
 
-### Event Flow (CQRS Side)
+- Java 21, Spring Boot 3.2.5, Maven (wrapper included).
+- PostgreSQL + Flyway on the write side, `ddl-auto=validate`.
+- MongoDB for the read model and the audit log.
+- JUnit 5, Mockito, AssertJ, Testcontainers (PostgreSQL + MongoDB), ArchUnit.
+- Docker (multi-stage build), GitHub Actions CI.
 
-    Aggregate.recordEvent(...)
-              │
-              ▼
-    Handler pulls domainEvents
-              │
-              ▼
-    EventBus.publish(event)
-              │
-              ▼
-    Projection / Read Model
-              │
-              ▼
-    Mongo / InMemory / Query Model
+## How to run it
 
-## Module structure
-
-This is a multi-module Maven project:
-
-- `src/core`: reusable CQRS abstractions and in-memory bus infrastructure.
-- `src/demo`: runnable sample application built on top of `core`.
-
-## Command execution flow
-
-The write path in the demo is:
-
-1. REST endpoint receives a command request.
-2. Request is dispatched through `CommandBus`.
-3. Command handler creates/loads `BookAggregate` and executes domain behavior.
-4. Aggregate records domain events.
-5. Aggregate state is persisted.
-6. Emitted events are published through `EventBus`.
-7. Event handlers update read projections and audit storage.
-
-Query handling is separate and goes through `QueryBus` and query handlers.
-
-## Running the application
-
-The project uses Spring Profiles to separate configuration by environment.
-
-**Dev (local):**
+Prerequisites: Java 21, Docker, and the bundled Maven wrapper.
 
 ```bash
+# Start PostgreSQL and MongoDB in containers
+docker compose -f src/demo/docker-compose.yml up -d postgres mongo
+
+# Run the demo application (dev profile; Flyway applies V1/V2/V3 on boot)
 ./mvnw spring-boot:run -pl src/demo
 ```
 
-No flags needed — `application.yml` defaults to `profiles.active: dev`, which connects to local PostgreSQL and MongoDB.
-
-**Test:**
+The API uses client-generated UUIDs: the client picks the identifier, `PUT` creates the resource at that URI.
 
 ```bash
-./mvnw test
+UUID=$(uuidgen)
+
+# Create
+curl -X PUT "http://localhost:8080/books/$UUID" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"The Art of War","author":"Sun Tzu"}'
+
+# Read (served from the Mongo projection, populated by the outbox poller)
+curl "http://localhost:8080/books/$UUID"
+
+# Update
+curl -X PATCH "http://localhost:8080/books/$UUID" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"The Art of War (revised)","author":"Sun Tzu"}'
+
+# Delete
+curl -X DELETE "http://localhost:8080/books/$UUID"
 ```
 
-Integration tests automatically use the `test` profile via `@ActiveProfiles("test")`. This profile uses H2 in-memory and excludes MongoDB.
+`GET /books?title=…` looks a book up by title in the read model.
 
-**Prod:**
+## How to run the tests
 
 ```bash
-SPRING_PROFILES_ACTIVE=prod java -jar mycqrs.jar
+./mvnw verify
 ```
 
-Or with a JVM flag:
+Core tests run on JUnit + Mockito + AssertJ with no Spring context — a concrete demonstration that the core doesn't depend on the container to be exercised. Demo integration tests boot a `@SpringBootTest` against Testcontainers (PostgreSQL + MongoDB) wired via `@ServiceConnection`; H2 is not used anywhere. ArchUnit enforces package boundaries in CI: contracts and ddd must not depend on Spring, the Book context must follow an onion shape, command handlers must not call each other directly, and no module may contain a slice cycle.
 
-```bash
-java -Dspring.profiles.active=prod -jar mycqrs.jar
-```
+## Design decisions
 
-## Current limitations
+Significant decisions — including deliberate non-adoptions such as Event Sourcing — are documented as ADRs in [`docs/adr/`](docs/adr/). The README intentionally does not summarize them; open the directory when a specific choice matters.
 
-Current known limitations are:
+## Status and roadmap
 
-- Event dispatch is synchronous and in-memory.
-- There is no outbox/transactional handoff for durable event publication.
-- No optimistic locking on aggregates yet (`@Version` pending).
+**Implemented**
+- Framework-agnostic core with an explicit Spring adapter (`@EnableCqrs`, deferred import, `@ConditionalOnMissingBean` on every default bean).
+- Handler auto-registration via `BeanPostProcessor`s for commands, queries, and events.
+- Chainable command interceptors in a fixed order: **validation → transaction → handler**. `TransactionalCommandInterceptor` uses `PlatformTransactionManager` with `PROPAGATION_REQUIRED` and commits outside the `try` block so a failing commit cannot trigger an invalid rollback.
+- Outbox pattern: `OutboxEventBus` (marked `@Primary`) writes events to the outbox table inside the aggregate's transaction; `OutboxPoller` drains the table asynchronously and dispatches to the internal in-memory bus, where Mongo projectors subscribe.
+- Optimistic locking on the aggregate via `@Version` on the JPA entity; `GlobalExceptionHandler` maps `ObjectOptimisticLockingFailureException` to HTTP 409.
+- Client-generated UUIDs; `PUT`/`PATCH`/`DELETE` for writes and `GET` for reads.
+- Flyway migrations with `ddl-auto=validate` in every environment.
+- ArchUnit enforcement of architectural boundaries in both modules.
+- Testcontainers (PostgreSQL + MongoDB) for every integration test.
+- Spring profiles for `dev` and `test`; Docker multi-stage image; GitHub Actions CI running `./mvnw verify`.
+- `GlobalExceptionHandler` mapping domain and infrastructure exceptions to meaningful HTTP status codes.
 
-## Architecture decisions
-
-Key architectural decisions are documented as ADRs in `docs/adr/`:
-
-- **ADR 0001** — Core package structure: separation of `contracts`, `infrastructure`, `spring`, and `ddd` following an API/SPI layering pattern.
-- **ADR 0002** — Read model strategy: unified read store on MongoDB accessed via `BookReadModelRepository` port; hard delete in read model with retention in the audit log.
-
-## Testing approach
-
-Tests focus on behavior across layers:
-
-- Integration tests with Spring Boot and H2 for command-side flows.
-- A smoke integration test for command-to-query behavior.
-- Domain tests for aggregate invariants and domain event recording.
-- Query handler tests for read-side lookup behavior.
-
-## Future improvements
-
-Planned improvements include:
-
-- Outbox pattern for durable event publication (Week 4).
-- Optimistic locking on aggregates via `@Version` (Week 4).
-- Event Sourcing considered and documented as ADR (Week 4, intentionally not implemented).
-- Migration of write-side integration tests from H2 to Postgres via Testcontainers.
-- Asynchronous event dispatch.
+**Planned**
+- Idempotency: command deduplication on the write side and projection idempotency on the read side.
+- End-to-end correlation ID propagated from HTTP request through command, event, and projection.
+- `demo-vanilla` adapter demonstrating the `core` jar running under a different DI container — or none at all.
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0**.
-
-See the [LICENSE](LICENSE) file for full details.
+GPL-3.0. See [LICENSE](LICENSE).
