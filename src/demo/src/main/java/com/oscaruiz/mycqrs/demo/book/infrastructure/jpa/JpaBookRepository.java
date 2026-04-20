@@ -1,0 +1,47 @@
+package com.oscaruiz.mycqrs.demo.book.infrastructure.jpa;
+
+import com.oscaruiz.mycqrs.demo.book.domain.model.BookAggregate;
+import com.oscaruiz.mycqrs.demo.book.domain.repository.BookRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public class JpaBookRepository implements BookRepository {
+
+    private final SpringDataBookRepository springDataBookRepository;
+
+    public JpaBookRepository(SpringDataBookRepository springDataBookRepository) {
+        this.springDataBookRepository = springDataBookRepository;
+    }
+
+    @Override
+    public void save(BookAggregate bookAggregate) {
+        UUID id = UUID.fromString(bookAggregate.getId());
+        BookEntity entity = springDataBookRepository.findById(id)
+                .map(existing -> {
+                    existing.update(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
+                    return existing;
+                })
+                .orElseGet(() -> new BookEntity(id, bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted()));
+        springDataBookRepository.save(entity);
+    }
+
+    @Override
+    public BookAggregate load(String id) {
+        BookEntity entity = springDataBookRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new NoSuchElementException("Book with id " + id + " was not found"));
+        return toAggregate(entity);
+    }
+
+    @Override
+    public Optional<BookAggregate> findByTitle(String title) {
+        return springDataBookRepository.findByTitle(title).map(this::toAggregate);
+    }
+
+    private BookAggregate toAggregate(BookEntity entity) {
+        return BookAggregate.rehydrate(entity.getId().toString(), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
+    }
+}
