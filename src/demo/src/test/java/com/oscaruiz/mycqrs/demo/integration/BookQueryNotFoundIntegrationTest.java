@@ -1,7 +1,7 @@
 package com.oscaruiz.mycqrs.demo.integration;
 
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EnableCqrs;
@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = BookQueryNotFoundIntegrationTest.TestConfig.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class BookQueryNotFoundIntegrationTest extends MongoTestcontainersTest {
+class BookQueryNotFoundIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -10,8 +10,7 @@ import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxConfig;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxEventBus;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
-import org.junit.jupiter.api.BeforeEach;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EnableCqrs;
@@ -37,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(classes = OutboxRollbackIntegrationTest.RollbackConfig.class)
 @ActiveProfiles("test")
-class OutboxRollbackIntegrationTest extends MongoTestcontainersTest {
+class OutboxRollbackIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private CommandBus commandBus;
@@ -47,11 +46,6 @@ class OutboxRollbackIntegrationTest extends MongoTestcontainersTest {
 
     @Autowired
     private BookRepository bookRepository;
-
-    @BeforeEach
-    void cleanOutbox() {
-        jdbc.execute("TRUNCATE TABLE outbox");
-    }
 
     @Test
     void whenOutboxWriteFails_aggregateSaveIsRolledBack() {

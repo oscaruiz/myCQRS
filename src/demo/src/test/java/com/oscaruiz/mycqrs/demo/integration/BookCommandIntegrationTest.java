@@ -10,7 +10,7 @@ import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxPoller;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = BookCommandIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class BookCommandIntegrationTest extends MongoTestcontainersTest {
+class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private CommandBus commandBus;

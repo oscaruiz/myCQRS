@@ -4,8 +4,7 @@ import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
-import org.junit.jupiter.api.BeforeEach;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EnableCqrs;
@@ -25,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = OutboxWriterIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class OutboxWriterIntegrationTest extends MongoTestcontainersTest {
+class OutboxWriterIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private CommandBus commandBus;
@@ -35,11 +34,6 @@ class OutboxWriterIntegrationTest extends MongoTestcontainersTest {
 
     @Autowired
     private BookRepository bookRepository;
-
-    @BeforeEach
-    void cleanOutbox() {
-        jdbc.execute("TRUNCATE TABLE outbox");
-    }
 
     @Test
     void successfulCommand_writesOneRowToOutbox() {

@@ -6,7 +6,7 @@ import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.SpringDataBookRepository;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = OptimisticLockingIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class OptimisticLockingIntegrationTest extends MongoTestcontainersTest {
+class OptimisticLockingIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private SpringDataBookRepository springDataBookRepository;

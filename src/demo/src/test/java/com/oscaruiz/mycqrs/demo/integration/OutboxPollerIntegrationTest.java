@@ -6,7 +6,7 @@ import com.oscaruiz.mycqrs.demo.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.domain.event.BookCreatedEvent;
 import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxPoller;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = OutboxPollerIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class OutboxPollerIntegrationTest extends MongoTestcontainersTest {
+class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private CommandBus commandBus;
@@ -48,7 +48,6 @@ class OutboxPollerIntegrationTest extends MongoTestcontainersTest {
 
     @BeforeEach
     void cleanState() {
-        jdbc.execute("TRUNCATE TABLE outbox");
         createdEventRecorder.clear();
     }
 

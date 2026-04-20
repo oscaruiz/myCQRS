@@ -12,7 +12,7 @@ import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLog;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookEventLogRepository;
 import com.oscaruiz.mycqrs.demo.infrastructure.mongo.BookOperation;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxPoller;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EnableCqrs;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = BookLifecycleIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class BookLifecycleIntegrationTest extends MongoTestcontainersTest {
+class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private CommandBus commandBus;

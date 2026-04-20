@@ -6,7 +6,7 @@ import com.oscaruiz.mycqrs.demo.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.domain.repository.BookRepository;
-import com.oscaruiz.mycqrs.demo.integration.support.MongoTestcontainersTest;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = BookCommandIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class CommandValidationIntegrationTest extends MongoTestcontainersTest {
+class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private CommandBus commandBus;
