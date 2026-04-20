@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.demo.integration;
 
-import org.junit.jupiter.api.BeforeEach;
+import com.oscaruiz.mycqrs.demo.integration.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -20,31 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = OutboxSchemaIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
-class OutboxSchemaIntegrationTest {
+class OutboxSchemaIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbc;
-
-    @BeforeEach
-    void createOutboxTableForTest() {
-        // Tests disable Flyway; create the outbox table manually in H2.
-        // This is temporary until Testcontainers Postgres (Week 5) runs real
-        // migrations against a real Postgres in tests.
-        jdbc.execute("""
-            CREATE TABLE IF NOT EXISTS outbox (
-                id UUID NOT NULL,
-                aggregate_id VARCHAR(36) NOT NULL,
-                event_type VARCHAR(255) NOT NULL,
-                payload TEXT NOT NULL,
-                occurred_at TIMESTAMP NOT NULL,
-                processed_at TIMESTAMP,
-                attempts INT NOT NULL DEFAULT 0,
-                last_error TEXT,
-                PRIMARY KEY (id)
-            )
-        """);
-        jdbc.execute("TRUNCATE TABLE outbox");
-    }
 
     @Test
     void outboxTableAcceptsInsertAndReturnsRow() {
@@ -63,11 +42,11 @@ class OutboxSchemaIntegrationTest {
             "SELECT * FROM outbox WHERE id = ?", id
         );
 
-        assertEquals(aggregateId, row.get("AGGREGATE_ID"));
-        assertEquals(eventType, row.get("EVENT_TYPE"));
-        assertEquals(payload, row.get("PAYLOAD"));
-        assertNull(row.get("PROCESSED_AT"));
-        assertEquals(0, ((Number) row.get("ATTEMPTS")).intValue());
+        assertEquals(aggregateId, row.get("aggregate_id"));
+        assertEquals(eventType, row.get("event_type"));
+        assertEquals(payload, row.get("payload"));
+        assertNull(row.get("processed_at"));
+        assertEquals(0, ((Number) row.get("attempts")).intValue());
     }
 
     @Test

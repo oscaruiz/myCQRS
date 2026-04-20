@@ -11,7 +11,6 @@ import com.oscaruiz.mycqrs.demo.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxConfig;
 import com.oscaruiz.mycqrs.demo.infrastructure.outbox.OutboxEventBus;
 import com.oscaruiz.mycqrs.demo.integration.support.AbstractFullStackIntegrationTest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.oscaruiz.mycqrs.core.spring.EnableCqrs;
@@ -47,11 +46,6 @@ class OutboxRollbackIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Autowired
     private BookRepository bookRepository;
-
-    @BeforeEach
-    void cleanOutbox() {
-        jdbc.execute("TRUNCATE TABLE outbox");
-    }
 
     @Test
     void whenOutboxWriteFails_aggregateSaveIsRolledBack() {

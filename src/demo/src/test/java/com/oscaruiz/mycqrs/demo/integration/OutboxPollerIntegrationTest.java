@@ -48,7 +48,6 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @BeforeEach
     void cleanState() {
-        jdbc.execute("TRUNCATE TABLE outbox");
         createdEventRecorder.clear();
     }
 
