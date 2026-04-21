@@ -4,6 +4,8 @@ import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.EventHandlerComponent;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookCreatedEvent;
 
+import java.util.ArrayList;
+
 @EventHandlerComponent
 public class BookCreatedMongoProjection implements EventHandler<BookCreatedEvent> {
 
@@ -18,7 +20,7 @@ public class BookCreatedMongoProjection implements EventHandler<BookCreatedEvent
         BookReadModel model = new BookReadModel(
                 event.getAggregateId(),
                 event.getTitle(),
-                event.getAuthor()
+                new ArrayList<>()
         );
         repository.save(model);
     }

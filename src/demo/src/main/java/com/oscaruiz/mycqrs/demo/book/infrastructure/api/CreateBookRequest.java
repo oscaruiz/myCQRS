@@ -17,13 +17,10 @@ import java.util.UUID;
 public record CreateBookRequest(
 
         @NotBlank(message = "Title is required")
-        String title,
-
-        @NotBlank(message = "Author is required")
-        String author
+        String title
 
 ) {
     public CreateBookCommand toCommand(UUID id) {
-        return new CreateBookCommand(id.toString(), title, author);
+        return new CreateBookCommand(id.toString(), title);
     }
 }

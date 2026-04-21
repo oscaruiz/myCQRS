@@ -1,5 +1,7 @@
 package com.oscaruiz.mycqrs.demo.book.infrastructure.api;
 
+import com.oscaruiz.mycqrs.demo.book.domain.service.AuthorNotFoundException;
+import com.oscaruiz.mycqrs.demo.book.domain.service.AuthorRetiredException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -55,6 +57,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
         ApiError error = generateApiError(HttpStatus.CONFLICT,
                 "The resource was modified by another request. Please retry.");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(AuthorNotFoundException.class)
+    public ResponseEntity<ApiError> handleAuthorNotFound(AuthorNotFoundException ex) {
+        ApiError error = generateApiError(HttpStatus.NOT_FOUND, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(AuthorRetiredException.class)
+    public ResponseEntity<ApiError> handleAuthorRetired(AuthorRetiredException ex) {
+        ApiError error = generateApiError(HttpStatus.CONFLICT, ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 

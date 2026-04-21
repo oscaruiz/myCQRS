@@ -1,7 +1,11 @@
 package com.oscaruiz.mycqrs.demo.book.infrastructure.mongo;
 
+import com.oscaruiz.mycqrs.demo.book.application.query.AuthorSummary;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "books")
 public class BookReadModel {
@@ -9,15 +13,15 @@ public class BookReadModel {
     @Id
     private String aggregateId;
     private String title;
-    private String author;
+    private List<AuthorSummary> authors = new ArrayList<>();
 
     public BookReadModel() {
     }
 
-    public BookReadModel(String aggregateId, String title, String author) {
+    public BookReadModel(String aggregateId, String title, List<AuthorSummary> authors) {
         this.aggregateId = aggregateId;
         this.title = title;
-        this.author = author;
+        this.authors = authors != null ? new ArrayList<>(authors) : new ArrayList<>();
     }
 
     public String getAggregateId() {
@@ -28,7 +32,15 @@ public class BookReadModel {
         return title;
     }
 
-    public String getAuthor() {
-        return author;
+    public List<AuthorSummary> getAuthors() {
+        return authors;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setAuthors(List<AuthorSummary> authors) {
+        this.authors = authors;
     }
 }

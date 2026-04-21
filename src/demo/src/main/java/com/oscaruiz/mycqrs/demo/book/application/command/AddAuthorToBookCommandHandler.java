@@ -5,26 +5,31 @@ import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.CommandHandlerComponent;
 import com.oscaruiz.mycqrs.demo.book.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.book.domain.repository.BookRepository;
+import com.oscaruiz.mycqrs.demo.book.domain.service.AuthorExistenceChecker;
 
 @CommandHandlerComponent
-public class UpdateBookCommandHandler implements CommandHandler<UpdateBookCommand> {
+public class AddAuthorToBookCommandHandler implements CommandHandler<AddAuthorToBookCommand> {
 
     private final BookRepository bookRepository;
     private final EventBus eventBus;
+    private final AuthorExistenceChecker authorExistenceChecker;
 
-    public UpdateBookCommandHandler(BookRepository bookRepository, EventBus eventBus) {
+    public AddAuthorToBookCommandHandler(BookRepository bookRepository,
+                                         EventBus eventBus,
+                                         AuthorExistenceChecker authorExistenceChecker) {
         this.bookRepository = bookRepository;
         this.eventBus = eventBus;
+        this.authorExistenceChecker = authorExistenceChecker;
     }
 
     @Override
-    public void handle(UpdateBookCommand command) {
-        // Application layer orchestrates use-cases through domain ports.
+    public void handle(AddAuthorToBookCommand command) {
+        authorExistenceChecker.ensureExistsAndActive(command.getAuthorId());
+
         BookAggregate aggregate = bookRepository.load(command.getBookId());
-        aggregate.update(command.getTitle());
+        aggregate.addAuthor(command.getAuthorId());
         bookRepository.save(aggregate);
 
         aggregate.pullDomainEvents().forEach(eventBus::publish);
-
     }
 }

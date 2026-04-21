@@ -52,7 +52,7 @@ class OutboxRollbackIntegrationTest extends AbstractFullStackIntegrationTest {
         String id = UUID.randomUUID().toString();
 
         assertThatThrownBy(() ->
-            commandBus.send(new CreateBookCommand(id, "Doomed", "Author"))
+            commandBus.send(new CreateBookCommand(id, "Doomed"))
         ).isInstanceOf(RuntimeException.class);
 
         Integer outboxCount = jdbc.queryForObject(
@@ -69,13 +69,15 @@ class OutboxRollbackIntegrationTest extends AbstractFullStackIntegrationTest {
     @ComponentScan(basePackages = {
             "com.oscaruiz.mycqrs.demo.book.application",
             "com.oscaruiz.mycqrs.demo.book.domain",
-            "com.oscaruiz.mycqrs.demo.book.infrastructure"
+            "com.oscaruiz.mycqrs.demo.book.infrastructure",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.jpa",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.mongo"
     }, excludeFilters = @ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,
             classes = OutboxConfig.class
     ))
-    @EnableJpaRepositories(basePackageClasses = SpringDataBookRepository.class)
-    @EntityScan(basePackageClasses = BookEntity.class)
+    @EnableJpaRepositories(basePackageClasses = {SpringDataBookRepository.class, com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.SpringDataAuthorRepository.class})
+    @EntityScan(basePackageClasses = {BookEntity.class, com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.AuthorEntity.class})
     static class RollbackConfig {
 
         @Bean

@@ -1,9 +1,16 @@
 package com.oscaruiz.mycqrs.demo.book.infrastructure.jpa;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Version;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -13,26 +20,31 @@ public class BookEntity {
     private UUID id;
 
     private String title;
-    private String author;
     private boolean deleted;
 
     @Version
     private Long version;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "book_authors",
+            joinColumns = @JoinColumn(name = "book_id")
+    )
+    @Column(name = "author_id")
+    private Set<UUID> authorIds = new HashSet<>();
+
     protected BookEntity() {
         // for JPA
     }
 
-    public BookEntity(UUID id, String title, String author, boolean deleted) {
+    public BookEntity(UUID id, String title, boolean deleted) {
         this.id = id;
         this.title = title;
-        this.author = author;
         this.deleted = deleted;
     }
 
-    public void update(String title, String author, boolean deleted) {
+    public void update(String title, boolean deleted) {
         this.title = title;
-        this.author = author;
         this.deleted = deleted;
     }
 
@@ -44,11 +56,16 @@ public class BookEntity {
         return title;
     }
 
-    public String getAuthor() {
-        return author;
-    }
-
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public Set<UUID> getAuthorIds() {
+        return authorIds;
+    }
+
+    public void replaceAuthorIds(Set<UUID> authorIds) {
+        this.authorIds.clear();
+        this.authorIds.addAll(authorIds);
     }
 }

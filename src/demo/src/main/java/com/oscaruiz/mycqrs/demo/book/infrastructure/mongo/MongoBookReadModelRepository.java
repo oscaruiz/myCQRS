@@ -4,6 +4,7 @@ import com.oscaruiz.mycqrs.demo.book.application.query.BookReadModelRepository;
 import com.oscaruiz.mycqrs.demo.book.application.query.BookResponse;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,6 +27,10 @@ public class MongoBookReadModelRepository implements BookReadModelRepository {
     }
 
     private BookResponse toResponse(BookReadModel model) {
-        return new BookResponse(model.getAggregateId(), model.getTitle(), model.getAuthor());
+        return new BookResponse(
+                model.getAggregateId(),
+                model.getTitle(),
+                model.getAuthors() != null ? model.getAuthors() : List.of()
+        );
     }
 }

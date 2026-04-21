@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Instant;
 
-public abstract class BookCreatedEventMixin {
+public abstract class AuthorAddedToBookEventMixin {
 
     @JsonCreator
-    public BookCreatedEventMixin(
+    public AuthorAddedToBookEventMixin(
             @JsonProperty("eventId") String eventId,
             @JsonProperty("occurredAt") Instant occurredAt,
             @JsonProperty("aggregateId") String aggregateId,
-            @JsonProperty("title") String title
+            @JsonProperty("authorId") String authorId
     ) {}
 }

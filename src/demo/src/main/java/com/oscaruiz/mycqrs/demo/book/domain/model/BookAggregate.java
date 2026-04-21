@@ -1,59 +1,60 @@
 package com.oscaruiz.mycqrs.demo.book.domain.model;
 
 import com.oscaruiz.mycqrs.core.ddd.AggregateRoot;
+import com.oscaruiz.mycqrs.demo.book.domain.event.AuthorAddedToBookEvent;
+import com.oscaruiz.mycqrs.demo.book.domain.event.AuthorRemovedFromBookEvent;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookCreatedEvent;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookDeletedEvent;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookUpdatedEvent;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class BookAggregate extends AggregateRoot<String> {
 
     private final String id;
     private String title;
-    private String author;
     private boolean deleted;
+    private final Set<String> authorIds;
 
-    private BookAggregate(String id, String title, String author, boolean deleted) {
+    private BookAggregate(String id, String title, boolean deleted, Set<String> authorIds) {
         this.id = id;
         this.title = title;
-        this.author = author;
         this.deleted = deleted;
+        this.authorIds = new HashSet<>(authorIds);
     }
 
-    public static BookAggregate create(String id, String title, String author) {
+    public static BookAggregate create(String id, String title) {
 
         requireNonBlank(id, "id");
         requireNonBlank(title, "title");
-        requireNonBlank(author, "author");
         UUID.fromString(id);
 
-        BookAggregate aggregate = new BookAggregate(id, title, author, false);
-        aggregate.recordEvent(new BookCreatedEvent(id, title, author));
+        BookAggregate aggregate = new BookAggregate(id, title, false, new HashSet<>());
+        aggregate.recordEvent(new BookCreatedEvent(id, title));
 
         return aggregate;
     }
 
-    public static BookAggregate rehydrate(String id, String title, String author, boolean deleted) {
-        return new BookAggregate(id, title, author, deleted);
+    public static BookAggregate rehydrate(String id, String title, boolean deleted, Set<String> authorIds) {
+        return new BookAggregate(id, title, deleted, authorIds);
     }
 
-    public void update(String title, String author) {
+    public void update(String title) {
         if (deleted) {
             throw new IllegalStateException("Cannot update a deleted book");
         }
 
         requireNonBlank(title, "title");
-        requireNonBlank(author, "author");
 
-        if (this.title.equals(title) && this.author.equals(author)) {
+        if (this.title.equals(title)) {
             return;
         }
 
         this.title = title;
-        this.author = author;
-
-        recordEvent(new BookUpdatedEvent(id, this.title, this.author));
+        recordEvent(new BookUpdatedEvent(id, this.title));
     }
 
     public void delete() {
@@ -65,6 +66,31 @@ public class BookAggregate extends AggregateRoot<String> {
         recordEvent(new BookDeletedEvent(id));
     }
 
+    public void addAuthor(String authorId) {
+        if (deleted) {
+            throw new IllegalStateException("Cannot modify authors of a deleted book");
+        }
+        requireNonBlank(authorId, "authorId");
+        UUID.fromString(authorId);
+
+        if (!authorIds.add(authorId)) {
+            return;
+        }
+        recordEvent(new AuthorAddedToBookEvent(id, authorId));
+    }
+
+    public void removeAuthor(String authorId) {
+        if (deleted) {
+            throw new IllegalStateException("Cannot modify authors of a deleted book");
+        }
+        requireNonBlank(authorId, "authorId");
+
+        if (!authorIds.remove(authorId)) {
+            return;
+        }
+        recordEvent(new AuthorRemovedFromBookEvent(id, authorId));
+    }
+
     @Override
     public String getId() {
         return id;
@@ -74,12 +100,12 @@ public class BookAggregate extends AggregateRoot<String> {
         return title;
     }
 
-    public String getAuthor() {
-        return author;
-    }
-
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public Set<String> getAuthorIds() {
+        return Collections.unmodifiableSet(authorIds);
     }
 
     private static void requireNonBlank(String value, String fieldName) {

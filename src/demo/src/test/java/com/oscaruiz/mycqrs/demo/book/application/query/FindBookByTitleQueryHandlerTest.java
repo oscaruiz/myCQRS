@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -20,7 +21,8 @@ class FindBookByTitleQueryHandlerTest {
         repository = new InMemoryBookReadModelRepository();
         handler = new FindBookByTitleQueryHandler(repository);
 
-        repository.save(new BookResponse(null, "Clean Code", "Robert C. Martin"));
+        repository.save(new BookResponse(null, "Clean Code",
+                List.of(new AuthorSummary("11111111-1111-1111-1111-111111111111", "Robert C. Martin", false))));
     }
 
     @Test
@@ -30,7 +32,8 @@ class FindBookByTitleQueryHandlerTest {
 
         assertNotNull(result);
         assertEquals("Clean Code", result.title());
-        assertEquals("Robert C. Martin", result.author());
+        assertEquals(1, result.authors().size());
+        assertEquals("Robert C. Martin", result.authors().get(0).fullName());
     }
 
     @Test

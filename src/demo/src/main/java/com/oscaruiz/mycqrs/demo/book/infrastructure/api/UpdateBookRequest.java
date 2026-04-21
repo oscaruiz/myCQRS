@@ -15,13 +15,10 @@ import jakarta.validation.constraints.NotBlank;
 public record UpdateBookRequest(
 
         @NotBlank(message = "Title is required")
-        String title,
-
-        @NotBlank(message = "Author is required")
-        String author
+        String title
 
 ) {
     public UpdateBookCommand toCommand(String id) {
-        return new UpdateBookCommand(id, title, author);
+        return new UpdateBookCommand(id, title);
     }
 }

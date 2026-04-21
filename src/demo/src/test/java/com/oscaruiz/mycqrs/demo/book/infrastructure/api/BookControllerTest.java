@@ -6,6 +6,7 @@ import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.demo.book.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.query.FindBookByIdQuery;
+import com.oscaruiz.mycqrs.demo.book.application.query.AuthorSummary;
 import com.oscaruiz.mycqrs.demo.book.application.query.BookResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -45,7 +47,7 @@ class BookControllerTest {
 
         @Test
         void createBook_withValidBody_returns201() throws Exception {
-            CreateBookRequest request = new CreateBookRequest("Dune", "Frank Herbert");
+            CreateBookRequest request = new CreateBookRequest("Dune");
             UUID id = UUID.randomUUID();
 
             mockMvc.perform(put("/books/{id}", id)
@@ -59,7 +61,7 @@ class BookControllerTest {
 
         @Test
         void createBook_withInvalidBody_returns400() throws Exception {
-            CreateBookRequest invalid = new CreateBookRequest("", "");
+            CreateBookRequest invalid = new CreateBookRequest("");
 
             mockMvc.perform(put("/books/{id}", UUID.randomUUID())
                             .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +73,7 @@ class BookControllerTest {
 
         @Test
         void createBook_withInvalidUuidInPath_returns400() throws Exception {
-            CreateBookRequest request = new CreateBookRequest("Dune", "Frank Herbert");
+            CreateBookRequest request = new CreateBookRequest("Dune");
 
             mockMvc.perform(put("/books/{id}", "not-a-uuid")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -87,7 +89,7 @@ class BookControllerTest {
 
         @Test
         void updateBook_whenOptimisticLockConflict_returns409() throws Exception {
-            UpdateBookRequest request = new UpdateBookRequest("Dune", "Frank Herbert");
+            UpdateBookRequest request = new UpdateBookRequest("Dune");
             UUID id = UUID.randomUUID();
 
             doThrow(new ObjectOptimisticLockingFailureException("BookEntity", id.toString()))
@@ -110,14 +112,18 @@ class BookControllerTest {
         @Test
         void getBook_whenExists_returns200() throws Exception {
             UUID id = UUID.randomUUID();
-            BookResponse book = new BookResponse(id.toString(), "Dune", "Frank Herbert");
+            UUID authorId = UUID.randomUUID();
+            BookResponse book = new BookResponse(id.toString(), "Dune",
+                    List.of(new AuthorSummary(authorId.toString(), "Frank Herbert", false)));
             when(queryBus.handle(any(FindBookByIdQuery.class))).thenReturn(book);
 
             mockMvc.perform(get("/books/{id}", id))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(id.toString()))
                     .andExpect(jsonPath("$.title").value("Dune"))
-                    .andExpect(jsonPath("$.author").value("Frank Herbert"));
+                    .andExpect(jsonPath("$.authors[0].authorId").value(authorId.toString()))
+                    .andExpect(jsonPath("$.authors[0].fullName").value("Frank Herbert"))
+                    .andExpect(jsonPath("$.authors[0].retired").value(false));
         }
 
     }

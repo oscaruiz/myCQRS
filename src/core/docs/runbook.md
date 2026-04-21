@@ -45,6 +45,8 @@ Inside psql:
 
 ```sql
 SELECT * FROM book_entity;
+SELECT * FROM book_authors;
+SELECT * FROM author_entity;
 \q
 ```
 
@@ -70,6 +72,8 @@ You should see:
 ```
 books
 book_events
+authors
+author_events
 ```
 
 Inspect documents:
@@ -77,6 +81,8 @@ Inspect documents:
 ```javascript
 db.books.find().pretty()
 db.book_events.find().pretty()
+db.authors.find().pretty()
+db.author_events.find().pretty()
 ```
 
 ---
@@ -92,10 +98,11 @@ docker exec -it mycqrs-postgres psql -U postgres -d mycqrsdb
 Inside:
 
 ```sql
-DELETE FROM book_entity;
-SELECT * FROM book_entity;
+TRUNCATE TABLE book_entity, author_entity, outbox RESTART IDENTITY CASCADE;
 \q
 ```
+
+`book_authors` is truncated implicitly via the `ON DELETE CASCADE` FK.
 
 ---
 
@@ -111,29 +118,65 @@ Inside:
 use mycqrs_read
 db.books.deleteMany({})
 db.book_events.deleteMany({})
-
-db.books.find()
-db.book_events.find()
+db.authors.deleteMany({})
+db.author_events.deleteMany({})
 ```
 
-Both collections should be empty.
+All four collections should be empty.
 
 ---
 
 # 🔥 Smoke Test API
 
-Book IDs are client-assigned UUIDs. Generate one with `uuidgen` (or
-`cat /proc/sys/kernel/random/uuid` on Linux).
+Book and Author IDs are client-assigned UUIDs. Generate them with `uuidgen`
+(or `cat /proc/sys/kernel/random/uuid` on Linux).
+
+## Create Author (Command)
+
+```bash
+AUTHOR_ID=$(uuidgen)
+curl -X PUT "http://localhost:8080/authors/$AUTHOR_ID" \
+-H "Content-Type: application/json" \
+-d '{
+  "firstName": "Robert",
+  "lastName": "Martin",
+  "birthYear": 1952
+}'
+```
+
+---
+
+## Rename Author (Command)
+
+```bash
+curl -X PATCH "http://localhost:8080/authors/$AUTHOR_ID" \
+-H "Content-Type: application/json" \
+-d '{
+  "firstName": "Uncle Bob",
+  "lastName": "Martin"
+}'
+```
+
+---
+
+## Delete Author (Command, soft-delete)
+
+```bash
+curl -X DELETE "http://localhost:8080/authors/$AUTHOR_ID"
+```
+
+---
 
 ## Create Book (Command)
+
+Books are created without authors; attach them afterwards.
 
 ```bash
 BOOK_ID=$(uuidgen)
 curl -X PUT "http://localhost:8080/books/$BOOK_ID" \
 -H "Content-Type: application/json" \
 -d '{
-  "title": "Clean Architecture",
-  "author": "Robert C. Martin"
+  "title": "Clean Architecture"
 }'
 ```
 
@@ -145,10 +188,32 @@ curl -X PUT "http://localhost:8080/books/$BOOK_ID" \
 curl -X PATCH "http://localhost:8080/books/$BOOK_ID" \
 -H "Content-Type: application/json" \
 -d '{
-  "title": "Cleaner Architecture",
-  "author": "Roberto C. Martino"
+  "title": "Cleaner Architecture"
 }'
 ```
+
+---
+
+## Add Author to Book (Command)
+
+```bash
+curl -X POST "http://localhost:8080/books/$BOOK_ID/authors/$AUTHOR_ID"
+```
+
+Responses:
+- `200 OK` on success (idempotent — a repeated call is a no-op).
+- `404 Not Found` if the author does not exist (`AuthorNotFoundException`).
+- `409 Conflict` if the author is soft-deleted (`AuthorRetiredException`).
+
+---
+
+## Remove Author from Book (Command)
+
+```bash
+curl -X DELETE "http://localhost:8080/books/$BOOK_ID/authors/$AUTHOR_ID"
+```
+
+`204 No Content`. Removing a non-referenced author is a legitimate no-op.
 
 ---
 
@@ -167,13 +232,54 @@ curl "http://localhost:8080/books/$BOOK_ID"
 curl "http://localhost:8080/books?title=Clean%20Architecture"
 ```
 
+Response shape:
+
+```json
+{
+  "id": "…",
+  "title": "Clean Architecture",
+  "authors": [
+    { "authorId": "…", "fullName": "Uncle Bob Martin", "retired": false }
+  ]
+}
+```
+
+---
+
+## Query Author (Read side)
+
+```bash
+curl "http://localhost:8080/authors/$AUTHOR_ID"
+```
+
+Response shape:
+
+```json
+{
+  "id": "…",
+  "firstName": "Uncle Bob",
+  "lastName": "Martin",
+  "birthYear": 1952,
+  "deleted": false,
+  "books": [
+    { "bookId": "…", "title": "Clean Architecture" }
+  ]
+}
+```
+
 ---
 
 # 📌 Development Notes
 
-- Write side persists data in PostgreSQL
-- Events are published via your custom EventBus
-- Read side projections are stored in MongoDB
+- Write side persists aggregates in PostgreSQL; `book_entity`, `book_authors`
+  and `author_entity` live there. No FK between `book_authors.author_id` and
+  `author_entity.id` — cross-aggregate consistency is eventual, enforced via
+  events, not via the schema.
+- Events are published transactionally into the `outbox` table and polled
+  asynchronously into the internal event bus.
+- Read side projections denormalize bi-directionally: each Book embeds a
+  summary of its authors, and each Author embeds a summary of its books.
+  Author rename / soft-delete propagate into every embedded reference.
 - This project follows:
   - CQRS
   - Hexagonal Architecture
