@@ -3,3 +3,9 @@ spring:
     name: mycqrs
   profiles:
     active: dev
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, outbox
