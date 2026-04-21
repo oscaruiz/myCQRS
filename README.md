@@ -1,12 +1,18 @@
 # myCQRS
 
-A DI-container-agnostic CQRS core in Java 21, with Spring Boot as the reference adapter.
+**A framework-agnostic CQRS core, with Spring Boot as the reference adapter.**
 
+![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
+![Spring Boot 3.2.5](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
+![Maven](https://img.shields.io/badge/Build-Maven-C71A36?logo=apachemaven&logoColor=white)
 ![CI](https://github.com/oscaruiz/myCQRS/actions/workflows/ci.yml/badge.svg?branch=main)
+![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)
 
-## What is this?
+## What is this
 
-A two-module Maven project built to demonstrate CQRS, DDD, and hexagonal architecture at a senior level without hiding the mechanics behind a framework. The `core` module provides the command, query, and event buses, interceptor chain, and handler auto-registration contracts as a reusable jar; Spring dependencies are declared `<optional>` and live only in a single adapter sub-package. The `demo` module wires that core into a Book bounded context backed by PostgreSQL (write side, Flyway), MongoDB (read side and audit log), and an outbox poller for eventual consistency. The repository doubles as a sandbox for architectural decisions that are documented, not improvised — including the ones that were rejected.
+A CQRS framework where the core (command/query/event buses, handler registration, interceptors) has zero dependencies on any DI container. Spring is wired in as an interchangeable adapter under `core.infrastructure.spring`; swapping it for Micronaut, Quarkus, or plain `new` requires no changes to `core.contracts` or `core.ddd`. On top of that, a Book bounded context demonstrates the framework end-to-end: hexagonal architecture, PostgreSQL write side with Flyway, MongoDB read side, and an outbox pattern solving the dual-write problem between them.
+
+The codebase is designed to be read: every architectural choice is small enough to explain in an interview, and the ones that aren't obvious are documented as ADRs.
 
 ## Architecture
 
@@ -38,68 +44,68 @@ Controller ──► CommandBus ──► [ Validation ─► Transaction ─►
 HTTP request ──► Controller ──► QueryBus ──► QueryHandler ──► MongoDB
 ```
 
-The outbox solves the dual-write problem. The aggregate row and the event envelope are written in the same PostgreSQL transaction, so either both commit or neither does. A scheduled poller drains the outbox, publishes each event through an internal in-memory bus, and the Mongo projectors update the read model. No distributed transaction, no lost events, no "publish first, hope the DB commits" ordering hazard.
+The outbox solves the dual-write problem. The aggregate row and the event envelope are written in the same PostgreSQL transaction — either both commit or neither does. A scheduled poller drains the outbox, publishes each event through an in-memory bus, and Mongo projectors update the read model. No distributed transaction, no lost events, no ordering gap between "event published" and "state committed".
 
 ## Modules
 
-- **`src/core`** — reusable CQRS framework. Published as a jar; Spring is an `<optional>` dependency, not a transitive one.
-  - `core.contracts` — ports: `Command`, `CommandBus`, `CommandHandler`, `CommandInterceptor`, `Event`, `EventBus`, `EventHandler`, `Query`, `QueryBus`, `QueryHandler`. **Zero Spring imports.**
-  - `core.ddd` — `AggregateRoot<ID>`, `DomainEvent`. **Zero Spring imports.**
+- **`src/core`** — reusable CQRS framework. Published as a jar; Spring is an `<optional>` dependency, not transitive. **`core.contracts` and `core.ddd` have zero Spring imports — verified by ArchUnit.**
+  - `core.contracts` — ports: `Command`, `CommandBus`, `CommandHandler`, `CommandInterceptor`, `Event`, `EventBus`, `EventHandler`, `Query`, `QueryBus`, `QueryHandler`.
+  - `core.ddd` — `AggregateRoot<ID>`, `DomainEvent`.
   - `core.infrastructure.bus` — in-memory `SimpleCommandBus`, `SimpleQueryBus`, `SimpleEventBus`.
   - `core.infrastructure.spring` — the Spring adapter: `@EnableCqrs`, `CqrsConfiguration`, `BeanPostProcessor`s that auto-register handlers, `ValidationCommandInterceptor`, `TransactionalCommandInterceptor`.
 - **`src/demo`** — Book bounded context in hexagonal style. PostgreSQL + Flyway on the write side, MongoDB on the read side, outbox poller in between.
 
 ## Stack
 
-- Java 21, Spring Boot 3.2.5, Maven (wrapper included).
+- Java 21, Spring Boot 3.2.5, Maven.
 - PostgreSQL + Flyway on the write side, `ddl-auto=validate`.
-- MongoDB for the read model and the audit log.
+- MongoDB for the read model.
 - JUnit 5, Mockito, AssertJ, Testcontainers (PostgreSQL + MongoDB), ArchUnit.
 - Docker (multi-stage build), GitHub Actions CI.
 
 ## How to run it
 
-Prerequisites: Java 21, Docker, and the bundled Maven wrapper.
+Prerequisites: Java 21, Docker Desktop, and the bundled Maven wrapper (`mvnw.cmd`).
 
-```bash
+```powershell
 # Start PostgreSQL and MongoDB in containers
-docker compose -f src/demo/docker-compose.yml up -d postgres mongo
+docker compose -f src\demo\docker-compose.yml up -d postgres mongo
 
 # Run the demo application (dev profile; Flyway applies V1/V2/V3 on boot)
-./mvnw spring-boot:run -pl src/demo
+.\mvnw.cmd spring-boot:run -pl src/demo
 ```
 
 The API uses client-generated UUIDs: the client picks the identifier, `PUT` creates the resource at that URI.
 
-```bash
-UUID=$(uuidgen)
+```powershell
+$UUID = "550e8400-e29b-41d4-a716-446655440000"
 
 # Create
-curl -X PUT "http://localhost:8080/books/$UUID" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"The Art of War","author":"Sun Tzu"}'
+curl.exe -X PUT "http://localhost:8080/books/$UUID" `
+  -H "Content-Type: application/json" `
+  -d '{\"title\":\"The Art of War\",\"author\":\"Sun Tzu\"}'
 
 # Read (served from the Mongo projection, populated by the outbox poller)
-curl "http://localhost:8080/books/$UUID"
+curl.exe "http://localhost:8080/books/$UUID"
 
 # Update
-curl -X PATCH "http://localhost:8080/books/$UUID" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"The Art of War (revised)","author":"Sun Tzu"}'
+curl.exe -X PATCH "http://localhost:8080/books/$UUID" `
+  -H "Content-Type: application/json" `
+  -d '{\"title\":\"The Art of War (revised)\",\"author\":\"Sun Tzu\"}'
 
 # Delete
-curl -X DELETE "http://localhost:8080/books/$UUID"
+curl.exe -X DELETE "http://localhost:8080/books/$UUID"
 ```
 
 `GET /books?title=…` looks a book up by title in the read model.
 
 ## How to run the tests
 
-```bash
-./mvnw verify
+```powershell
+.\mvnw.cmd verify
 ```
 
-Core tests run on JUnit + Mockito + AssertJ with no Spring context — a concrete demonstration that the core doesn't depend on the container to be exercised. Demo integration tests boot a `@SpringBootTest` against Testcontainers (PostgreSQL + MongoDB) wired via `@ServiceConnection`; H2 is not used anywhere. ArchUnit enforces package boundaries in CI: contracts and ddd must not depend on Spring, the Book context must follow an onion shape, command handlers must not call each other directly, and no module may contain a slice cycle.
+Core tests run on JUnit + Mockito + AssertJ with no Spring context. Demo integration tests boot `@SpringBootTest` against Testcontainers (PostgreSQL + MongoDB) wired via `@ServiceConnection`; H2 is not used anywhere. ArchUnit enforces package boundaries in CI: contracts and ddd must not depend on Spring, the Book context must follow an onion shape, command handlers must not call each other directly, and no module may contain a slice cycle.
 
 ## Design decisions
 
@@ -112,13 +118,13 @@ Significant decisions — including deliberate non-adoptions such as Event Sourc
 - Handler auto-registration via `BeanPostProcessor`s for commands, queries, and events.
 - Chainable command interceptors in a fixed order: **validation → transaction → handler**. `TransactionalCommandInterceptor` uses `PlatformTransactionManager` with `PROPAGATION_REQUIRED` and commits outside the `try` block so a failing commit cannot trigger an invalid rollback.
 - Outbox pattern: `OutboxEventBus` (marked `@Primary`) writes events to the outbox table inside the aggregate's transaction; `OutboxPoller` drains the table asynchronously and dispatches to the internal in-memory bus, where Mongo projectors subscribe.
-- Optimistic locking on the aggregate via `@Version` on the JPA entity; `GlobalExceptionHandler` maps `ObjectOptimisticLockingFailureException` to HTTP 409.
+- Optimistic locking on the aggregate via `@Version` on the JPA entity; `GlobalExceptionHandler` maps domain and infrastructure exceptions to meaningful HTTP status codes (e.g. `ObjectOptimisticLockingFailureException` → 409).
 - Client-generated UUIDs; `PUT`/`PATCH`/`DELETE` for writes and `GET` for reads.
 - Flyway migrations with `ddl-auto=validate` in every environment.
 - ArchUnit enforcement of architectural boundaries in both modules.
 - Testcontainers (PostgreSQL + MongoDB) for every integration test.
-- Spring profiles for `dev` and `test`; Docker multi-stage image; GitHub Actions CI running `./mvnw verify`.
-- `GlobalExceptionHandler` mapping domain and infrastructure exceptions to meaningful HTTP status codes.
+- Spring profiles for `dev` and `test`.
+- Docker multi-stage image and GitHub Actions CI running `./mvnw verify`.
 
 **Planned**
 - Idempotency: command deduplication on the write side and projection idempotency on the read side.
