@@ -6,6 +6,7 @@
 ![Spring Boot 3.2.5](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
 ![Maven](https://img.shields.io/badge/Build-Maven-C71A36?logo=apachemaven&logoColor=white)
 ![CI](https://github.com/oscaruiz/myCQRS/actions/workflows/ci.yml/badge.svg?branch=main)
+![Deploy](https://github.com/oscaruiz/myCQRS/actions/workflows/deploy.yml/badge.svg?branch=main)
 ![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)
 
 ## What is this
@@ -13,6 +14,23 @@
 A CQRS framework where the core (command/query/event buses, handler registration, interceptors) has zero dependencies on any DI container. Spring is wired in as an interchangeable adapter under `core.infrastructure.spring`; swapping it for Micronaut, Quarkus, or plain `new` requires no changes to `core.contracts` or `core.ddd`. On top of that, a Book bounded context demonstrates the framework end-to-end: hexagonal architecture, PostgreSQL write side with Flyway, MongoDB read side, and an outbox pattern solving the dual-write problem between them.
 
 The codebase is designed to be read: every architectural choice is small enough to explain in an interview, and the ones that aren't obvious are documented as ADRs.
+
+## Live demo
+
+Deployed on Render free tier. Swagger UI entry point:
+
+`https://<app>.onrender.com/swagger-ui.html`
+
+> Free tier; first request after idle may take ~30s. Conscious trade-off —
+> production would use a paid tier or `min-instances=1`.
+
+| Endpoint | Purpose |
+|---|---|
+| `PUT /books/{id}` | Creates a book (client-generated UUID). |
+| `GET /actuator/outbox` | Outbox stats — watch `pending` drain to `processed`. |
+| `GET /books/{id}` | Reads from the Mongo projection. |
+
+Deployment rationale: [ADR 0007](docs/adr/0007-immutable-docker-images-via-ghcr.md).
 
 ## Architecture
 
@@ -134,3 +152,14 @@ Significant decisions — including deliberate non-adoptions such as Event Sourc
 ## License
 
 GPL-3.0. See [LICENSE](LICENSE).
+
+## Post-merge setup
+
+One-time manual steps after the first merge to `main` triggers the deploy workflow:
+
+- Provision a Neon Postgres free-tier database. Capture the JDBC URL (with `sslmode=require`), username, and password.
+- Provision a MongoDB Atlas M0 cluster. Allow network access from `0.0.0.0/0` (Render free tier has no static IPs — documented trade-off). Capture the `mongodb+srv` URI including the database name.
+- Create a Render Web Service in "Deploy an existing image from a registry" mode, pointing at `ghcr.io/<owner>/mycqrs:latest`. Set the four env vars: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `SPRING_DATA_MONGODB_URI`.
+- Copy the Render deploy hook URL into the GitHub repository secret `RENDER_DEPLOY_HOOK`.
+- In the GitHub repository settings, ensure workflow permissions are set to "Read and write" so the deploy workflow can push to GHCR.
+- After the first successful deploy workflow run, flip the GHCR package visibility to public (GitHub profile → Packages → `mycqrs` → Package settings → Change visibility). Only needed once.
