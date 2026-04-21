@@ -11,6 +11,8 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.onionArchitecture;
@@ -34,11 +36,39 @@ class ArchitectureTest {
             onionArchitecture()
                     .domainModels("..demo.book.domain..")
                     .applicationServices("..demo.book.application..")
-                    .adapter("jpa",    "..demo.book.infrastructure.jpa..")
-                    .adapter("mongo",  "..demo.book.infrastructure.mongo..")
-                    .adapter("api",    "..demo.book.infrastructure.api..")
-                    .adapter("outbox", "..demo.book.infrastructure.outbox..")
+                    .adapter("jpa",     "..demo.book.infrastructure.jpa..")
+                    .adapter("mongo",   "..demo.book.infrastructure.mongo..")
+                    .adapter("api",     "..demo.book.infrastructure.api..")
+                    .adapter("outbox",  "..demo.book.infrastructure.outbox..")
+                    .adapter("service", "..demo.book.infrastructure.service..")
                     .withOptionalLayers(true);
+
+    // Cross-bounded-context collaborators (Book's infrastructure adapters
+    // calling Author's published ports) are legitimate but confuse ArchUnit's
+    // onion model, which otherwise treats every incoming dependency as a
+    // violation. We ignore only the PUBLISHED-PORT edges — Book reaching
+    // into Author's domain (AuthorRepository, AuthorAggregate) and into
+    // Author's application.query ports (AuthorReadModelRepository,
+    // AuthorResponse). Any other edge from Book into Author (e.g., into
+    // {@code author.infrastructure.*} or {@code author.application.command.*})
+    // will surface as an onion violation here.
+    @ArchTest
+    static final ArchRule authorFollowsOnionArchitecture =
+            onionArchitecture()
+                    .domainModels("..demo.author.domain..")
+                    .applicationServices("..demo.author.application..")
+                    .adapter("jpa",    "..demo.author.infrastructure.jpa..")
+                    .adapter("mongo",  "..demo.author.infrastructure.mongo..")
+                    .adapter("api",    "..demo.author.infrastructure.api..")
+                    .adapter("outbox", "..demo.author.infrastructure.outbox..")
+                    .withOptionalLayers(true)
+                    .ignoreDependency(
+                            resideInAPackage("..demo.book.."),
+                            resideInAnyPackage(
+                                    "..demo.author.domain..",
+                                    "..demo.author.application.query.."
+                            )
+                    );
 
     // redundante con la regla onion; mantenida como assertion explícita —
     // un fallo aquí apunta al boundary roto sin parsing del mensaje de onion.
@@ -51,6 +81,57 @@ class ArchitectureTest {
                             "..demo.book.infrastructure.mongo..",
                             "..demo.book.infrastructure.api..",
                             "..demo.book.infrastructure.outbox.."
+                    );
+
+    @ArchTest
+    static final ArchRule authorApplicationDoesNotDependOnInfrastructure =
+            noClasses()
+                    .that().resideInAPackage("..demo.author.application..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "..demo.author.infrastructure.jpa..",
+                            "..demo.author.infrastructure.mongo..",
+                            "..demo.author.infrastructure.api..",
+                            "..demo.author.infrastructure.outbox.."
+                    );
+
+    // Book's domain may only reach into Author's bounded context through
+    // domain-level packages (the AuthorRepository port and AuthorAggregate
+    // type) — never through Author's application services or adapters. This
+    // keeps cross-aggregate references narrow: a future Book invariant that
+    // needs to consult an Author must go through AuthorRepository, not
+    // through a query handler, a projection, or any JPA/Mongo plumbing.
+    @ArchTest
+    static final ArchRule bookDomainOnlyTouchesAuthorViaDomainPort =
+            noClasses()
+                    .that().resideInAPackage("..demo.book.domain..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "..demo.author.application..",
+                            "..demo.author.infrastructure.."
+                    );
+
+    // Book's infrastructure may depend on Author's domain ports (e.g., the
+    // RepositoryAuthorExistenceChecker adapter consults AuthorRepository) and
+    // on Author's application query ports (e.g., Mongo projections read
+    // AuthorReadModelRepository to denormalize embedded summaries). It must
+    // NOT reach into Author's infrastructure: doing so would couple the two
+    // adapters' internals and defeat the query-port abstraction.
+    @ArchTest
+    static final ArchRule bookInfrastructureDoesNotDependOnAuthorInfrastructure =
+            noClasses()
+                    .that().resideInAPackage("..demo.book.infrastructure..")
+                    .should().dependOnClassesThat().resideInAPackage(
+                            "..demo.author.infrastructure.."
+                    );
+
+    // Symmetric guard: Author's infrastructure has no business touching
+    // Book's infrastructure either. No current use case requires it; this
+    // rule reserves the boundary.
+    @ArchTest
+    static final ArchRule authorInfrastructureDoesNotDependOnBookInfrastructure =
+            noClasses()
+                    .that().resideInAPackage("..demo.author.infrastructure..")
+                    .should().dependOnClassesThat().resideInAPackage(
+                            "..demo.book.infrastructure.."
                     );
 
     private static final ArchCondition<JavaClass> notDependOnAnotherCommandHandler =
@@ -82,6 +163,9 @@ class ArchitectureTest {
     // forbidden as direct dependencies. Coordination between commands
     // must go through the CommandBus, which is a runtime dispatch
     // mechanism and does not appear as a class-level dependency.
+    //
+    // The rule applies across bounded contexts: a Book handler cannot
+    // reference an Author handler class, and vice versa.
     @ArchTest
     static final ArchRule commandHandlersDoNotDependOnOtherCommandHandlers =
             classes()
@@ -91,4 +175,8 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule bookSlicesAreFreeOfCycles =
             slices().matching("..demo.book.(*)..").should().beFreeOfCycles();
+
+    @ArchTest
+    static final ArchRule authorSlicesAreFreeOfCycles =
+            slices().matching("..demo.author.(*)..").should().beFreeOfCycles();
 }
