@@ -159,6 +159,21 @@ not compile.
   push. Not automatable from a workflow without elevated credentials, and
   not worth introducing those for a one-time step.
 
+### Runtime base image: Debian, not Alpine
+
+The runtime stage uses `eclipse-temurin:21-jre` (Debian-based, glibc) rather
+than `eclipse-temurin:21-jre-alpine` (musl). This is deliberate and driven
+by third-party TLS compatibility, not image-size preference: Alpine's musl
+libc combined with its minimal CA truststore fails the TLS handshake
+against MongoDB Atlas shard nodes with `Received fatal alert:
+internal_error`, even though the Postgres/Neon JDBC driver connects from
+the same container without issue. The Debian-based JRE carries the full
+CA bundle and a glibc resolver that handle Atlas' SNI/TLS negotiation
+correctly. The cost is ~80 MB of extra image size, which remains well
+within Render free tier's 512 MB pull budget. If the runtime image is
+ever swapped for a smaller base, Atlas connectivity must be re-verified
+end-to-end before merging.
+
 ## Related work
 
 - ADR 0003 (outbox pattern): this ADR does not touch the runtime behavior of

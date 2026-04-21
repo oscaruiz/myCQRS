@@ -4,7 +4,7 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn package -DskipTests
 
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/oscaruiz/myCQRS" \
       org.opencontainers.image.description="myCQRS demo application" \
