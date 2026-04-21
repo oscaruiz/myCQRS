@@ -45,10 +45,13 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- PostgreSQL Driver -->
+        <!-- PostgreSQL Driver: pinned to 42.7.4 for Neon SCRAM compatibility.
+             Spring Boot 3.2.5 manages 42.6.2, which fails SCRAM-SHA-256 auth
+             against Neon with "iteration must be >= 4096". Fixed in 42.7.x. -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <version>42.7.4</version>
         </dependency>
 
         <!-- Flyway -->
