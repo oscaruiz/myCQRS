@@ -17,6 +17,6 @@ public abstract class AbstractPostgresIntegrationTest {
 
     @AfterEach
     void truncateWriteSideTables() {
-        jdbc.execute("TRUNCATE TABLE book_entity, outbox RESTART IDENTITY CASCADE");
+        jdbc.execute("TRUNCATE TABLE book_entity, author_entity, outbox RESTART IDENTITY CASCADE");
     }
 }

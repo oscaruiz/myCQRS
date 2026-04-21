@@ -27,8 +27,10 @@ public abstract class AbstractFullStackIntegrationTest {
     void cleanAll() {
         // Order is independent — no FK or cross-store dependency.
         // Stable ordering for log readability only.
-        jdbc.execute("TRUNCATE TABLE book_entity, outbox RESTART IDENTITY CASCADE");
+        jdbc.execute("TRUNCATE TABLE book_entity, author_entity, outbox RESTART IDENTITY CASCADE");
         mongoTemplate.dropCollection("books");
         mongoTemplate.dropCollection("book_events");
+        mongoTemplate.dropCollection("authors");
+        mongoTemplate.dropCollection("author_events");
     }
 }
