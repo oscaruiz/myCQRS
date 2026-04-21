@@ -11,13 +11,9 @@ public class CreateBookCommand implements Command {
     @NotBlank
     private final String title;
 
-    @NotBlank
-    private final String author;
-
-    public CreateBookCommand(String id, String title, String author) {
+    public CreateBookCommand(String id, String title) {
         this.id = id;
         this.title = title;
-        this.author = author;
     }
 
     public String getId() {
@@ -26,9 +22,5 @@ public class CreateBookCommand implements Command {
 
     public String getTitle() {
         return title;
-    }
-
-    public String getAuthor() {
-        return author;
     }
 }

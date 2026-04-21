@@ -34,7 +34,7 @@ class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest 
         String id = UUID.randomUUID().toString();
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> commandBus.send(new CreateBookCommand(id, "", "Some Author")));
+                () -> commandBus.send(new CreateBookCommand(id, "")));
 
         assertTrue(ex.getMessage().contains("title"), () -> "expected message to mention 'title': " + ex.getMessage());
         Optional<BookAggregate> persisted = bookRepository.findByTitle("");
@@ -42,19 +42,9 @@ class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest 
     }
 
     @Test
-    void createCommandWithBlankAuthorIsRejectedByInterceptor() {
-        String id = UUID.randomUUID().toString();
-
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> commandBus.send(new CreateBookCommand(id, "Valid Title", "")));
-
-        assertTrue(ex.getMessage().contains("author"), () -> "expected message to mention 'author': " + ex.getMessage());
-    }
-
-    @Test
     void updateCommandWithBlankBookIdIsRejectedByInterceptor() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> commandBus.send(new UpdateBookCommand("", "Title", "Author")));
+                () -> commandBus.send(new UpdateBookCommand("", "Title")));
 
         assertTrue(ex.getMessage().contains("bookId"), () -> "expected message to mention 'bookId': " + ex.getMessage());
     }
@@ -71,7 +61,7 @@ class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest 
     void validCreateCommandPassesValidation() {
         String id = UUID.randomUUID().toString();
 
-        commandBus.send(new CreateBookCommand(id, "Valid Title", "Valid Author"));
+        commandBus.send(new CreateBookCommand(id, "Valid Title"));
 
         BookAggregate saved = bookRepository.load(id);
         assertEquals("Valid Title", saved.getTitle());

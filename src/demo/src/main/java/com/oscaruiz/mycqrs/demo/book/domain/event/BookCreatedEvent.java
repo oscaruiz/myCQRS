@@ -5,28 +5,20 @@ import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
 import java.time.Instant;
 
 public class BookCreatedEvent extends DomainEvent {
-    private final String title;
-    private final String author;
 
-    public BookCreatedEvent(String aggregateId, String title, String author) {
+    private final String title;
+
+    public BookCreatedEvent(String aggregateId, String title) {
         super(aggregateId);
         this.title = title;
-        this.author = author;
     }
 
-    protected BookCreatedEvent(String eventId, Instant occurredAt, String aggregateId,
-                               String title, String author) {
+    protected BookCreatedEvent(String eventId, Instant occurredAt, String aggregateId, String title) {
         super(eventId, occurredAt, aggregateId);
         this.title = title;
-        this.author = author;
     }
 
     public String getTitle() {
         return title;
     }
-
-    public String getAuthor() {
-        return author;
-    }
-
 }

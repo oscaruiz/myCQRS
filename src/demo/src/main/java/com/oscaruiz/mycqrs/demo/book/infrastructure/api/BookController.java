@@ -2,13 +2,24 @@ package com.oscaruiz.mycqrs.demo.book.infrastructure.api;
 
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
+import com.oscaruiz.mycqrs.demo.book.application.command.AddAuthorToBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.command.DeleteBookCommand;
+import com.oscaruiz.mycqrs.demo.book.application.command.RemoveAuthorFromBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.query.BookResponse;
 import com.oscaruiz.mycqrs.demo.book.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.book.application.query.FindBookByTitleQuery;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 import java.util.UUID;
@@ -55,5 +66,15 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/authors/{authorId}")
+    public ResponseEntity<Void> addAuthorToBook(@PathVariable UUID id, @PathVariable UUID authorId) {
+        commandBus.send(new AddAuthorToBookCommand(id.toString(), authorId.toString()));
+        return ResponseEntity.ok().build();
+    }
 
+    @DeleteMapping("/{id}/authors/{authorId}")
+    public ResponseEntity<Void> removeAuthorFromBook(@PathVariable UUID id, @PathVariable UUID authorId) {
+        commandBus.send(new RemoveAuthorFromBookCommand(id.toString(), authorId.toString()));
+        return ResponseEntity.noContent().build();
+    }
 }

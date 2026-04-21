@@ -41,7 +41,7 @@ class CommandQuerySmokeIntegrationTest extends AbstractFullStackIntegrationTest 
     @Test
     void createCommandThenFindQueryReturnsCreatedBook() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Clean Architecture", "Robert C. Martin"));
+        commandBus.send(new CreateBookCommand(id, "Clean Architecture"));
 
         outboxPoller.poll();
 
@@ -49,7 +49,7 @@ class CommandQuerySmokeIntegrationTest extends AbstractFullStackIntegrationTest 
 
         assertNotNull(found);
         assertEquals("Clean Architecture", found.title());
-        assertEquals("Robert C. Martin", found.author());
+        // Original assertion on found.author() removed: BookResponse no longer carries a single-author field.
     }
 
     @SpringBootConfiguration
@@ -58,10 +58,12 @@ class CommandQuerySmokeIntegrationTest extends AbstractFullStackIntegrationTest 
     @ComponentScan(basePackages = {
             "com.oscaruiz.mycqrs.demo.book.application",
             "com.oscaruiz.mycqrs.demo.book.domain",
-            "com.oscaruiz.mycqrs.demo.book.infrastructure"
+            "com.oscaruiz.mycqrs.demo.book.infrastructure",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.jpa",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.mongo"
     })
-    @EnableJpaRepositories(basePackageClasses = SpringDataBookRepository.class)
-    @EntityScan(basePackageClasses = BookEntity.class)
+    @EnableJpaRepositories(basePackageClasses = {SpringDataBookRepository.class, com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.SpringDataAuthorRepository.class})
+    @EntityScan(basePackageClasses = {BookEntity.class, com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.AuthorEntity.class})
     static class TestConfig {
     }
 }

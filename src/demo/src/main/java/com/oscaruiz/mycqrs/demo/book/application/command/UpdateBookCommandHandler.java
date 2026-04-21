@@ -21,7 +21,7 @@ public class UpdateBookCommandHandler implements CommandHandler<UpdateBookComman
     public void handle(UpdateBookCommand command) {
         // Application layer orchestrates use-cases through domain ports.
         BookAggregate aggregate = bookRepository.load(command.getBookId());
-        aggregate.update(command.getTitle(), command.getAuthor());
+        aggregate.update(command.getTitle());
         bookRepository.save(aggregate);
 
         aggregate.pullDomainEvents().forEach(eventBus::publish);

@@ -22,7 +22,7 @@ public class CreateBookCommandHandler implements CommandHandler<CreateBookComman
     @Override
     public void handle(CreateBookCommand command) {
 
-        BookAggregate aggregate = BookAggregate.create(command.getId(), command.getTitle(), command.getAuthor());
+        BookAggregate aggregate = BookAggregate.create(command.getId(), command.getTitle());
         bookRepository.save(aggregate);
 
         aggregate.pullDomainEvents().forEach(eventBus::publish);

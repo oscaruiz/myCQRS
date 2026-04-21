@@ -7,6 +7,14 @@ spring:
   flyway:
     enabled: true
 
+  datasource:
+    hikari:
+      # Each test class spawns its own Spring context against the shared Postgres
+      # container. Keep per-context pools small so the total connection count
+      # stays under Postgres' default max_connections=100.
+      maximum-pool-size: 5
+      minimum-idle: 0
+
 mycqrs:
   outbox:
     poll-interval: 60000

@@ -11,13 +11,9 @@ public class UpdateBookCommand implements Command {
     @NotBlank
     private final String title;
 
-    @NotBlank
-    private final String author;
-
-    public UpdateBookCommand(String bookId, String title, String author) {
+    public UpdateBookCommand(String bookId, String title) {
         this.bookId = bookId;
         this.title = title;
-        this.author = author;
     }
 
     public String getBookId() {
@@ -26,9 +22,5 @@ public class UpdateBookCommand implements Command {
 
     public String getTitle() {
         return title;
-    }
-
-    public String getAuthor() {
-        return author;
     }
 }

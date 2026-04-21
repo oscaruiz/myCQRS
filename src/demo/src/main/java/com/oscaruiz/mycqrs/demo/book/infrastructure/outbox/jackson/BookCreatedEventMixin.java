@@ -12,7 +12,6 @@ public abstract class BookCreatedEventMixin {
             @JsonProperty("eventId") String eventId,
             @JsonProperty("occurredAt") Instant occurredAt,
             @JsonProperty("aggregateId") String aggregateId,
-            @JsonProperty("title") String title,
-            @JsonProperty("author") String author
+            @JsonProperty("title") String title
     ) {}
 }

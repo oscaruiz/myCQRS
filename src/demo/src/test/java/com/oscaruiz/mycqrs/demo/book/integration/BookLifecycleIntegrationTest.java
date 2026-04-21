@@ -7,6 +7,8 @@ import com.oscaruiz.mycqrs.demo.book.application.command.DeleteBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.query.FindBookByIdQuery;
 import com.oscaruiz.mycqrs.demo.book.application.query.BookResponse;
+import com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.AuthorEntity;
+import com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.SpringDataAuthorRepository;
 import com.oscaruiz.mycqrs.demo.book.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.book.infrastructure.mongo.BookEventLog;
 import com.oscaruiz.mycqrs.demo.book.infrastructure.mongo.BookEventLogRepository;
@@ -52,22 +54,22 @@ class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void createThenUpdate_queryReflectsUpdate() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Original Title", "Author"));
+        commandBus.send(new CreateBookCommand(id, "Original Title"));
         outboxPoller.poll();
 
-        commandBus.send(new UpdateBookCommand(id, "Updated Title", "Author"));
+        commandBus.send(new UpdateBookCommand(id, "Updated Title"));
         outboxPoller.poll();
 
         BookResponse book = queryBus.handle(new FindBookByIdQuery(id));
 
         assertEquals("Updated Title", book.title());
-        assertEquals("Author", book.author());
+        // Original assertion on book.author() removed: BookResponse no longer carries a single-author field.
     }
 
     @Test
     void createThenDelete_queryThrowsNotFound() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Soon to die", "Author"));
+        commandBus.send(new CreateBookCommand(id, "Soon to die"));
         outboxPoller.poll();
 
         commandBus.send(new DeleteBookCommand(id));
@@ -80,7 +82,7 @@ class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void deleteEmitsAuditLogEntry() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Audit Target", "Author"));
+        commandBus.send(new CreateBookCommand(id, "Audit Target"));
         outboxPoller.poll();
 
         commandBus.send(new DeleteBookCommand(id));
@@ -101,10 +103,12 @@ class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
     @ComponentScan(basePackages = {
             "com.oscaruiz.mycqrs.demo.book.application",
             "com.oscaruiz.mycqrs.demo.book.domain",
-            "com.oscaruiz.mycqrs.demo.book.infrastructure"
+            "com.oscaruiz.mycqrs.demo.book.infrastructure",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.jpa",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.mongo"
     })
-    @EnableJpaRepositories(basePackageClasses = SpringDataBookRepository.class)
-    @EntityScan(basePackageClasses = BookEntity.class)
+    @EnableJpaRepositories(basePackageClasses = {SpringDataBookRepository.class, SpringDataAuthorRepository.class})
+    @EntityScan(basePackageClasses = {BookEntity.class, AuthorEntity.class})
     static class TestConfig {
     }
 }

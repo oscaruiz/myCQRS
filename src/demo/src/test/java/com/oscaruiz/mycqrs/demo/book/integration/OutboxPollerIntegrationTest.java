@@ -54,7 +54,7 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void successfulDispatch_marksProcessedAt() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Poller Happy", "Author"));
+        commandBus.send(new CreateBookCommand(id, "Poller Happy"));
 
         outboxPoller.poll();
 
@@ -72,7 +72,7 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
         String id = UUID.randomUUID().toString();
         createdEventRecorder.failOnNext("simulated projection failure");
 
-        commandBus.send(new CreateBookCommand(id, "Poller Sad", "Author"));
+        commandBus.send(new CreateBookCommand(id, "Poller Sad"));
 
         outboxPoller.poll();
 
@@ -96,7 +96,7 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void secondPoll_skipsAlreadyProcessedRow() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Poller Once", "Author"));
+        commandBus.send(new CreateBookCommand(id, "Poller Once"));
 
         outboxPoller.poll();
         assertThat(createdEventRecorder.events()).hasSize(1);
@@ -112,10 +112,12 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
     @ComponentScan(basePackages = {
             "com.oscaruiz.mycqrs.demo.book.application",
             "com.oscaruiz.mycqrs.demo.book.domain",
-            "com.oscaruiz.mycqrs.demo.book.infrastructure"
+            "com.oscaruiz.mycqrs.demo.book.infrastructure",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.jpa",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.mongo"
     })
-    @EnableJpaRepositories(basePackageClasses = SpringDataBookRepository.class)
-    @EntityScan(basePackageClasses = BookEntity.class)
+    @EnableJpaRepositories(basePackageClasses = {SpringDataBookRepository.class, com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.SpringDataAuthorRepository.class})
+    @EntityScan(basePackageClasses = {BookEntity.class, com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.AuthorEntity.class})
     @Import(OutboxPollerIntegrationTest.RecorderConfig.class)
     static class TestConfig {
     }

@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 public class JpaBookRepository implements BookRepository {
@@ -20,12 +22,20 @@ public class JpaBookRepository implements BookRepository {
     @Override
     public void save(BookAggregate bookAggregate) {
         UUID id = UUID.fromString(bookAggregate.getId());
+        Set<UUID> authorIds = bookAggregate.getAuthorIds().stream()
+                .map(UUID::fromString)
+                .collect(Collectors.toSet());
         BookEntity entity = springDataBookRepository.findById(id)
                 .map(existing -> {
-                    existing.update(bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted());
+                    existing.update(bookAggregate.getTitle(), bookAggregate.isDeleted());
+                    existing.replaceAuthorIds(authorIds);
                     return existing;
                 })
-                .orElseGet(() -> new BookEntity(id, bookAggregate.getTitle(), bookAggregate.getAuthor(), bookAggregate.isDeleted()));
+                .orElseGet(() -> {
+                    BookEntity created = new BookEntity(id, bookAggregate.getTitle(), bookAggregate.isDeleted());
+                    created.replaceAuthorIds(authorIds);
+                    return created;
+                });
         springDataBookRepository.save(entity);
     }
 
@@ -42,6 +52,14 @@ public class JpaBookRepository implements BookRepository {
     }
 
     private BookAggregate toAggregate(BookEntity entity) {
-        return BookAggregate.rehydrate(entity.getId().toString(), entity.getTitle(), entity.getAuthor(), entity.isDeleted());
+        Set<String> authorIds = entity.getAuthorIds().stream()
+                .map(UUID::toString)
+                .collect(Collectors.toSet());
+        return BookAggregate.rehydrate(
+                entity.getId().toString(),
+                entity.getTitle(),
+                entity.isDeleted(),
+                authorIds
+        );
     }
 }

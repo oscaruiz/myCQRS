@@ -10,7 +10,7 @@
 
 ## What is this
 
-A CQRS framework where the core — command/query/event buses, handler registration, interceptors — has zero dependencies on any DI container. Spring is wired in as an interchangeable adapter under `core.infrastructure.spring`; swapping it for Micronaut, Quarkus, or plain `new` requires no changes to `core.contracts` or `core.ddd`. On top of that, a Book bounded context demonstrates the framework end-to-end: hexagonal architecture, PostgreSQL write side with Flyway, MongoDB read side, and an outbox pattern solving the dual-write problem between them.
+A CQRS framework where the core (command/query/event buses, handler registration, interceptors) has zero dependencies on any DI container. Spring is wired in as an interchangeable adapter under `core.infrastructure.spring`; swapping it for Micronaut, Quarkus, or plain `new` requires no changes to `core.contracts` or `core.ddd`. On top of that, a Book bounded context demonstrates the framework end-to-end: hexagonal architecture, PostgreSQL write side with Flyway, MongoDB read side, and an outbox pattern solving the dual-write problem between them.
 
 The codebase is designed to be read: every architectural choice is small enough to explain in an interview, and the ones that aren't obvious are documented as ADRs.
 

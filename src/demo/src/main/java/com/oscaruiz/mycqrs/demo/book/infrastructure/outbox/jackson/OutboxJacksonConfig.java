@@ -1,6 +1,8 @@
 package com.oscaruiz.mycqrs.demo.book.infrastructure.outbox.jackson;
 
 import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
+import com.oscaruiz.mycqrs.demo.book.domain.event.AuthorAddedToBookEvent;
+import com.oscaruiz.mycqrs.demo.book.domain.event.AuthorRemovedFromBookEvent;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookCreatedEvent;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookDeletedEvent;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookUpdatedEvent;
@@ -25,6 +27,8 @@ public class OutboxJacksonConfig {
                 .mixIn(DomainEvent.class, DomainEventMixin.class)
                 .mixIn(BookCreatedEvent.class, BookCreatedEventMixin.class)
                 .mixIn(BookUpdatedEvent.class, BookUpdatedEventMixin.class)
-                .mixIn(BookDeletedEvent.class, BookDeletedEventMixin.class);
+                .mixIn(BookDeletedEvent.class, BookDeletedEventMixin.class)
+                .mixIn(AuthorAddedToBookEvent.class, AuthorAddedToBookEventMixin.class)
+                .mixIn(AuthorRemovedFromBookEvent.class, AuthorRemovedFromBookEventMixin.class);
     }
 }

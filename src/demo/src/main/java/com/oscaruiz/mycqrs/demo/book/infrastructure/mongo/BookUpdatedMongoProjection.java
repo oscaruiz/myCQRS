@@ -15,11 +15,11 @@ public class BookUpdatedMongoProjection implements EventHandler<BookUpdatedEvent
 
     @Override
     public void handle(BookUpdatedEvent event) {
-        BookReadModel model = new BookReadModel(
-                event.getAggregateId(),
-                event.getTitle(),
-                event.getAuthor()
-        );
-        repository.save(model);
+        BookReadModel existing = repository.findById(event.getAggregateId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "BookReadModel not found for id " + event.getAggregateId()
+                                + " while projecting BookUpdatedEvent; out-of-order delivery — outbox will retry"));
+        existing.setTitle(event.getTitle());
+        repository.save(existing);
     }
 }

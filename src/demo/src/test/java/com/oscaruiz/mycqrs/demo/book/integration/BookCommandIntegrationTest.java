@@ -8,6 +8,8 @@ import com.oscaruiz.mycqrs.demo.book.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.book.domain.event.BookUpdatedEvent;
 import com.oscaruiz.mycqrs.demo.book.domain.model.BookAggregate;
 import com.oscaruiz.mycqrs.demo.book.domain.repository.BookRepository;
+import com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.AuthorEntity;
+import com.oscaruiz.mycqrs.demo.author.infrastructure.jpa.SpringDataAuthorRepository;
 import com.oscaruiz.mycqrs.demo.book.infrastructure.jpa.BookEntity;
 import com.oscaruiz.mycqrs.demo.book.infrastructure.outbox.OutboxPoller;
 import com.oscaruiz.mycqrs.demo.book.integration.support.AbstractFullStackIntegrationTest;
@@ -30,6 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,24 +64,24 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void createBookCommandSavesBook() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Domain-Driven Design", "Eric Evans"));
+        commandBus.send(new CreateBookCommand(id, "Domain-Driven Design"));
 
         BookAggregate saved = bookRepository.findByTitle("Domain-Driven Design").orElseThrow();
 
         assertEquals(id, saved.getId());
-        assertEquals("Eric Evans", saved.getAuthor());
+        // Original assertion on saved.getAuthor() removed: BookAggregate no longer carries a single-author field.
         assertFalse(saved.isDeleted());
     }
 
     @Test
     void updateBookCommandEmitsEventAndChangesValues() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Refactoring", "Martin Fowler"));
+        commandBus.send(new CreateBookCommand(id, "Refactoring"));
         outboxPoller.poll();
 
         BookAggregate existing = bookRepository.findByTitle("Refactoring").orElseThrow();
 
-        commandBus.send(new UpdateBookCommand(existing.getId(), "Refactoring 2nd", "Martin Fowler"));
+        commandBus.send(new UpdateBookCommand(existing.getId(), "Refactoring 2nd"));
         outboxPoller.poll();
 
         BookAggregate updated = bookRepository.load(existing.getId());
@@ -90,7 +93,7 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Test
     void deleteBookCommandMarksAggregateDeleted() {
-        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Patterns", "GoF"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Patterns"));
         BookAggregate existing = bookRepository.findByTitle("Patterns").orElseThrow();
 
         commandBus.send(new DeleteBookCommand(existing.getId()));
@@ -102,7 +105,7 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Test
     void deleteTwiceThrowsException() {
-        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Effective Java", "Joshua Bloch"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Effective Java"));
         BookAggregate existing = bookRepository.findByTitle("Effective Java").orElseThrow();
 
         commandBus.send(new DeleteBookCommand(existing.getId()));
@@ -113,26 +116,26 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Test
     void updateAfterDeleteThrowsException() {
-        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Clean Architecture", "Robert C. Martin"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Clean Architecture"));
         BookAggregate existing = bookRepository.findByTitle("Clean Architecture").orElseThrow();
 
         commandBus.send(new DeleteBookCommand(existing.getId()));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new UpdateBookCommand(existing.getId(), "Any", "Any")));
+                () -> commandBus.send(new UpdateBookCommand(existing.getId(), "Any")));
     }
 
 
     @Test
     void saveWithDetachedAggregateInsertsNewRow() {
         String id = UUID.randomUUID().toString();
-        BookAggregate detached = BookAggregate.rehydrate(id, "Ghost", "Nobody", false);
+        BookAggregate detached = BookAggregate.rehydrate(id, "Ghost", false, Set.of());
 
         bookRepository.save(detached);
 
         BookAggregate loaded = bookRepository.load(id);
         assertEquals("Ghost", loaded.getTitle());
-        assertEquals("Nobody", loaded.getAuthor());
+        // Original assertion on loaded.getAuthor() removed: BookAggregate no longer carries a single-author field.
     }
 
     @Test
@@ -147,10 +150,12 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @ComponentScan(basePackages = {
             "com.oscaruiz.mycqrs.demo.book.application",
             "com.oscaruiz.mycqrs.demo.book.domain",
-            "com.oscaruiz.mycqrs.demo.book.infrastructure"
+            "com.oscaruiz.mycqrs.demo.book.infrastructure",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.jpa",
+            "com.oscaruiz.mycqrs.demo.author.infrastructure.mongo"
     })
-    @EnableJpaRepositories(basePackageClasses = SpringDataBookRepository.class)
-    @EntityScan(basePackageClasses = BookEntity.class)
+    @EnableJpaRepositories(basePackageClasses = {SpringDataBookRepository.class, SpringDataAuthorRepository.class})
+    @EntityScan(basePackageClasses = {BookEntity.class, AuthorEntity.class})
     @Import(TestEventsConfig.class)
     static class TestConfig {
     }
