@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -42,7 +43,7 @@ public class BookController {
     }
 
     @GetMapping
-    public ResponseEntity<BookResponse> getBooksByTitle(@RequestParam String title) {
+    public ResponseEntity<List<BookResponse>> getBooksByTitle(@RequestParam String title) {
         return ResponseEntity.ok(queryBus.handle(new FindBookByTitleQuery(title)));
     }
 

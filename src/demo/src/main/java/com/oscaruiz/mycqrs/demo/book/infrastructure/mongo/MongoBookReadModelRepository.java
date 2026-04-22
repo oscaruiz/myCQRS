@@ -22,8 +22,10 @@ public class MongoBookReadModelRepository implements BookReadModelRepository {
     }
 
     @Override
-    public Optional<BookResponse> findByTitle(String title) {
-        return bookMongoRepository.findFirstByTitle(title).map(this::toResponse);
+    public List<BookResponse> findByTitle(String title) {
+        return bookMongoRepository.findByTitleContainingIgnoreCase(title).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private BookResponse toResponse(BookReadModel model) {

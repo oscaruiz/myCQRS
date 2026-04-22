@@ -167,7 +167,7 @@
       <h3>Search</h3>
       <input id="in-book-search" placeholder="Book title..." />
       <button id="btn-book-search">Search book by title</button>
-      <div class="read-status" id="book-search-status">Enter an exact title</div>
+      <div class="read-status" id="book-search-status">Partial and case-insensitive</div>
       <pre id="book-search-json"></pre>
     </div>
     <div class="card">
@@ -433,11 +433,18 @@
     const statusEl = $("book-search-status");
     const jsonEl = $("book-search-json");
     if (r.ok) {
-      statusEl.textContent = "Match"; statusEl.className = "read-status ok";
-      jsonEl.textContent = JSON.stringify(r.body, null, 2);
+      const count = Array.isArray(r.body) ? r.body.length : 0;
+      if (count === 0) {
+        statusEl.textContent = "No books found";
+        statusEl.className = "read-status err";
+        jsonEl.textContent = "";
+      } else {
+        statusEl.textContent = count + (count === 1 ? " match" : " matches");
+        statusEl.className = "read-status ok";
+        jsonEl.textContent = JSON.stringify(r.body, null, 2);
+      }
     } else {
-      statusEl.textContent = r.code === 404 ? "No books found"
-          : ((r.code || "—") + " " + (r.reason || "error"));
+      statusEl.textContent = (r.code || "—") + " " + (r.reason || "error");
       statusEl.className = "read-status err";
       jsonEl.textContent = "";
     }

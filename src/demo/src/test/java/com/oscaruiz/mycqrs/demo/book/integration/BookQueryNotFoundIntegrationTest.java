@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = BookQueryNotFoundIntegrationTest.TestConfig.class)
@@ -36,9 +37,10 @@ class BookQueryNotFoundIntegrationTest extends AbstractFullStackIntegrationTest 
     }
 
     @Test
-    void getBookByTitle_whenRepositoryEmpty_returns404() throws Exception {
+    void getBookByTitle_whenRepositoryEmpty_returns200WithEmptyList() throws Exception {
         mockMvc.perform(get("/books").param("title", "Nonexistent-" + UUID.randomUUID()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 
     @SpringBootConfiguration
