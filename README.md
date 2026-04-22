@@ -32,6 +32,26 @@ Deployed on Render free tier. Swagger UI entry point:
 
 Deployment rationale: [ADR 0007](docs/adr/0007-immutable-docker-images-via-ghcr.md).
 
+## Dashboard
+
+Served at `/` by the running demo. Single-page HTML (no framework, no build
+step) that exposes the full CQRS pipeline end-to-end in one view:
+
+- **Write side:** create/update/delete books and authors, link an author to
+  a book, and see the last ten UI-issued commands with per-call latency.
+- **Outbox:** pending / processed counters, last processed timestamp, poll
+  interval; polled every 2 s with a stale indicator on failure.
+- **Recent events:** last 10 outbox rows with derived status
+  (`pending` / `processed` / `failed`) and latency in milliseconds. Fed by
+  `GET /actuator/outbox-recent`.
+- **Read side:** author and book projections, auto-refreshed after each
+  command with a visible consistency delay; search by exact book title.
+
+The primary observability surface of the demo — the only place where the
+command → outbox → projection flow is visible in real time. Rationale and
+LOC budget in
+[ADR 0009](docs/adr/0009-dashboard-as-first-class-observability-surface.md).
+
 ## Architecture
 
 ### Write flow
@@ -131,10 +151,6 @@ curl.exe -X DELETE "http://localhost:8080/books/$BOOK"
 ```
 
 Core tests run on JUnit + Mockito + AssertJ with no Spring context. Demo integration tests boot `@SpringBootTest` against Testcontainers (PostgreSQL + MongoDB) wired via `@ServiceConnection`; H2 is not used anywhere. ArchUnit enforces package boundaries in CI: contracts and ddd must not depend on Spring, the Book context must follow an onion shape, command handlers must not call each other directly, and no module may contain a slice cycle.
-
-## Optional dashboard
-
-A minimal HTML dashboard is served at `/`. It exercises the three-column flow (commands, outbox stats, read-side queries) against the same endpoints documented above. Not part of the architectural contract — <~350 LOC, no framework, no tests. The architectural surface is Swagger + Actuator.
 
 ## Design decisions
 
