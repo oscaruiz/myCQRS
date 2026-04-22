@@ -58,11 +58,56 @@
   .read-status { font-size: 12px; color: var(--muted); margin: 6px 0; }
   .read-status.ok  { color: var(--ok); }
   .read-status.err { color: var(--err); }
+  .read-status.waiting { color: var(--muted); font-style: italic; }
   pre { background: #fff; border: 1px solid var(--border); border-radius: 3px;
     padding: 8px; font-family: var(--mono); font-size: 12px; overflow-x: auto;
     margin: 0; max-height: 300px; }
   footer.flow { margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--border);
     font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: center; }
+  .events-row { margin-top: 16px; }
+  .events-row h2 { margin: 0 0 4px 0; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  .events-row h2 .subtitle { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .events-card { padding: 8px 12px; }
+  .events-card table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .events-card th, .events-card td { padding: 6px 8px; text-align: left;
+    border-bottom: 1px solid var(--border); }
+  .events-card tbody tr:last-child td { border-bottom: none; }
+  .events-card th { color: var(--muted); font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.05em; }
+  .events-card td.num { font-family: var(--mono); text-align: right; }
+  .events-card td.ev  { font-family: var(--mono); }
+  .events-card .empty { color: var(--muted); font-style: italic; text-align: center; }
+  .pill { display: inline-block; padding: 1px 8px; font-size: 11px;
+    border-radius: 10px; font-weight: 600; }
+  .pill.processed { background: #dcfce7; color: var(--ok); }
+  .pill.pending   { background: #fef3c7; color: #92400e; }
+  .pill.failed    { background: #fee2e2; color: var(--err); }
+  tr.row-new { animation: flashnew 1.5s ease-out; }
+  @keyframes flashnew {
+    from { background-color: #fef3c7; }
+    to   { background-color: transparent; }
+  }
+  .cmd-history ol { list-style: none; margin: 0; padding: 0;
+    font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .cmd-history li { padding: 2px 0; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; }
+  .cmd-history li.empty { font-family: inherit; font-style: italic; }
+  .snapshot-row { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .snapshot-row h2 { margin: 0 0 4px 0; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  .snapshot-row h2 .subtitle { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .snap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .snap-grid { grid-template-columns: 1fr; } }
+  .snap-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+  .snap-events { list-style: none; margin: 0; padding: 8px; background: #fff;
+    border: 1px solid var(--border); border-radius: 3px; font-family: var(--mono);
+    font-size: 11px; max-height: 300px; overflow-y: auto; }
+  .snap-events li { padding: 2px 0; color: var(--muted); }
+  .snap-events li.empty { font-style: italic; }
+  .snapshot-card .snap-empty { color: var(--muted); font-style: italic;
+    font-size: 12px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -99,6 +144,10 @@
         <span id="cmd-book-id">Book: —</span>
       </div>
     </div>
+    <div class="card cmd-history">
+      <h3>Command history</h3>
+      <ol id="cmd-history-list"><li class="empty">No commands yet</li></ol>
+    </div>
   </section>
 
   <section class="col">
@@ -114,6 +163,13 @@
   <section class="col">
     <h2>Query</h2>
     <div class="card">
+      <h3>Search</h3>
+      <input id="in-book-search" placeholder="Book title..." />
+      <button id="btn-book-search">Search book by title</button>
+      <div class="read-status" id="book-search-status">Enter an exact title</div>
+      <pre id="book-search-json"></pre>
+    </div>
+    <div class="card">
       <h3>Author</h3>
       <button id="btn-author-refresh" disabled>Refresh author</button>
       <div class="read-status" id="author-read-status">No author created yet</div>
@@ -128,6 +184,45 @@
   </section>
 </main>
 
+<section class="events-row">
+  <h2>Recent events <span class="subtitle">— last 10 from the outbox</span></h2>
+  <div class="card events-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th><th>Event</th><th>Aggregate</th>
+          <th class="num">Latency</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="events-tbody">
+        <tr><td class="empty" colspan="5">No events yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="snapshot-row">
+  <h2>Write ↔ Read snapshot <span class="subtitle">— same entity, both stores</span></h2>
+  <div class="card snapshot-card">
+    <h3>Author</h3>
+    <div class="snap-grid" id="snap-author-grid">
+      <div><div class="snap-label">Postgres</div><pre id="snap-author-pg"></pre></div>
+      <div><div class="snap-label">Mongo</div><pre id="snap-author-mongo"></pre></div>
+      <div><div class="snap-label">Events</div><ol class="snap-events" id="snap-author-events"></ol></div>
+    </div>
+    <div class="snap-empty" id="snap-author-empty">Create an author to see its write/read snapshot.</div>
+  </div>
+  <div class="card snapshot-card">
+    <h3>Book</h3>
+    <div class="snap-grid" id="snap-book-grid">
+      <div><div class="snap-label">Postgres</div><pre id="snap-book-pg"></pre></div>
+      <div><div class="snap-label">Mongo</div><pre id="snap-book-mongo"></pre></div>
+      <div><div class="snap-label">Events</div><ol class="snap-events" id="snap-book-events"></ol></div>
+    </div>
+    <div class="snap-empty" id="snap-book-empty">Create a book to see its write/read snapshot.</div>
+  </div>
+</section>
+
 <footer class="flow">
   Command → PostgreSQL + Outbox (same tx) → Poller → Event Bus → Mongo Projection → Query
 </footer>
@@ -136,11 +231,20 @@
 (() => {
   // In-memory state only. Page refresh = clean state (intentional).
   const state = {
-    currentAuthorId:    null,
-    currentBookId:      null,
-    lastStatus:         null,
-    outboxPollInFlight: false,
-    outboxStale:        false,
+    currentAuthorId:      null,
+    currentBookId:        null,
+    lastStatus:           null,
+    outboxPollInFlight:   false,
+    outboxStale:          false,
+    pollerIntervalMs:     2000,
+    eventsPollInFlight:   false,
+    lastEventIds:         new Set(),
+    cmdHistory:           [],
+    snapshotPollInFlight: false,
+  };
+  const refresh = {
+    author: { timerId: null, generation: 0 },
+    book:   { timerId: null, generation: 0 },
   };
   const $ = id => document.getElementById(id);
   const truncate = id => id ? id.slice(0, 5) + "…" + id.slice(-4) : "—";
@@ -170,22 +274,45 @@
   }
 
   // HTTP errors do NOT throw here — callers branch on `ok`. Network errors
-  // surface as code=0 so the UI still reports something.
+  // surface as code=0 so the UI still reports something. Every call is
+  // recorded in the command history unless the path is a polling endpoint.
   async function call(method, url, body) {
     const init = { method, headers: {} };
     if (body !== undefined) {
       init.headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(body);
     }
+    const start = performance.now();
     try {
       const res = await fetch(url, init);
       const text = await res.text();
       let parsed = null;
       if (text) { try { parsed = JSON.parse(text); } catch { parsed = text; } }
+      recordCommand(method, url, res.status, performance.now() - start);
       return { ok: res.ok, code: res.status, reason: res.statusText || "", body: parsed };
     } catch {
+      recordCommand(method, url, 0, performance.now() - start);
       return { ok: false, code: 0, reason: "Network error", body: null };
     }
+  }
+
+  function recordCommand(method, path, status, elapsed) {
+    if (path.startsWith("/actuator/")) return;
+    state.cmdHistory.unshift({
+      timestamp: new Date().toISOString(),
+      method, path, status,
+      latencyMs: Math.round(elapsed),
+    });
+    if (state.cmdHistory.length > 10) state.cmdHistory.length = 10;
+    renderCmdHistory();
+  }
+
+  function renderCmdHistory() {
+    const list = $("cmd-history-list");
+    list.innerHTML = state.cmdHistory.map(c =>
+      "<li>" + formatTime(c.timestamp) + "  " + c.method + "  " + c.path +
+        "  →  " + c.status + "  (" + c.latencyMs + "ms)</li>"
+    ).join("");
   }
 
   // ---- Commands (write side) ----
@@ -194,39 +321,45 @@
     const lastName  = $("in-author-last").value.trim();
     const id = crypto.randomUUID();
     const r = await call("PUT", "/authors/" + id, { firstName, lastName });
-    if (r.ok) state.currentAuthorId = id;
+    if (r.ok) { state.currentAuthorId = id; }
     setStatus(r.code, r.reason, "create author");
+    if (r.ok) scheduleAutoRefresh("author", id);
   });
 
   $("btn-book-create").addEventListener("click", async () => {
     const title = $("in-book-title").value.trim();
     const id = crypto.randomUUID();
     const r = await call("PUT", "/books/" + id, { title });
-    if (r.ok) state.currentBookId = id;
+    if (r.ok) { state.currentBookId = id; }
     setStatus(r.code, r.reason, "create book");
+    if (r.ok) scheduleAutoRefresh("book", id);
   });
 
   $("btn-book-update").addEventListener("click", async () => {
     const title = $("in-book-title").value.trim();
     const r = await call("PATCH", "/books/" + state.currentBookId, { title });
     setStatus(r.code, r.reason, "update book");
+    if (r.ok) scheduleAutoRefresh("book");
   });
 
   $("btn-book-delete").addEventListener("click", async () => {
+    const deletedId = state.currentBookId;
     const r = await call("DELETE", "/books/" + state.currentBookId);
     if (r.ok) state.currentBookId = null;
     setStatus(r.code, r.reason, "delete book");
+    if (r.ok) scheduleAutoRefresh("book", deletedId);
   });
 
   $("btn-link").addEventListener("click", async () => {
     const r = await call("POST", "/books/" + state.currentBookId + "/authors/" + state.currentAuthorId);
     setStatus(r.code, r.reason, "link");
+    if (r.ok) { scheduleAutoRefresh("author"); scheduleAutoRefresh("book"); }
   });
 
   // ---- Queries (read side) ----
-  // Read side is NOT auto-refreshed. Manual refresh makes the CQRS separation
-  // explicit and avoids races with the poller draining between a command and
-  // the observer's visual check.
+  // Read side is refreshed automatically after each command with a visible delay,
+  // making the eventual consistency explicit. Manual refresh remains available
+  // for isolated queries.
   function renderRead(kind, r) {
     const statusEl = $(kind + "-read-status");
     const jsonEl   = $(kind + "-json");
@@ -245,16 +378,66 @@
     }
   }
 
+  // Supersede any pending or in-flight auto-refresh for `kind`. Bumping the
+  // generation token makes the previous tick's result a no-op when it returns.
+  function cancelAutoRefresh(kind) {
+    const t = refresh[kind];
+    t.generation++;
+    if (t.timerId) { clearTimeout(t.timerId); t.timerId = null; }
+  }
+
+  function scheduleAutoRefresh(kind, idOverride) {
+    const id = idOverride !== undefined
+      ? idOverride
+      : (kind === "author" ? state.currentAuthorId : state.currentBookId);
+    if (!id) return;
+    cancelAutoRefresh(kind);
+    const t = refresh[kind];
+    const gen = ++t.generation;
+    const statusEl = $(kind + "-read-status");
+    statusEl.textContent = "Waiting for projection…";
+    statusEl.className = "read-status waiting";
+    $(kind + "-json").textContent = "";
+    const path = kind === "author" ? "/authors/" : "/books/";
+    t.timerId = setTimeout(async () => {
+      t.timerId = null;
+      if (gen !== t.generation) return;
+      const r = await call("GET", path + id);
+      if (gen !== t.generation) return;
+      renderRead(kind, r);
+    }, state.pollerIntervalMs + 500);
+  }
+
   $("btn-author-refresh").addEventListener("click", async () => {
+    cancelAutoRefresh("author");
     const r = await call("GET", "/authors/" + state.currentAuthorId);
     renderRead("author", r);
     setStatus(r.code, r.reason, "refresh author");
   });
 
   $("btn-book-refresh").addEventListener("click", async () => {
+    cancelAutoRefresh("book");
     const r = await call("GET", "/books/" + state.currentBookId);
     renderRead("book", r);
     setStatus(r.code, r.reason, "refresh book");
+  });
+
+  $("btn-book-search").addEventListener("click", async () => {
+    const title = $("in-book-search").value.trim();
+    if (!title) return;
+    const r = await call("GET", "/books?title=" + encodeURIComponent(title));
+    const statusEl = $("book-search-status");
+    const jsonEl = $("book-search-json");
+    if (r.ok) {
+      statusEl.textContent = "Match"; statusEl.className = "read-status ok";
+      jsonEl.textContent = JSON.stringify(r.body, null, 2);
+    } else {
+      statusEl.textContent = r.code === 404 ? "No books found"
+          : ((r.code || "—") + " " + (r.reason || "error"));
+      statusEl.className = "read-status err";
+      jsonEl.textContent = "";
+    }
+    setStatus(r.code, r.reason, "search book");
   });
 
   // ---- Outbox polling ----
@@ -277,6 +460,9 @@
         $("ob-processed").textContent = r.body.processed;
         $("ob-last").textContent      = r.body.last_processed_at || "—";
         $("ob-interval").textContent  = "Poll: every " + formatInterval(r.body.poller_interval_ms) + "s";
+        if (typeof r.body.poller_interval_ms === "number") {
+          state.pollerIntervalMs = r.body.poller_interval_ms;
+        }
         state.outboxStale = false;
         $("outbox-card").classList.remove("stale");
       } else {
@@ -288,11 +474,97 @@
     }
   }
 
+  // ---- Recent events (read from outbox) ----
+  // Last 10 outbox rows with derived status + latency. New rows get a brief
+  // background flash via CSS keyframes (row-new class); the diff uses
+  // state.lastEventIds so we skip the flash on first render.
+  function formatTime(iso) {
+    return new Date(iso).toLocaleTimeString([], { hour12: false });
+  }
+
+  function renderEvents(rows) {
+    const tbody = $("events-tbody");
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td class="empty" colspan="5">No events yet</td></tr>';
+      state.lastEventIds = new Set();
+      return;
+    }
+    const prev = state.lastEventIds;
+    const next = new Set();
+    tbody.innerHTML = rows.map(r => {
+      next.add(r.id);
+      const latency = r.latency_ms == null ? "—" : r.latency_ms + " ms";
+      const fresh = prev.size > 0 && !prev.has(r.id);
+      return '<tr' + (fresh ? ' class="row-new"' : '') + '>' +
+        '<td>' + formatTime(r.occurred_at) + '</td>' +
+        '<td class="ev">' + r.event_type_simple + '</td>' +
+        '<td>' + r.aggregate_type + '</td>' +
+        '<td class="num">' + latency + '</td>' +
+        '<td><span class="pill ' + r.status + '">' + r.status + '</span></td>' +
+      '</tr>';
+    }).join("");
+    state.lastEventIds = next;
+  }
+
+  async function eventsTick() {
+    if (document.visibilityState !== "visible") return;
+    if (state.eventsPollInFlight) return;
+    state.eventsPollInFlight = true;
+    try {
+      const r = await call("GET", "/actuator/outbox-recent?limit=10");
+      if (r.ok && Array.isArray(r.body)) renderEvents(r.body);
+    } finally {
+      state.eventsPollInFlight = false;
+    }
+  }
+
+  // ---- Write ↔ Read snapshot (per-entity DB inspector) ----
+  // For each kind (author/book) currently tracked, fetch the Postgres row,
+  // the Mongo document, and the last 10 event-log entries side-by-side.
+  function renderSnapshot(kind, data) {
+    const grid = $("snap-" + kind + "-grid");
+    const empty = $("snap-" + kind + "-empty");
+    if (data == null) { grid.style.display = "none"; empty.style.display = "block"; return; }
+    grid.style.display = "grid"; empty.style.display = "none";
+    $("snap-" + kind + "-pg").textContent = data.postgres == null
+        ? "null (not in Postgres)" : JSON.stringify(data.postgres, null, 2);
+    $("snap-" + kind + "-mongo").textContent = data.mongo == null
+        ? "null (projection not caught up)" : JSON.stringify(data.mongo, null, 2);
+    const events = data.events || [];
+    const list = $("snap-" + kind + "-events");
+    list.innerHTML = events.length
+        ? events.map(e => "<li>" + formatTime(e.timestamp) + "  " +
+            e.type + " (" + e.operation + ")</li>").join("")
+        : '<li class="empty">No events</li>';
+  }
+
+  async function snapshotTick() {
+    if (document.visibilityState !== "visible") return;
+    if (state.snapshotPollInFlight) return;
+    state.snapshotPollInFlight = true;
+    try {
+      if (state.currentAuthorId) {
+        const r = await call("GET", "/actuator/entity-snapshot/author/" + state.currentAuthorId);
+        if (r.ok) renderSnapshot("author", r.body);
+      } else renderSnapshot("author", null);
+      if (state.currentBookId) {
+        const r = await call("GET", "/actuator/entity-snapshot/book/" + state.currentBookId);
+        if (r.ok) renderSnapshot("book", r.body);
+      } else renderSnapshot("book", null);
+    } finally {
+      state.snapshotPollInFlight = false;
+    }
+  }
+
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") outboxTick();
+    if (document.visibilityState === "visible") { outboxTick(); eventsTick(); snapshotTick(); }
   });
   setInterval(outboxTick, 2000);
+  setInterval(eventsTick, 2000);
+  setInterval(snapshotTick, 2000);
   outboxTick();
+  eventsTick();
+  snapshotTick();
   syncUI();
 })();
 </script>
