@@ -58,6 +58,7 @@
   .read-status { font-size: 12px; color: var(--muted); margin: 6px 0; }
   .read-status.ok  { color: var(--ok); }
   .read-status.err { color: var(--err); }
+  .read-status.waiting { color: var(--muted); font-style: italic; }
   pre { background: #fff; border: 1px solid var(--border); border-radius: 3px;
     padding: 8px; font-family: var(--mono); font-size: 12px; overflow-x: auto;
     margin: 0; max-height: 300px; }
@@ -136,11 +137,16 @@
 (() => {
   // In-memory state only. Page refresh = clean state (intentional).
   const state = {
-    currentAuthorId:    null,
-    currentBookId:      null,
-    lastStatus:         null,
-    outboxPollInFlight: false,
-    outboxStale:        false,
+    currentAuthorId:      null,
+    currentBookId:        null,
+    lastStatus:           null,
+    outboxPollInFlight:   false,
+    outboxStale:          false,
+    pollerIntervalMs:     2000,
+  };
+  const refresh = {
+    author: { timerId: null, generation: 0 },
+    book:   { timerId: null, generation: 0 },
   };
   const $ = id => document.getElementById(id);
   const truncate = id => id ? id.slice(0, 5) + "…" + id.slice(-4) : "—";
@@ -194,39 +200,45 @@
     const lastName  = $("in-author-last").value.trim();
     const id = crypto.randomUUID();
     const r = await call("PUT", "/authors/" + id, { firstName, lastName });
-    if (r.ok) state.currentAuthorId = id;
+    if (r.ok) { state.currentAuthorId = id; }
     setStatus(r.code, r.reason, "create author");
+    if (r.ok) scheduleAutoRefresh("author", id);
   });
 
   $("btn-book-create").addEventListener("click", async () => {
     const title = $("in-book-title").value.trim();
     const id = crypto.randomUUID();
     const r = await call("PUT", "/books/" + id, { title });
-    if (r.ok) state.currentBookId = id;
+    if (r.ok) { state.currentBookId = id; }
     setStatus(r.code, r.reason, "create book");
+    if (r.ok) scheduleAutoRefresh("book", id);
   });
 
   $("btn-book-update").addEventListener("click", async () => {
     const title = $("in-book-title").value.trim();
     const r = await call("PATCH", "/books/" + state.currentBookId, { title });
     setStatus(r.code, r.reason, "update book");
+    if (r.ok) scheduleAutoRefresh("book");
   });
 
   $("btn-book-delete").addEventListener("click", async () => {
+    const deletedId = state.currentBookId;
     const r = await call("DELETE", "/books/" + state.currentBookId);
     if (r.ok) state.currentBookId = null;
     setStatus(r.code, r.reason, "delete book");
+    if (r.ok) scheduleAutoRefresh("book", deletedId);
   });
 
   $("btn-link").addEventListener("click", async () => {
     const r = await call("POST", "/books/" + state.currentBookId + "/authors/" + state.currentAuthorId);
     setStatus(r.code, r.reason, "link");
+    if (r.ok) { scheduleAutoRefresh("author"); scheduleAutoRefresh("book"); }
   });
 
   // ---- Queries (read side) ----
-  // Read side is NOT auto-refreshed. Manual refresh makes the CQRS separation
-  // explicit and avoids races with the poller draining between a command and
-  // the observer's visual check.
+  // Read side is refreshed automatically after each command with a visible delay,
+  // making the eventual consistency explicit. Manual refresh remains available
+  // for isolated queries.
   function renderRead(kind, r) {
     const statusEl = $(kind + "-read-status");
     const jsonEl   = $(kind + "-json");
@@ -245,13 +257,45 @@
     }
   }
 
+  // Supersede any pending or in-flight auto-refresh for `kind`. Bumping the
+  // generation token makes the previous tick's result a no-op when it returns.
+  function cancelAutoRefresh(kind) {
+    const t = refresh[kind];
+    t.generation++;
+    if (t.timerId) { clearTimeout(t.timerId); t.timerId = null; }
+  }
+
+  function scheduleAutoRefresh(kind, idOverride) {
+    const id = idOverride !== undefined
+      ? idOverride
+      : (kind === "author" ? state.currentAuthorId : state.currentBookId);
+    if (!id) return;
+    cancelAutoRefresh(kind);
+    const t = refresh[kind];
+    const gen = ++t.generation;
+    const statusEl = $(kind + "-read-status");
+    statusEl.textContent = "Waiting for projection…";
+    statusEl.className = "read-status waiting";
+    $(kind + "-json").textContent = "";
+    const path = kind === "author" ? "/authors/" : "/books/";
+    t.timerId = setTimeout(async () => {
+      t.timerId = null;
+      if (gen !== t.generation) return;
+      const r = await call("GET", path + id);
+      if (gen !== t.generation) return;
+      renderRead(kind, r);
+    }, state.pollerIntervalMs + 500);
+  }
+
   $("btn-author-refresh").addEventListener("click", async () => {
+    cancelAutoRefresh("author");
     const r = await call("GET", "/authors/" + state.currentAuthorId);
     renderRead("author", r);
     setStatus(r.code, r.reason, "refresh author");
   });
 
   $("btn-book-refresh").addEventListener("click", async () => {
+    cancelAutoRefresh("book");
     const r = await call("GET", "/books/" + state.currentBookId);
     renderRead("book", r);
     setStatus(r.code, r.reason, "refresh book");
@@ -277,6 +321,9 @@
         $("ob-processed").textContent = r.body.processed;
         $("ob-last").textContent      = r.body.last_processed_at || "—";
         $("ob-interval").textContent  = "Poll: every " + formatInterval(r.body.poller_interval_ms) + "s";
+        if (typeof r.body.poller_interval_ms === "number") {
+          state.pollerIntervalMs = r.body.poller_interval_ms;
+        }
         state.outboxStale = false;
         $("outbox-card").classList.remove("stale");
       } else {
