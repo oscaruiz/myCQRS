@@ -63,7 +63,6 @@ class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
         BookResponse book = queryBus.handle(new FindBookByIdQuery(id));
 
         assertEquals("Updated Title", book.title());
-        // Original assertion on book.author() removed: BookResponse no longer carries a single-author field.
     }
 
     @Test

@@ -69,7 +69,6 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
         BookAggregate saved = bookRepository.findByTitle("Domain-Driven Design").orElseThrow();
 
         assertEquals(id, saved.getId());
-        // Original assertion on saved.getAuthor() removed: BookAggregate no longer carries a single-author field.
         assertFalse(saved.isDeleted());
     }
 
@@ -135,7 +134,6 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
 
         BookAggregate loaded = bookRepository.load(id);
         assertEquals("Ghost", loaded.getTitle());
-        // Original assertion on loaded.getAuthor() removed: BookAggregate no longer carries a single-author field.
     }
 
     @Test
