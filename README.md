@@ -46,11 +46,17 @@ step) that exposes the full CQRS pipeline end-to-end in one view:
   `GET /actuator/outbox-recent`.
 - **Read side:** author and book projections, auto-refreshed after each
   command with a visible consistency delay; search by exact book title.
+- **Write ↔ Read snapshot:** for the currently-tracked author or book,
+  the Postgres row (normalised, with the `book_authors` join) next to
+  the Mongo document (denormalised, with embedded author / book
+  summaries) plus the last 10 event-log entries. Fed by
+  `GET /actuator/entity-snapshot/{kind}/{id}`.
 
 The primary observability surface of the demo — the only place where the
-command → outbox → projection flow is visible in real time. Rationale and
-LOC budget in
-[ADR 0009](docs/adr/0009-dashboard-as-first-class-observability-surface.md).
+command → outbox → projection flow is visible in real time. Rationale in
+[ADR 0009](docs/adr/0009-dashboard-as-first-class-observability-surface.md);
+the LOC budget and the entity-snapshot contract are amended in
+[ADR 0010](docs/adr/0010-dashboard-entity-snapshot-and-loc-cap-raise.md).
 
 ## Architecture
 
