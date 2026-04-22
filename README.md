@@ -19,7 +19,7 @@ The codebase is designed to be read: every architectural choice is small enough 
 
 Deployed on Render free tier. Swagger UI entry point:
 
-`https://<app>.onrender.com/swagger-ui.html`
+`https://mycqrs.onrender.com/swagger-ui.html`
 
 > Free tier; first request after idle may take ~30s. Conscious trade-off —
 > production would use a paid tier or `min-instances=1`.
@@ -31,6 +31,8 @@ Deployed on Render free tier. Swagger UI entry point:
 | `GET /books/{id}` | Reads from the Mongo projection. |
 
 Deployment rationale: [ADR 0007](docs/adr/0007-immutable-docker-images-via-ghcr.md).
+
+See the dashboard at `/` for the full observability surface (commands, outbox stats, recent events, read-side projections, write↔read snapshot).
 
 ## Dashboard
 
@@ -45,7 +47,8 @@ step) that exposes the full CQRS pipeline end-to-end in one view:
   (`pending` / `processed` / `failed`) and latency in milliseconds. Fed by
   `GET /actuator/outbox-recent`.
 - **Read side:** author and book projections, auto-refreshed after each
-  command with a visible consistency delay; search by exact book title.
+  command with a visible consistency delay; partial, case-insensitive
+  search by book title.
 - **Write ↔ Read snapshot:** for the currently-tracked author or book,
   the Postgres row (normalised, with the `book_authors` join) next to
   the Mongo document (denormalised, with embedded author / book
@@ -176,6 +179,7 @@ Significant decisions — including deliberate non-adoptions such as Event Sourc
 - Testcontainers (PostgreSQL + MongoDB) for every integration test.
 - Spring profiles for `dev` and `test`.
 - Docker multi-stage image and GitHub Actions CI running `./mvnw verify`.
+- Post-deploy smoke test against `/actuator/health` in the deploy workflow; each successful deploy registers a first-class GitHub Deployment against the `production` environment.
 
 **Planned**
 - Idempotency: command deduplication on the write side and projection idempotency on the read side.
