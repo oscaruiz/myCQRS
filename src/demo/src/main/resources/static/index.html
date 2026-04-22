@@ -64,6 +64,30 @@
     margin: 0; max-height: 300px; }
   footer.flow { margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--border);
     font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: center; }
+  .events-row { margin-top: 16px; }
+  .events-row h2 { margin: 0 0 4px 0; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  .events-row h2 .subtitle { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .events-card { padding: 8px 12px; }
+  .events-card table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .events-card th, .events-card td { padding: 6px 8px; text-align: left;
+    border-bottom: 1px solid var(--border); }
+  .events-card tbody tr:last-child td { border-bottom: none; }
+  .events-card th { color: var(--muted); font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.05em; }
+  .events-card td.num { font-family: var(--mono); text-align: right; }
+  .events-card td.ev  { font-family: var(--mono); }
+  .events-card .empty { color: var(--muted); font-style: italic; text-align: center; }
+  .pill { display: inline-block; padding: 1px 8px; font-size: 11px;
+    border-radius: 10px; font-weight: 600; }
+  .pill.processed { background: #dcfce7; color: var(--ok); }
+  .pill.pending   { background: #fef3c7; color: #92400e; }
+  .pill.failed    { background: #fee2e2; color: var(--err); }
+  tr.row-new { animation: flashnew 1.5s ease-out; }
+  @keyframes flashnew {
+    from { background-color: #fef3c7; }
+    to   { background-color: transparent; }
+  }
 </style>
 </head>
 <body>
@@ -129,6 +153,23 @@
   </section>
 </main>
 
+<section class="events-row">
+  <h2>Recent events <span class="subtitle">— last 10 from the outbox</span></h2>
+  <div class="card events-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th><th>Event</th><th>Aggregate</th>
+          <th class="num">Latency</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="events-tbody">
+        <tr><td class="empty" colspan="5">No events yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
 <footer class="flow">
   Command → PostgreSQL + Outbox (same tx) → Poller → Event Bus → Mongo Projection → Query
 </footer>
@@ -143,6 +184,8 @@
     outboxPollInFlight:   false,
     outboxStale:          false,
     pollerIntervalMs:     2000,
+    eventsPollInFlight:   false,
+    lastEventIds:         new Set(),
   };
   const refresh = {
     author: { timerId: null, generation: 0 },
@@ -335,11 +378,57 @@
     }
   }
 
+  // ---- Recent events (read from outbox) ----
+  // Last 10 outbox rows with derived status + latency. New rows get a brief
+  // background flash via CSS keyframes (row-new class); the diff uses
+  // state.lastEventIds so we skip the flash on first render.
+  function formatTime(iso) {
+    return new Date(iso).toLocaleTimeString([], { hour12: false });
+  }
+
+  function renderEvents(rows) {
+    const tbody = $("events-tbody");
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td class="empty" colspan="5">No events yet</td></tr>';
+      state.lastEventIds = new Set();
+      return;
+    }
+    const prev = state.lastEventIds;
+    const next = new Set();
+    tbody.innerHTML = rows.map(r => {
+      next.add(r.id);
+      const latency = r.latency_ms == null ? "—" : r.latency_ms + " ms";
+      const fresh = prev.size > 0 && !prev.has(r.id);
+      return '<tr' + (fresh ? ' class="row-new"' : '') + '>' +
+        '<td>' + formatTime(r.occurred_at) + '</td>' +
+        '<td class="ev">' + r.event_type_simple + '</td>' +
+        '<td>' + r.aggregate_type + '</td>' +
+        '<td class="num">' + latency + '</td>' +
+        '<td><span class="pill ' + r.status + '">' + r.status + '</span></td>' +
+      '</tr>';
+    }).join("");
+    state.lastEventIds = next;
+  }
+
+  async function eventsTick() {
+    if (document.visibilityState !== "visible") return;
+    if (state.eventsPollInFlight) return;
+    state.eventsPollInFlight = true;
+    try {
+      const r = await call("GET", "/actuator/outbox-recent?limit=10");
+      if (r.ok && Array.isArray(r.body)) renderEvents(r.body);
+    } finally {
+      state.eventsPollInFlight = false;
+    }
+  }
+
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") outboxTick();
+    if (document.visibilityState === "visible") { outboxTick(); eventsTick(); }
   });
   setInterval(outboxTick, 2000);
+  setInterval(eventsTick, 2000);
   outboxTick();
+  eventsTick();
   syncUI();
 })();
 </script>
