@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.infrastructure.observability;
+package com.oscaruiz.mycqrs.demo.shared.infrastructure.observability;
 
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;

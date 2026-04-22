@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.infrastructure.observability;
+package com.oscaruiz.mycqrs.demo.shared.infrastructure.observability;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
