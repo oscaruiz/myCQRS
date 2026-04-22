@@ -124,6 +124,7 @@
       <h3>Author</h3>
       <input id="in-author-first" placeholder="First name" />
       <input id="in-author-last" placeholder="Last name" />
+      <input id="in-author-birth-year" type="number" min="1" max="2026" placeholder="Birth year (optional)" />
       <button id="btn-author-create">Create author</button>
     </div>
     <div class="card">
@@ -319,8 +320,11 @@
   $("btn-author-create").addEventListener("click", async () => {
     const firstName = $("in-author-first").value.trim();
     const lastName  = $("in-author-last").value.trim();
+    const birthYearRaw = $("in-author-birth-year").value.trim();
     const id = crypto.randomUUID();
-    const r = await call("PUT", "/authors/" + id, { firstName, lastName });
+    const body = { firstName, lastName };
+    if (birthYearRaw !== "") body.birthYear = Number(birthYearRaw);
+    const r = await call("PUT", "/authors/" + id, body);
     if (r.ok) { state.currentAuthorId = id; }
     setStatus(r.code, r.reason, "create author");
     if (r.ok) scheduleAutoRefresh("author", id);
