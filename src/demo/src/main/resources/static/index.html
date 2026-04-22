@@ -88,6 +88,11 @@
     from { background-color: #fef3c7; }
     to   { background-color: transparent; }
   }
+  .cmd-history ol { list-style: none; margin: 0; padding: 0;
+    font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .cmd-history li { padding: 2px 0; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; }
+  .cmd-history li.empty { font-family: inherit; font-style: italic; }
 </style>
 </head>
 <body>
@@ -123,6 +128,10 @@
         <span id="cmd-author-id">Author: —</span>
         <span id="cmd-book-id">Book: —</span>
       </div>
+    </div>
+    <div class="card cmd-history">
+      <h3>Command history</h3>
+      <ol id="cmd-history-list"><li class="empty">No commands yet</li></ol>
     </div>
   </section>
 
@@ -186,6 +195,7 @@
     pollerIntervalMs:     2000,
     eventsPollInFlight:   false,
     lastEventIds:         new Set(),
+    cmdHistory:           [],
   };
   const refresh = {
     author: { timerId: null, generation: 0 },
@@ -219,22 +229,45 @@
   }
 
   // HTTP errors do NOT throw here — callers branch on `ok`. Network errors
-  // surface as code=0 so the UI still reports something.
+  // surface as code=0 so the UI still reports something. Every call is
+  // recorded in the command history unless the path is a polling endpoint.
   async function call(method, url, body) {
     const init = { method, headers: {} };
     if (body !== undefined) {
       init.headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(body);
     }
+    const start = performance.now();
     try {
       const res = await fetch(url, init);
       const text = await res.text();
       let parsed = null;
       if (text) { try { parsed = JSON.parse(text); } catch { parsed = text; } }
+      recordCommand(method, url, res.status, performance.now() - start);
       return { ok: res.ok, code: res.status, reason: res.statusText || "", body: parsed };
     } catch {
+      recordCommand(method, url, 0, performance.now() - start);
       return { ok: false, code: 0, reason: "Network error", body: null };
     }
+  }
+
+  function recordCommand(method, path, status, elapsed) {
+    if (path.startsWith("/actuator/")) return;
+    state.cmdHistory.unshift({
+      timestamp: new Date().toISOString(),
+      method, path, status,
+      latencyMs: Math.round(elapsed),
+    });
+    if (state.cmdHistory.length > 10) state.cmdHistory.length = 10;
+    renderCmdHistory();
+  }
+
+  function renderCmdHistory() {
+    const list = $("cmd-history-list");
+    list.innerHTML = state.cmdHistory.map(c =>
+      "<li>" + formatTime(c.timestamp) + "  " + c.method + "  " + c.path +
+        "  →  " + c.status + "  (" + c.latencyMs + "ms)</li>"
+    ).join("");
   }
 
   // ---- Commands (write side) ----
