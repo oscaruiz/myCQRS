@@ -7,6 +7,7 @@ on:
 permissions:
   contents: read
   packages: write
+  deployments: write
 
 jobs:
   deploy:
@@ -41,6 +42,15 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/mycqrs:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/mycqrs:latest
 
+      - name: Start deployment
+        uses: bobheadxi/deployments@v1
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: production
+          ref: ${{ github.sha }}
+
       - name: Trigger Render deploy
         run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
 
@@ -59,3 +69,14 @@ jobs:
           done
           echo "Smoke test failed: /actuator/health did not report UP within the window."
           exit 1
+
+      - name: Update deployment status
+        if: always()
+        uses: bobheadxi/deployments@v1
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: production
+          status: ${{ job.status }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          env_url: ${{ secrets.RENDER_APP_URL }}
