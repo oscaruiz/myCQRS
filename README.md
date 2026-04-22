@@ -93,26 +93,33 @@ docker compose -f src\demo\docker-compose.yml up -d postgres mongo
 .\mvnw.cmd spring-boot:run -pl src/demo
 ```
 
-The API uses client-generated UUIDs: the client picks the identifier, `PUT` creates the resource at that URI.
+The API uses client-generated UUIDs: the client picks the identifier, `PUT` creates the resource at that URI. `Author` is a separate aggregate; a book with an author is three writes (create author, create book, link). See [ADR 0008](docs/adr/0008-authors-as-separate-write-operation.md).
 
 ```powershell
-$UUID = "550e8400-e29b-41d4-a716-446655440000"
+$BOOK   = "550e8400-e29b-41d4-a716-446655440000"
+$AUTHOR = "b1e2c3d4-5678-90ab-cdef-1234567890ab"
 
-# Create
-curl.exe -X PUT "http://localhost:8080/books/$UUID" `
+# Create the author, then the book, then link them
+curl.exe -X PUT "http://localhost:8080/authors/$AUTHOR" `
   -H "Content-Type: application/json" `
-  -d '{\"title\":\"The Art of War\",\"author\":\"Sun Tzu\"}'
+  -d '{\"firstName\":\"Sun\",\"lastName\":\"Tzu\",\"birthYear\":-544}'
+
+curl.exe -X PUT "http://localhost:8080/books/$BOOK" `
+  -H "Content-Type: application/json" `
+  -d '{\"title\":\"The Art of War\"}'
+
+curl.exe -X POST "http://localhost:8080/books/$BOOK/authors/$AUTHOR"
 
 # Read (served from the Mongo projection, populated by the outbox poller)
-curl.exe "http://localhost:8080/books/$UUID"
+curl.exe "http://localhost:8080/books/$BOOK"
 
-# Update
-curl.exe -X PATCH "http://localhost:8080/books/$UUID" `
+# Update the title
+curl.exe -X PATCH "http://localhost:8080/books/$BOOK" `
   -H "Content-Type: application/json" `
-  -d '{\"title\":\"The Art of War (revised)\",\"author\":\"Sun Tzu\"}'
+  -d '{\"title\":\"The Art of War (revised)\"}'
 
 # Delete
-curl.exe -X DELETE "http://localhost:8080/books/$UUID"
+curl.exe -X DELETE "http://localhost:8080/books/$BOOK"
 ```
 
 `GET /books?title=…` looks a book up by title in the read model.
