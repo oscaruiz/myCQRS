@@ -43,3 +43,19 @@ jobs:
 
       - name: Trigger Render deploy
         run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+      - name: Smoke test
+        run: |
+          set -e
+          echo "Waiting for deploy to settle..."
+          sleep 30
+          for i in {1..20}; do
+            if curl -fsS --max-time 10 "${{ secrets.RENDER_APP_URL }}/actuator/health" | grep -q '"status":"UP"'; then
+              echo "Health check passed on attempt $i."
+              exit 0
+            fi
+            echo "Attempt $i: not ready yet, waiting 15s..."
+            sleep 15
+          done
+          echo "Smoke test failed: /actuator/health did not report UP within the window."
+          exit 1

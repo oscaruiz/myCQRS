@@ -159,6 +159,20 @@ not compile.
   push. Not automatable from a workflow without elevated credentials, and
   not worth introducing those for a one-time step.
 
+### Post-deploy validation
+
+The deploy workflow polls `/actuator/health` against the Render-hosted
+service after triggering the deploy hook, and fails the workflow if the
+new container does not report `"status":"UP"` within ~5 minutes. The
+deploy hook itself returns 200 as soon as Render *queues* the pull; it
+does not confirm that the new image actually starts. Without this
+post-deploy check, a broken image could ship while the workflow stayed
+green and the first user would be the one to discover the outage. The
+smoke test closes that gap at the cost of one additional repo secret
+(`RENDER_APP_URL`) and ~5 minutes of worst-case workflow time — paid
+only on deploys that actually hang, since the loop exits on first
+success.
+
 ### Runtime base image: Debian, not Alpine
 
 The runtime stage uses `eclipse-temurin:21-jre` (Debian-based, glibc) rather

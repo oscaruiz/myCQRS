@@ -194,5 +194,6 @@ One-time manual steps after the first merge to `main` triggers the deploy workfl
 - Provision a MongoDB Atlas M0 cluster. Allow network access from `0.0.0.0/0` (Render free tier has no static IPs — documented trade-off). Capture the `mongodb+srv` URI including the database name.
 - Create a Render Web Service in "Deploy an existing image from a registry" mode, pointing at `ghcr.io/<owner>/mycqrs:latest`. Set the four env vars: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `SPRING_DATA_MONGODB_URI`.
 - Copy the Render deploy hook URL into the GitHub repository secret `RENDER_DEPLOY_HOOK`.
+- Create GitHub repo secret `RENDER_APP_URL` containing the public URL of the Render service (no trailing slash). Used by the deploy workflow's post-deploy smoke test.
 - In the GitHub repository settings, ensure workflow permissions are set to "Read and write" so the deploy workflow can push to GHCR.
 - After the first successful deploy workflow run, flip the GHCR package visibility to public (GitHub profile → Packages → `mycqrs` → Package settings → Change visibility). Only needed once.
