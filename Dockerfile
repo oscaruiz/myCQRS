@@ -10,7 +10,7 @@ LABEL org.opencontainers.image.source="https://github.com/oscaruiz/myCQRS" \
       org.opencontainers.image.description="myCQRS demo application" \
       org.opencontainers.image.licenses="GPL-3.0"
 
-RUN addgroup -S app && adduser -S app -G app
+RUN groupadd -r app && useradd -r -g app app
 WORKDIR /app
 COPY --from=build /app/src/demo/target/mycqrs-demo.jar app.jar
 RUN chown app:app app.jar
