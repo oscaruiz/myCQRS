@@ -93,6 +93,21 @@
   .cmd-history li { padding: 2px 0; white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; }
   .cmd-history li.empty { font-family: inherit; font-style: italic; }
+  .snapshot-row { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .snapshot-row h2 { margin: 0 0 4px 0; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  .snapshot-row h2 .subtitle { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .snap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .snap-grid { grid-template-columns: 1fr; } }
+  .snap-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+  .snap-events { list-style: none; margin: 0; padding: 8px; background: #fff;
+    border: 1px solid var(--border); border-radius: 3px; font-family: var(--mono);
+    font-size: 11px; max-height: 300px; overflow-y: auto; }
+  .snap-events li { padding: 2px 0; color: var(--muted); }
+  .snap-events li.empty { font-style: italic; }
+  .snapshot-card .snap-empty { color: var(--muted); font-style: italic;
+    font-size: 12px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -186,6 +201,28 @@
   </div>
 </section>
 
+<section class="snapshot-row">
+  <h2>Write ↔ Read snapshot <span class="subtitle">— same entity, both stores</span></h2>
+  <div class="card snapshot-card">
+    <h3>Author</h3>
+    <div class="snap-grid" id="snap-author-grid">
+      <div><div class="snap-label">Postgres</div><pre id="snap-author-pg"></pre></div>
+      <div><div class="snap-label">Mongo</div><pre id="snap-author-mongo"></pre></div>
+      <div><div class="snap-label">Events</div><ol class="snap-events" id="snap-author-events"></ol></div>
+    </div>
+    <div class="snap-empty" id="snap-author-empty">Create an author to see its write/read snapshot.</div>
+  </div>
+  <div class="card snapshot-card">
+    <h3>Book</h3>
+    <div class="snap-grid" id="snap-book-grid">
+      <div><div class="snap-label">Postgres</div><pre id="snap-book-pg"></pre></div>
+      <div><div class="snap-label">Mongo</div><pre id="snap-book-mongo"></pre></div>
+      <div><div class="snap-label">Events</div><ol class="snap-events" id="snap-book-events"></ol></div>
+    </div>
+    <div class="snap-empty" id="snap-book-empty">Create a book to see its write/read snapshot.</div>
+  </div>
+</section>
+
 <footer class="flow">
   Command → PostgreSQL + Outbox (same tx) → Poller → Event Bus → Mongo Projection → Query
 </footer>
@@ -203,6 +240,7 @@
     eventsPollInFlight:   false,
     lastEventIds:         new Set(),
     cmdHistory:           [],
+    snapshotPollInFlight: false,
   };
   const refresh = {
     author: { timerId: null, generation: 0 },
@@ -480,13 +518,53 @@
     }
   }
 
+  // ---- Write ↔ Read snapshot (per-entity DB inspector) ----
+  // For each kind (author/book) currently tracked, fetch the Postgres row,
+  // the Mongo document, and the last 10 event-log entries side-by-side.
+  function renderSnapshot(kind, data) {
+    const grid = $("snap-" + kind + "-grid");
+    const empty = $("snap-" + kind + "-empty");
+    if (data == null) { grid.style.display = "none"; empty.style.display = "block"; return; }
+    grid.style.display = "grid"; empty.style.display = "none";
+    $("snap-" + kind + "-pg").textContent = data.postgres == null
+        ? "null (not in Postgres)" : JSON.stringify(data.postgres, null, 2);
+    $("snap-" + kind + "-mongo").textContent = data.mongo == null
+        ? "null (projection not caught up)" : JSON.stringify(data.mongo, null, 2);
+    const events = data.events || [];
+    const list = $("snap-" + kind + "-events");
+    list.innerHTML = events.length
+        ? events.map(e => "<li>" + formatTime(e.timestamp) + "  " +
+            e.type + " (" + e.operation + ")</li>").join("")
+        : '<li class="empty">No events</li>';
+  }
+
+  async function snapshotTick() {
+    if (document.visibilityState !== "visible") return;
+    if (state.snapshotPollInFlight) return;
+    state.snapshotPollInFlight = true;
+    try {
+      if (state.currentAuthorId) {
+        const r = await call("GET", "/actuator/entity-snapshot/author/" + state.currentAuthorId);
+        if (r.ok) renderSnapshot("author", r.body);
+      } else renderSnapshot("author", null);
+      if (state.currentBookId) {
+        const r = await call("GET", "/actuator/entity-snapshot/book/" + state.currentBookId);
+        if (r.ok) renderSnapshot("book", r.body);
+      } else renderSnapshot("book", null);
+    } finally {
+      state.snapshotPollInFlight = false;
+    }
+  }
+
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") { outboxTick(); eventsTick(); }
+    if (document.visibilityState === "visible") { outboxTick(); eventsTick(); snapshotTick(); }
   });
   setInterval(outboxTick, 2000);
   setInterval(eventsTick, 2000);
+  setInterval(snapshotTick, 2000);
   outboxTick();
   eventsTick();
+  snapshotTick();
   syncUI();
 })();
 </script>
