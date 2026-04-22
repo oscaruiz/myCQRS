@@ -148,6 +148,13 @@
   <section class="col">
     <h2>Query</h2>
     <div class="card">
+      <h3>Search</h3>
+      <input id="in-book-search" placeholder="Book title..." />
+      <button id="btn-book-search">Search by title</button>
+      <div class="read-status" id="book-search-status">Enter an exact title</div>
+      <pre id="book-search-json"></pre>
+    </div>
+    <div class="card">
       <h3>Author</h3>
       <button id="btn-author-refresh" disabled>Refresh author</button>
       <div class="read-status" id="author-read-status">No author created yet</div>
@@ -375,6 +382,24 @@
     const r = await call("GET", "/books/" + state.currentBookId);
     renderRead("book", r);
     setStatus(r.code, r.reason, "refresh book");
+  });
+
+  $("btn-book-search").addEventListener("click", async () => {
+    const title = $("in-book-search").value.trim();
+    if (!title) return;
+    const r = await call("GET", "/books?title=" + encodeURIComponent(title));
+    const statusEl = $("book-search-status");
+    const jsonEl = $("book-search-json");
+    if (r.ok) {
+      statusEl.textContent = "Match"; statusEl.className = "read-status ok";
+      jsonEl.textContent = JSON.stringify(r.body, null, 2);
+    } else {
+      statusEl.textContent = r.code === 404 ? "No books found"
+          : ((r.code || "—") + " " + (r.reason || "error"));
+      statusEl.className = "read-status err";
+      jsonEl.textContent = "";
+    }
+    setStatus(r.code, r.reason, "search book");
   });
 
   // ---- Outbox polling ----
