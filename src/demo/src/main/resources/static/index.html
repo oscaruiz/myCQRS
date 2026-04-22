@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>myCQRS — Dashboard</title>
+<style>
+  :root {
+    --fg: #111827; --muted: #6b7280; --border: #e5e7eb;
+    --bg-card: #fafafa; --ok: #15803d; --err: #b91c1c;
+    --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; padding: 24px; max-width: 1400px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--fg); line-height: 1.45;
+  }
+  header { display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  header nav { font-size: 13px; color: var(--muted); }
+  header nav a { color: var(--muted); text-decoration: none;
+    border-bottom: 1px dotted var(--muted); }
+  header nav a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .col > h2 { margin: 0 0 4px 0; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  .card { border: 1px solid var(--border); background: var(--bg-card);
+    border-radius: 4px; padding: 12px; }
+  .card h3 { margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .card input { width: 100%; padding: 6px 8px; border: 1px solid var(--border);
+    border-radius: 3px; font: inherit; margin-bottom: 6px; }
+  .card button { padding: 6px 10px; border: 1px solid var(--border); background: #fff;
+    border-radius: 3px; font: inherit; cursor: pointer; margin-right: 4px; margin-top: 4px; }
+  .card button:not(:disabled):hover { background: #f3f4f6; }
+  .card button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .status-footer { border-top: 1px solid var(--border); padding-top: 10px;
+    font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .status-footer .ok  { color: var(--ok); font-weight: 600; }
+  .status-footer .err { color: var(--err); font-weight: 600; }
+  .status-footer .ids span { display: block; margin-top: 2px; }
+  .metric { display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .metric:last-of-type { border-bottom: none; }
+  .metric .label { color: var(--muted); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; }
+  .metric .value { font-family: var(--mono); font-size: 22px; font-weight: 600; }
+  .metric .value.ts { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .poll-info { margin-top: 8px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  #outbox-card.stale #ob-pending::after,
+  #outbox-card.stale #ob-processed::after {
+    content: ""; display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--err); margin-left: 6px; vertical-align: middle;
+  }
+  .read-status { font-size: 12px; color: var(--muted); margin: 6px 0; }
+  .read-status.ok  { color: var(--ok); }
+  .read-status.err { color: var(--err); }
+  pre { background: #fff; border: 1px solid var(--border); border-radius: 3px;
+    padding: 8px; font-family: var(--mono); font-size: 12px; overflow-x: auto;
+    margin: 0; max-height: 300px; }
+  footer.flow { margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>myCQRS Dashboard</h1>
+  <nav><a href="/swagger-ui.html">Swagger</a> · <a href="/actuator/outbox">/actuator/outbox</a></nav>
+</header>
+
+<main class="grid">
+  <section class="col">
+    <h2>Commands</h2>
+    <div class="card">
+      <h3>Author</h3>
+      <input id="in-author-first" placeholder="First name" />
+      <input id="in-author-last" placeholder="Last name" />
+      <button id="btn-author-create">Create author</button>
+    </div>
+    <div class="card">
+      <h3>Book</h3>
+      <input id="in-book-title" placeholder="Title" />
+      <button id="btn-book-create">Create book</button>
+      <button id="btn-book-update" disabled>Update book</button>
+      <button id="btn-book-delete" disabled>Delete book</button>
+    </div>
+    <div class="card">
+      <h3>Link</h3>
+      <button id="btn-link" disabled>Link current author → current book</button>
+    </div>
+    <div class="status-footer">
+      <div>Last: <span id="cmd-status-line">no operation yet</span></div>
+      <div class="ids">
+        <span id="cmd-author-id">Author: —</span>
+        <span id="cmd-book-id">Book: —</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>Outbox</h2>
+    <div class="card" id="outbox-card">
+      <div class="metric"><span class="label">pending</span><span class="value" id="ob-pending">—</span></div>
+      <div class="metric"><span class="label">processed</span><span class="value" id="ob-processed">—</span></div>
+      <div class="metric"><span class="label">last_processed_at</span><span class="value ts" id="ob-last">—</span></div>
+      <div class="poll-info" id="ob-interval">Poll: every —s</div>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>Query</h2>
+    <div class="card">
+      <h3>Author</h3>
+      <button id="btn-author-refresh" disabled>Refresh author</button>
+      <div class="read-status" id="author-read-status">No author created yet</div>
+      <pre id="author-json"></pre>
+    </div>
+    <div class="card">
+      <h3>Book</h3>
+      <button id="btn-book-refresh" disabled>Refresh book</button>
+      <div class="read-status" id="book-read-status">No book created yet</div>
+      <pre id="book-json"></pre>
+    </div>
+  </section>
+</main>
+
+<footer class="flow">
+  Command → PostgreSQL + Outbox (same tx) → Poller → Event Bus → Mongo Projection → Query
+</footer>
+
+<script>
+(() => {
+  // In-memory state only. Page refresh = clean state (intentional).
+  const state = {
+    currentAuthorId:    null,
+    currentBookId:      null,
+    lastStatus:         null,
+    outboxPollInFlight: false,
+    outboxStale:        false,
+  };
+  const $ = id => document.getElementById(id);
+  const truncate = id => id ? id.slice(0, 5) + "…" + id.slice(-4) : "—";
+
+  function syncUI() {
+    $("btn-book-update").disabled    = state.currentBookId === null;
+    $("btn-book-delete").disabled    = state.currentBookId === null;
+    $("btn-link").disabled           = state.currentBookId === null || state.currentAuthorId === null;
+    $("btn-author-refresh").disabled = state.currentAuthorId === null;
+    $("btn-book-refresh").disabled   = state.currentBookId === null;
+    $("cmd-author-id").textContent   = "Author: " + truncate(state.currentAuthorId);
+    $("cmd-book-id").textContent     = "Book: "   + truncate(state.currentBookId);
+    const line = $("cmd-status-line");
+    if (state.lastStatus === null) {
+      line.textContent = "no operation yet";
+      line.className = "";
+    } else {
+      const { code, reason, label } = state.lastStatus;
+      line.textContent = code + " " + reason + " (" + label + ")";
+      line.className = code >= 200 && code < 300 ? "ok" : "err";
+    }
+  }
+
+  function setStatus(code, reason, label) {
+    state.lastStatus = { code, reason, label };
+    syncUI();
+  }
+
+  // HTTP errors do NOT throw here — callers branch on `ok`. Network errors
+  // surface as code=0 so the UI still reports something.
+  async function call(method, url, body) {
+    const init = { method, headers: {} };
+    if (body !== undefined) {
+      init.headers["Content-Type"] = "application/json";
+      init.body = JSON.stringify(body);
+    }
+    try {
+      const res = await fetch(url, init);
+      const text = await res.text();
+      let parsed = null;
+      if (text) { try { parsed = JSON.parse(text); } catch { parsed = text; } }
+      return { ok: res.ok, code: res.status, reason: res.statusText || "", body: parsed };
+    } catch {
+      return { ok: false, code: 0, reason: "Network error", body: null };
+    }
+  }
+
+  // ---- Commands (write side) ----
+  $("btn-author-create").addEventListener("click", async () => {
+    const firstName = $("in-author-first").value.trim();
+    const lastName  = $("in-author-last").value.trim();
+    const id = crypto.randomUUID();
+    const r = await call("PUT", "/authors/" + id, { firstName, lastName });
+    if (r.ok) state.currentAuthorId = id;
+    setStatus(r.code, r.reason, "create author");
+  });
+
+  $("btn-book-create").addEventListener("click", async () => {
+    const title = $("in-book-title").value.trim();
+    const id = crypto.randomUUID();
+    const r = await call("PUT", "/books/" + id, { title });
+    if (r.ok) state.currentBookId = id;
+    setStatus(r.code, r.reason, "create book");
+  });
+
+  $("btn-book-update").addEventListener("click", async () => {
+    const title = $("in-book-title").value.trim();
+    const r = await call("PATCH", "/books/" + state.currentBookId, { title });
+    setStatus(r.code, r.reason, "update book");
+  });
+
+  $("btn-book-delete").addEventListener("click", async () => {
+    const r = await call("DELETE", "/books/" + state.currentBookId);
+    if (r.ok) state.currentBookId = null;
+    setStatus(r.code, r.reason, "delete book");
+  });
+
+  $("btn-link").addEventListener("click", async () => {
+    const r = await call("POST", "/books/" + state.currentBookId + "/authors/" + state.currentAuthorId);
+    setStatus(r.code, r.reason, "link");
+  });
+
+  // ---- Queries (read side) ----
+  // Read side is NOT auto-refreshed. Manual refresh makes the CQRS separation
+  // explicit and avoids races with the poller draining between a command and
+  // the observer's visual check.
+  function renderRead(kind, r) {
+    const statusEl = $(kind + "-read-status");
+    const jsonEl   = $(kind + "-json");
+    if (r.ok) {
+      statusEl.textContent = (kind === "author" ? "Author" : "Book") + " found";
+      statusEl.className = "read-status ok";
+      jsonEl.textContent = JSON.stringify(r.body, null, 2);
+    } else if (r.code === 404) {
+      statusEl.textContent = "404 Not found";
+      statusEl.className = "read-status err";
+      jsonEl.textContent = "";
+    } else {
+      statusEl.textContent = (r.code || "—") + " " + (r.reason || "error");
+      statusEl.className = "read-status err";
+      jsonEl.textContent = "";
+    }
+  }
+
+  $("btn-author-refresh").addEventListener("click", async () => {
+    const r = await call("GET", "/authors/" + state.currentAuthorId);
+    renderRead("author", r);
+    setStatus(r.code, r.reason, "refresh author");
+  });
+
+  $("btn-book-refresh").addEventListener("click", async () => {
+    const r = await call("GET", "/books/" + state.currentBookId);
+    renderRead("book", r);
+    setStatus(r.code, r.reason, "refresh book");
+  });
+
+  // ---- Outbox polling ----
+  // Serial: skip ticks instead of queueing to avoid overlap under slow
+  // networks. On failure we mark the column stale (red dot next to pending
+  // and processed) so the dashboard doesn't look healthy while disconnected.
+  function formatInterval(ms) {
+    const s = ms / 1000;
+    return Number.isInteger(s) ? s.toString() : s.toFixed(1);
+  }
+
+  async function outboxTick() {
+    if (document.visibilityState !== "visible") return;
+    if (state.outboxPollInFlight) return;
+    state.outboxPollInFlight = true;
+    try {
+      const r = await call("GET", "/actuator/outbox");
+      if (r.ok && r.body && typeof r.body === "object") {
+        $("ob-pending").textContent   = r.body.pending;
+        $("ob-processed").textContent = r.body.processed;
+        $("ob-last").textContent      = r.body.last_processed_at || "—";
+        $("ob-interval").textContent  = "Poll: every " + formatInterval(r.body.poller_interval_ms) + "s";
+        state.outboxStale = false;
+        $("outbox-card").classList.remove("stale");
+      } else {
+        state.outboxStale = true;
+        $("outbox-card").classList.add("stale");
+      }
+    } finally {
+      state.outboxPollInFlight = false;
+    }
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") outboxTick();
+  });
+  setInterval(outboxTick, 2000);
+  outboxTick();
+  syncUI();
+})();
+</script>
+
+</body>
+</html>
