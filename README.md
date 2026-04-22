@@ -132,6 +132,10 @@ curl.exe -X DELETE "http://localhost:8080/books/$BOOK"
 
 Core tests run on JUnit + Mockito + AssertJ with no Spring context. Demo integration tests boot `@SpringBootTest` against Testcontainers (PostgreSQL + MongoDB) wired via `@ServiceConnection`; H2 is not used anywhere. ArchUnit enforces package boundaries in CI: contracts and ddd must not depend on Spring, the Book context must follow an onion shape, command handlers must not call each other directly, and no module may contain a slice cycle.
 
+## Optional dashboard
+
+A minimal HTML dashboard is served at `/`. It exercises the three-column flow (commands, outbox stats, read-side queries) against the same endpoints documented above. Not part of the architectural contract — <~350 LOC, no framework, no tests. The architectural surface is Swagger + Actuator.
+
 ## Design decisions
 
 Significant decisions — including deliberate non-adoptions such as Event Sourcing — are documented as ADRs in [`docs/adr/`](docs/adr/). The README intentionally does not summarize them; open the directory when a specific choice matters.
