@@ -2,7 +2,9 @@ package com.oscaruiz.mycqrs.demo.book.application.query;
 
 import com.oscaruiz.mycqrs.core.contracts.query.Query;
 
-public class FindBookByTitleQuery implements Query<BookResponse> {
+import java.util.List;
+
+public class FindBookByTitleQuery implements Query<List<BookResponse>> {
 
     private final String title;
 

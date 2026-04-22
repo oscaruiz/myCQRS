@@ -7,6 +7,7 @@ on:
 permissions:
   contents: read
   packages: write
+  deployments: write
 
 jobs:
   deploy:
@@ -41,5 +42,41 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/mycqrs:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/mycqrs:latest
 
+      - name: Start deployment
+        uses: bobheadxi/deployments@v1
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: production
+          ref: ${{ github.sha }}
+
       - name: Trigger Render deploy
         run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+      - name: Smoke test
+        run: |
+          set -e
+          echo "Waiting for deploy to settle..."
+          sleep 30
+          for i in {1..20}; do
+            if curl -fsS --max-time 10 "${{ secrets.RENDER_APP_URL }}/actuator/health" | grep -q '"status":"UP"'; then
+              echo "Health check passed on attempt $i."
+              exit 0
+            fi
+            echo "Attempt $i: not ready yet, waiting 15s..."
+            sleep 15
+          done
+          echo "Smoke test failed: /actuator/health did not report UP within the window."
+          exit 1
+
+      - name: Update deployment status
+        if: always()
+        uses: bobheadxi/deployments@v1
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: production
+          status: ${{ job.status }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          env_url: ${{ secrets.RENDER_APP_URL }}

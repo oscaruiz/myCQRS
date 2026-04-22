@@ -19,7 +19,7 @@ The codebase is designed to be read: every architectural choice is small enough 
 
 Deployed on Render free tier. Swagger UI entry point:
 
-`https://<app>.onrender.com/swagger-ui.html`
+`https://mycqrs.onrender.com/swagger-ui.html`
 
 > Free tier; first request after idle may take ~30s. Conscious trade-off —
 > production would use a paid tier or `min-instances=1`.
@@ -31,6 +31,8 @@ Deployed on Render free tier. Swagger UI entry point:
 | `GET /books/{id}` | Reads from the Mongo projection. |
 
 Deployment rationale: [ADR 0007](docs/adr/0007-immutable-docker-images-via-ghcr.md).
+
+See the dashboard at `/` for the full observability surface (commands, outbox stats, recent events, read-side projections, write↔read snapshot).
 
 ## Dashboard
 
@@ -45,7 +47,8 @@ step) that exposes the full CQRS pipeline end-to-end in one view:
   (`pending` / `processed` / `failed`) and latency in milliseconds. Fed by
   `GET /actuator/outbox-recent`.
 - **Read side:** author and book projections, auto-refreshed after each
-  command with a visible consistency delay; search by exact book title.
+  command with a visible consistency delay; partial, case-insensitive
+  search by book title.
 - **Write ↔ Read snapshot:** for the currently-tracked author or book,
   the Postgres row (normalised, with the `book_authors` join) next to
   the Mongo document (denormalised, with embedded author / book
@@ -176,6 +179,7 @@ Significant decisions — including deliberate non-adoptions such as Event Sourc
 - Testcontainers (PostgreSQL + MongoDB) for every integration test.
 - Spring profiles for `dev` and `test`.
 - Docker multi-stage image and GitHub Actions CI running `./mvnw verify`.
+- Post-deploy smoke test against `/actuator/health` in the deploy workflow; each successful deploy registers a first-class GitHub Deployment against the `production` environment.
 
 **Planned**
 - Idempotency: command deduplication on the write side and projection idempotency on the read side.
@@ -194,5 +198,6 @@ One-time manual steps after the first merge to `main` triggers the deploy workfl
 - Provision a MongoDB Atlas M0 cluster. Allow network access from `0.0.0.0/0` (Render free tier has no static IPs — documented trade-off). Capture the `mongodb+srv` URI including the database name.
 - Create a Render Web Service in "Deploy an existing image from a registry" mode, pointing at `ghcr.io/<owner>/mycqrs:latest`. Set the four env vars: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `SPRING_DATA_MONGODB_URI`.
 - Copy the Render deploy hook URL into the GitHub repository secret `RENDER_DEPLOY_HOOK`.
+- Create GitHub repo secret `RENDER_APP_URL` containing the public URL of the Render service (no trailing slash). Used by the deploy workflow's post-deploy smoke test.
 - In the GitHub repository settings, ensure workflow permissions are set to "Read and write" so the deploy workflow can push to GHCR.
 - After the first successful deploy workflow run, flip the GHCR package visibility to public (GitHub profile → Packages → `mycqrs` → Package settings → Change visibility). Only needed once.

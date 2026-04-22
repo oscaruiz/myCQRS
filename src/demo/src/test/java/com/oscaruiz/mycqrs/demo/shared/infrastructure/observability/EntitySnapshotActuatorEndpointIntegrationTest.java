@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.demo.infrastructure.observability;
+package com.oscaruiz.mycqrs.demo.shared.infrastructure.observability;
 
 import com.oscaruiz.mycqrs.demo.book.integration.support.AbstractFullStackIntegrationTest;
 import org.bson.Document;

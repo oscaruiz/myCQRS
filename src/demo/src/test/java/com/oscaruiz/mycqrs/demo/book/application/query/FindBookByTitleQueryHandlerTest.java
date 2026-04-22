@@ -3,10 +3,8 @@ package com.oscaruiz.mycqrs.demo.book.application.query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,38 +26,43 @@ class FindBookByTitleQueryHandlerTest {
     @Test
     void shouldReturnBookByTitle() {
         FindBookByTitleQuery query = new FindBookByTitleQuery("Clean Code");
-        BookResponse result = handler.handle(query);
+        List<BookResponse> result = handler.handle(query);
 
-        assertNotNull(result);
-        assertEquals("Clean Code", result.title());
-        assertEquals(1, result.authors().size());
-        assertEquals("Robert C. Martin", result.authors().get(0).fullName());
+        assertEquals(1, result.size());
+        assertEquals("Clean Code", result.get(0).title());
+        assertEquals(1, result.get(0).authors().size());
+        assertEquals("Robert C. Martin", result.get(0).authors().get(0).fullName());
     }
 
     @Test
-    void shouldThrowWhenBookNotFound() {
+    void shouldReturnEmptyListWhenNoMatch() {
         FindBookByTitleQuery query = new FindBookByTitleQuery("Unknown Book");
 
-        assertThrows(NoSuchElementException.class, () -> handler.handle(query));
+        List<BookResponse> result = handler.handle(query);
+
+        assertTrue(result.isEmpty());
     }
 
     private static class InMemoryBookReadModelRepository implements BookReadModelRepository {
-        private final Map<String, BookResponse> byTitle = new HashMap<>();
+        private final List<BookResponse> books = new ArrayList<>();
 
         void save(BookResponse book) {
-            byTitle.put(book.title(), book);
+            books.add(book);
         }
 
         @Override
         public Optional<BookResponse> findById(String id) {
-            return byTitle.values().stream()
+            return books.stream()
                     .filter(b -> id.equals(b.id()))
                     .findFirst();
         }
 
         @Override
-        public Optional<BookResponse> findByTitle(String title) {
-            return Optional.ofNullable(byTitle.get(title));
+        public List<BookResponse> findByTitle(String title) {
+            String needle = title.toLowerCase();
+            return books.stream()
+                    .filter(b -> b.title() != null && b.title().toLowerCase().contains(needle))
+                    .toList();
         }
     }
 }

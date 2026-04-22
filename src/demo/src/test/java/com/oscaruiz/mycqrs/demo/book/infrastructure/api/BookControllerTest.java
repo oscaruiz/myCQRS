@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -124,6 +125,19 @@ class BookControllerTest {
                     .andExpect(jsonPath("$.authors[0].authorId").value(authorId.toString()))
                     .andExpect(jsonPath("$.authors[0].fullName").value("Frank Herbert"))
                     .andExpect(jsonPath("$.authors[0].retired").value(false));
+        }
+
+        @Test
+        void getBook_whenNotFound_returns404() throws Exception {
+            UUID id = UUID.randomUUID();
+            when(queryBus.handle(any(FindBookByIdQuery.class)))
+                    .thenThrow(new NoSuchElementException("Book with id " + id + " not found"));
+
+            mockMvc.perform(get("/books/{id}", id))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.status").value(404))
+                    .andExpect(jsonPath("$.error").value("Not Found"))
+                    .andExpect(jsonPath("$.message").value("Book with id " + id + " not found"));
         }
 
     }
