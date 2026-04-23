@@ -6,8 +6,10 @@ import com.oscaruiz.mycqrs.core.contracts.event.Event;
 import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
 import com.oscaruiz.mycqrs.core.contracts.event.EventHandler;
 import com.oscaruiz.mycqrs.core.ddd.DomainEvent;
+import com.oscaruiz.mycqrs.core.infrastructure.observability.CorrelationIdMdc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
@@ -36,8 +38,8 @@ public class OutboxEventBus implements EventBus {
     private static final Logger log = LoggerFactory.getLogger(OutboxEventBus.class);
 
     private static final String INSERT_SQL = """
-            INSERT INTO outbox (id, aggregate_id, event_type, payload, occurred_at)
-            VALUES (:id, :aggregateId, :eventType, :payload, :occurredAt)
+            INSERT INTO outbox (id, aggregate_id, event_type, payload, occurred_at, correlation_id)
+            VALUES (:id, :aggregateId, :eventType, :payload, :occurredAt, :correlationId)
             """;
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -62,12 +64,27 @@ public class OutboxEventBus implements EventBus {
             .addValue("aggregateId", domainEvent.getAggregateId())
             .addValue("eventType", event.getClass().getName())
             .addValue("payload", serialize(event))
-            .addValue("occurredAt", Timestamp.from(domainEvent.getOccurredAt()));
+            .addValue("occurredAt", Timestamp.from(domainEvent.getOccurredAt()))
+            .addValue("correlationId", resolveCorrelationId());
 
         jdbcTemplate.update(INSERT_SQL, params);
 
         log.debug("Wrote event {} to outbox (aggregate {})",
             event.getClass().getSimpleName(), domainEvent.getAggregateId());
+    }
+
+    private UUID resolveCorrelationId() {
+        String raw = MDC.get(CorrelationIdMdc.KEY);
+        if (raw == null) {
+            log.warn("correlationId missing when writing outbox row — interceptor chain likely misconfigured");
+            return null;
+        }
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException e) {
+            log.warn("correlationId in MDC is not a valid UUID ({}); persisting null", raw);
+            return null;
+        }
     }
 
     @Override

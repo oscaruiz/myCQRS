@@ -3,8 +3,10 @@ package com.oscaruiz.mycqrs.demo.book.infrastructure.outbox;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oscaruiz.mycqrs.core.contracts.event.Event;
 import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
+import com.oscaruiz.mycqrs.core.infrastructure.observability.CorrelationIdMdc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -38,7 +40,7 @@ public class OutboxPoller {
     private static final Logger log = LoggerFactory.getLogger(OutboxPoller.class);
 
     private static final String SELECT_UNPROCESSED_SQL = """
-            SELECT id, event_type, payload, attempts
+            SELECT id, event_type, payload, attempts, correlation_id
             FROM outbox
             WHERE processed_at IS NULL
             ORDER BY attempts ASC, occurred_at ASC
@@ -90,6 +92,9 @@ public class OutboxPoller {
 
     private void dispatch(OutboxRow row) {
         try {
+            if (row.correlationId() != null) {
+                MDC.put(CorrelationIdMdc.KEY, row.correlationId().toString());
+            }
             Event event = deserialize(row.eventType(), row.payload());
             internalEventBus.publish(event);
             markProcessed(row.id());
@@ -98,6 +103,8 @@ public class OutboxPoller {
             markFailed(row.id(), e.getMessage());
             log.warn("Failed to dispatch outbox row {} (attempt {}): {}",
                 row.id(), row.attempts() + 1, e.getMessage());
+        } finally {
+            MDC.remove(CorrelationIdMdc.KEY);
         }
     }
 
@@ -125,13 +132,18 @@ public class OutboxPoller {
     }
 
     private RowMapper<OutboxRow> outboxRowMapper() {
-        return (rs, rowNum) -> new OutboxRow(
-            UUID.fromString(rs.getString("id")),
-            rs.getString("event_type"),
-            rs.getString("payload"),
-            rs.getInt("attempts")
-        );
+        return (rs, rowNum) -> {
+            String correlationRaw = rs.getString("correlation_id");
+            UUID correlationId = correlationRaw == null ? null : UUID.fromString(correlationRaw);
+            return new OutboxRow(
+                UUID.fromString(rs.getString("id")),
+                rs.getString("event_type"),
+                rs.getString("payload"),
+                rs.getInt("attempts"),
+                correlationId
+            );
+        };
     }
 
-    private record OutboxRow(UUID id, String eventType, String payload, int attempts) { }
+    private record OutboxRow(UUID id, String eventType, String payload, int attempts, UUID correlationId) { }
 }
