@@ -64,7 +64,7 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void createBookCommandSavesBook() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Domain-Driven Design"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Domain-Driven Design"));
 
         BookAggregate saved = bookRepository.findByTitle("Domain-Driven Design").orElseThrow();
 
@@ -75,12 +75,12 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void updateBookCommandEmitsEventAndChangesValues() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Refactoring"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Refactoring"));
         outboxPoller.poll();
 
         BookAggregate existing = bookRepository.findByTitle("Refactoring").orElseThrow();
 
-        commandBus.send(new UpdateBookCommand(existing.getId(), "Refactoring 2nd"));
+        commandBus.send(new UpdateBookCommand(UUID.randomUUID(),existing.getId(), "Refactoring 2nd"));
         outboxPoller.poll();
 
         BookAggregate updated = bookRepository.load(existing.getId());
@@ -92,10 +92,10 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Test
     void deleteBookCommandMarksAggregateDeleted() {
-        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Patterns"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),UUID.randomUUID().toString(), "Patterns"));
         BookAggregate existing = bookRepository.findByTitle("Patterns").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(existing.getId()));
+        commandBus.send(new DeleteBookCommand(UUID.randomUUID(),existing.getId()));
 
         BookAggregate deleted = bookRepository.load(existing.getId());
 
@@ -104,24 +104,24 @@ class BookCommandIntegrationTest extends AbstractFullStackIntegrationTest {
 
     @Test
     void deleteTwiceThrowsException() {
-        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Effective Java"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),UUID.randomUUID().toString(), "Effective Java"));
         BookAggregate existing = bookRepository.findByTitle("Effective Java").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(existing.getId()));
+        commandBus.send(new DeleteBookCommand(UUID.randomUUID(),existing.getId()));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new DeleteBookCommand(existing.getId())));
+                () -> commandBus.send(new DeleteBookCommand(UUID.randomUUID(),existing.getId())));
     }
 
     @Test
     void updateAfterDeleteThrowsException() {
-        commandBus.send(new CreateBookCommand(UUID.randomUUID().toString(), "Clean Architecture"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),UUID.randomUUID().toString(), "Clean Architecture"));
         BookAggregate existing = bookRepository.findByTitle("Clean Architecture").orElseThrow();
 
-        commandBus.send(new DeleteBookCommand(existing.getId()));
+        commandBus.send(new DeleteBookCommand(UUID.randomUUID(),existing.getId()));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new UpdateBookCommand(existing.getId(), "Any")));
+                () -> commandBus.send(new UpdateBookCommand(UUID.randomUUID(),existing.getId(), "Any")));
     }
 
 

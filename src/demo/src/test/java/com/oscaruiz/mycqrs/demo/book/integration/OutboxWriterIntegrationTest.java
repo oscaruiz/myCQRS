@@ -38,7 +38,7 @@ class OutboxWriterIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void successfulCommand_writesOneRowToOutbox() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Happy"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Happy"));
 
         Integer count = jdbc.queryForObject(
             "SELECT COUNT(*) FROM outbox WHERE aggregate_id = ?",

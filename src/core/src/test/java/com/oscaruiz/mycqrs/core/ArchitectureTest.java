@@ -27,6 +27,12 @@ class ArchitectureTest {
                     .should().dependOnClassesThat().resideInAPackage("org.springframework..");
 
     @ArchTest
+    static final ArchRule idempotencyDoesNotDependOnSpring =
+            noClasses()
+                    .that().resideInAPackage("..core.idempotency..")
+                    .should().dependOnClassesThat().resideInAPackage("org.springframework..");
+
+    @ArchTest
     static final ArchRule coreSlicesAreFreeOfCycles =
             slices().matching("..core.(*)..").should().beFreeOfCycles();
 }

@@ -3,6 +3,7 @@ package com.oscaruiz.mycqrs.demo.book.infrastructure.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
+import com.oscaruiz.mycqrs.core.idempotency.ProcessedCommandsStore;
 import com.oscaruiz.mycqrs.demo.book.application.command.CreateBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.command.UpdateBookCommand;
 import com.oscaruiz.mycqrs.demo.book.application.query.FindBookByIdQuery;
@@ -42,6 +43,9 @@ class BookControllerTest {
 
     @MockBean
     private QueryBus queryBus;
+
+    @MockBean
+    private ProcessedCommandsStore processedCommandsStore;
 
     @Nested
     class CreateBook {

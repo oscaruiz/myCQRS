@@ -63,11 +63,11 @@ class BookWithAuthorsLifecycleIntegrationTest extends AbstractFullStackIntegrati
     void happyPath_createAuthor_createBook_addAuthor_queryShowsName() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
         outboxPoller.poll();
 
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
         outboxPoller.poll();
 
         BookResponse book = queryBus.handle(new FindBookByIdQuery(bookId));
@@ -87,13 +87,13 @@ class BookWithAuthorsLifecycleIntegrationTest extends AbstractFullStackIntegrati
     void authorRename_propagatesToBookReadModel() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
         outboxPoller.poll();
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
         outboxPoller.poll();
 
-        commandBus.send(new RenameAuthorCommand(authorId, "Eric", "Blair"));
+        commandBus.send(new RenameAuthorCommand(UUID.randomUUID(),authorId, "Eric", "Blair"));
         outboxPoller.poll();
 
         BookResponse book = queryBus.handle(new FindBookByIdQuery(bookId));
@@ -105,13 +105,13 @@ class BookWithAuthorsLifecycleIntegrationTest extends AbstractFullStackIntegrati
     void authorSoftDelete_propagatesRetiredFlag() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
         outboxPoller.poll();
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
         outboxPoller.poll();
 
-        commandBus.send(new DeleteAuthorCommand(authorId));
+        commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),authorId));
         outboxPoller.poll();
 
         BookResponse book = queryBus.handle(new FindBookByIdQuery(bookId));
@@ -130,13 +130,13 @@ class BookWithAuthorsLifecycleIntegrationTest extends AbstractFullStackIntegrati
     void removeAuthor_removesFromBothSides() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
         outboxPoller.poll();
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
         outboxPoller.poll();
 
-        commandBus.send(new RemoveAuthorFromBookCommand(bookId, authorId));
+        commandBus.send(new RemoveAuthorFromBookCommand(UUID.randomUUID(),bookId, authorId));
         outboxPoller.poll();
 
         BookResponse book = queryBus.handle(new FindBookByIdQuery(bookId));
@@ -150,12 +150,12 @@ class BookWithAuthorsLifecycleIntegrationTest extends AbstractFullStackIntegrati
     void addAuthorTwice_isIdempotent_endToEnd() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
         outboxPoller.poll();
 
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
         outboxPoller.poll();
 
         BookResponse book = queryBus.handle(new FindBookByIdQuery(bookId));
@@ -171,7 +171,7 @@ class BookWithAuthorsLifecycleIntegrationTest extends AbstractFullStackIntegrati
     @Test
     void addNonexistentAuthor_returns404() throws Exception {
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(bookId, "Orphan"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "Orphan"));
 
         UUID unknownAuthor = UUID.randomUUID();
         mockMvc.perform(post("/books/{id}/authors/{authorId}", bookId, unknownAuthor))
@@ -184,9 +184,9 @@ class BookWithAuthorsLifecycleIntegrationTest extends AbstractFullStackIntegrati
     void addSoftDeletedAuthor_returns409() throws Exception {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "Retired", "Author", 1900));
-        commandBus.send(new DeleteAuthorCommand(authorId));
-        commandBus.send(new CreateBookCommand(bookId, "Stranded"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "Retired", "Author", 1900));
+        commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),authorId));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "Stranded"));
 
         mockMvc.perform(post("/books/{id}/authors/{authorId}", bookId, authorId))
                 .andExpect(status().isConflict())

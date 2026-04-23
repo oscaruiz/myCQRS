@@ -52,7 +52,7 @@ class OutboxRollbackIntegrationTest extends AbstractFullStackIntegrationTest {
         String id = UUID.randomUUID().toString();
 
         assertThatThrownBy(() ->
-            commandBus.send(new CreateBookCommand(id, "Doomed"))
+            commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Doomed"))
         ).isInstanceOf(RuntimeException.class);
 
         Integer outboxCount = jdbc.queryForObject(

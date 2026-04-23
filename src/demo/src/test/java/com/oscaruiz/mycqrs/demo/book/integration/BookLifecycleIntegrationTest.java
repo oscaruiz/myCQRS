@@ -54,10 +54,10 @@ class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void createThenUpdate_queryReflectsUpdate() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Original Title"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Original Title"));
         outboxPoller.poll();
 
-        commandBus.send(new UpdateBookCommand(id, "Updated Title"));
+        commandBus.send(new UpdateBookCommand(UUID.randomUUID(),id, "Updated Title"));
         outboxPoller.poll();
 
         BookResponse book = queryBus.handle(new FindBookByIdQuery(id));
@@ -68,10 +68,10 @@ class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void createThenDelete_queryThrowsNotFound() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Soon to die"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Soon to die"));
         outboxPoller.poll();
 
-        commandBus.send(new DeleteBookCommand(id));
+        commandBus.send(new DeleteBookCommand(UUID.randomUUID(),id));
         outboxPoller.poll();
 
         assertThrows(NoSuchElementException.class,
@@ -81,10 +81,10 @@ class BookLifecycleIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void deleteEmitsAuditLogEntry() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Audit Target"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Audit Target"));
         outboxPoller.poll();
 
-        commandBus.send(new DeleteBookCommand(id));
+        commandBus.send(new DeleteBookCommand(UUID.randomUUID(),id));
         outboxPoller.poll();
 
         List<BookEventLog> entriesForAggregate = eventLogRepository.findAll().stream()

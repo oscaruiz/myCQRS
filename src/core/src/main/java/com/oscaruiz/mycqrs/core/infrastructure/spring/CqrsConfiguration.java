@@ -3,13 +3,17 @@ package com.oscaruiz.mycqrs.core.infrastructure.spring;
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.event.EventBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
+import com.oscaruiz.mycqrs.core.idempotency.IdempotencyCommandInterceptor;
+import com.oscaruiz.mycqrs.core.idempotency.ProcessedCommandsStore;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.command.SimpleCommandBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.query.SimpleQueryBus;
+import com.oscaruiz.mycqrs.core.infrastructure.spring.idempotency.JdbcProcessedCommandsStore;
 import jakarta.validation.Validator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
@@ -33,11 +37,26 @@ public class CqrsConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(ProcessedCommandsStore.class)
+    public ProcessedCommandsStore processedCommandsStore(NamedParameterJdbcTemplate jdbc) {
+        return new JdbcProcessedCommandsStore(jdbc);
+    }
+
+    /**
+     * Interceptors are applied in reverse registration order by {@link SimpleCommandBus},
+     * so this list produces the execution order Validation → Transactional → Idempotency →
+     * Handler. Idempotency must stay innermost so the {@code processed_commands} insert
+     * commits or rolls back together with the handler's side effects.
+     */
+    @Bean
     @ConditionalOnMissingBean(CommandBus.class)
-    public CommandBus commandBus(Validator validator, PlatformTransactionManager transactionManager) {
+    public CommandBus commandBus(Validator validator,
+                                 PlatformTransactionManager transactionManager,
+                                 ProcessedCommandsStore processedCommandsStore) {
         var bus = new SimpleCommandBus();
         bus.addInterceptor(new ValidationCommandInterceptor(validator));
         bus.addInterceptor(new TransactionalCommandInterceptor(transactionManager));
+        bus.addInterceptor(new IdempotencyCommandInterceptor(processedCommandsStore));
         return bus;
     }
 

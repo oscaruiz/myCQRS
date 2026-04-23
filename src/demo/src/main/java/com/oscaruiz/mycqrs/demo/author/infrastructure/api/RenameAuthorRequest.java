@@ -3,6 +3,8 @@ package com.oscaruiz.mycqrs.demo.author.infrastructure.api;
 import com.oscaruiz.mycqrs.demo.author.application.command.RenameAuthorCommand;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.UUID;
+
 /**
  * HTTP-layer DTO. Validation annotations here exist solely to provide
  * field-level error feedback to API clients via
@@ -20,7 +22,7 @@ public record RenameAuthorRequest(
         String lastName
 
 ) {
-    public RenameAuthorCommand toCommand(String id) {
-        return new RenameAuthorCommand(id, firstName, lastName);
+    public RenameAuthorCommand toCommand(UUID commandId, String id) {
+        return new RenameAuthorCommand(commandId, id, firstName, lastName);
     }
 }

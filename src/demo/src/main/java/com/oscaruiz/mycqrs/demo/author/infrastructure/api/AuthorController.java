@@ -38,7 +38,7 @@ public class AuthorController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> createAuthor(@PathVariable UUID id, @Valid @RequestBody CreateAuthorRequest request) {
-        commandBus.send(request.toCommand(id));
+        commandBus.send(request.toCommand(UUID.randomUUID(), id));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header("Location", "/authors/" + id)
                 .build();
@@ -46,13 +46,13 @@ public class AuthorController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> renameAuthor(@PathVariable UUID id, @Valid @RequestBody RenameAuthorRequest request) {
-        commandBus.send(request.toCommand(id.toString()));
+        commandBus.send(request.toCommand(UUID.randomUUID(), id.toString()));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAuthor(@PathVariable UUID id) {
-        commandBus.send(new DeleteAuthorCommand(id.toString()));
+        commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(), id.toString()));
         return ResponseEntity.noContent().build();
     }
 }

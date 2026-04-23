@@ -12,6 +12,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -36,7 +38,7 @@ class TransactionalCommandInterceptorTest {
 
     @Test
     void commits_after_handler_succeeds() {
-        FakeCommand command = new FakeCommand();
+        FakeCommand command = new FakeCommand(UUID.randomUUID());
         CommandHandlerInvoker next = mock(CommandHandlerInvoker.class);
 
         interceptor.intercept(command, next);
@@ -50,7 +52,7 @@ class TransactionalCommandInterceptorTest {
 
     @Test
     void rolls_back_and_propagates_when_handler_throws_runtime_exception() {
-        FakeCommand command = new FakeCommand();
+        FakeCommand command = new FakeCommand(UUID.randomUUID());
         CommandHandlerInvoker next = mock(CommandHandlerInvoker.class);
         RuntimeException boom = new IllegalStateException("boom");
         doThrow(boom).when(next).invoke(command);
@@ -67,7 +69,7 @@ class TransactionalCommandInterceptorTest {
 
     @Test
     void rolls_back_and_propagates_when_handler_throws_error() {
-        FakeCommand command = new FakeCommand();
+        FakeCommand command = new FakeCommand(UUID.randomUUID());
         CommandHandlerInvoker next = mock(CommandHandlerInvoker.class);
         Error fatal = new AssertionError("fatal");
         doThrow(fatal).when(next).invoke(command);
@@ -84,7 +86,7 @@ class TransactionalCommandInterceptorTest {
 
     @Test
     void does_not_rollback_when_commit_fails() {
-        FakeCommand command = new FakeCommand();
+        FakeCommand command = new FakeCommand(UUID.randomUUID());
         CommandHandlerInvoker next = mock(CommandHandlerInvoker.class);
         RuntimeException commitFailure = new IllegalStateException("commit failed");
         doThrow(commitFailure).when(transactionManager).commit(transactionStatus);
@@ -97,5 +99,5 @@ class TransactionalCommandInterceptorTest {
         verify(transactionManager, never()).rollback(any());
     }
 
-    record FakeCommand() implements Command {}
+    record FakeCommand(UUID commandId) implements Command {}
 }

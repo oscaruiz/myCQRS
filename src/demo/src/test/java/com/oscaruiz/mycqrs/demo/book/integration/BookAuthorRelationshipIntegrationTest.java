@@ -45,10 +45,10 @@ class BookAuthorRelationshipIntegrationTest extends AbstractFullStackIntegration
     void addAuthorAttachesAuthorIdToBook() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
 
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
 
         BookAggregate book = bookRepository.load(bookId);
         assertThat(book.getAuthorIds()).containsExactly(authorId);
@@ -58,11 +58,11 @@ class BookAuthorRelationshipIntegrationTest extends AbstractFullStackIntegration
     void addAuthorTwiceIsIdempotent() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
 
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
 
         BookAggregate book = bookRepository.load(bookId);
         assertThat(book.getAuthorIds()).containsExactly(authorId);
@@ -71,9 +71,9 @@ class BookAuthorRelationshipIntegrationTest extends AbstractFullStackIntegration
     @Test
     void addNonexistentAuthorThrowsAuthorNotFound() {
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(bookId, "Orphan"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "Orphan"));
 
-        assertThatThrownBy(() -> commandBus.send(new AddAuthorToBookCommand(bookId, UUID.randomUUID().toString())))
+        assertThatThrownBy(() -> commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, UUID.randomUUID().toString())))
                 .isInstanceOf(AuthorNotFoundException.class);
     }
 
@@ -81,11 +81,11 @@ class BookAuthorRelationshipIntegrationTest extends AbstractFullStackIntegration
     void addRetiredAuthorThrowsAuthorRetired() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "Retired", "Author", 1900));
-        commandBus.send(new DeleteAuthorCommand(authorId));
-        commandBus.send(new CreateBookCommand(bookId, "Stranded"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "Retired", "Author", 1900));
+        commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),authorId));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "Stranded"));
 
-        assertThatThrownBy(() -> commandBus.send(new AddAuthorToBookCommand(bookId, authorId)))
+        assertThatThrownBy(() -> commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId)))
                 .isInstanceOf(AuthorRetiredException.class);
     }
 
@@ -93,11 +93,11 @@ class BookAuthorRelationshipIntegrationTest extends AbstractFullStackIntegration
     void removeAuthorEmptiesTheSet() {
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
-        commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
 
-        commandBus.send(new RemoveAuthorFromBookCommand(bookId, authorId));
+        commandBus.send(new RemoveAuthorFromBookCommand(UUID.randomUUID(),bookId, authorId));
 
         BookAggregate book = bookRepository.load(bookId);
         assertThat(book.getAuthorIds()).isEmpty();
@@ -106,9 +106,9 @@ class BookAuthorRelationshipIntegrationTest extends AbstractFullStackIntegration
     @Test
     void removeAuthorThatNeverExistedIsLegitimateNoOp() {
         String bookId = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(bookId, "Clean"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "Clean"));
 
-        commandBus.send(new RemoveAuthorFromBookCommand(bookId, UUID.randomUUID().toString()));
+        commandBus.send(new RemoveAuthorFromBookCommand(UUID.randomUUID(),bookId, UUID.randomUUID().toString()));
 
         BookAggregate book = bookRepository.load(bookId);
         assertThat(book.getAuthorIds()).isEmpty();

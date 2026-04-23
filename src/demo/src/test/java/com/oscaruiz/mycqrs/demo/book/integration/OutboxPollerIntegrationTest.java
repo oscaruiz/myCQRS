@@ -54,7 +54,7 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void successfulDispatch_marksProcessedAt() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Poller Happy"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Poller Happy"));
 
         outboxPoller.poll();
 
@@ -72,7 +72,7 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
         String id = UUID.randomUUID().toString();
         createdEventRecorder.failOnNext("simulated projection failure");
 
-        commandBus.send(new CreateBookCommand(id, "Poller Sad"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Poller Sad"));
 
         outboxPoller.poll();
 
@@ -96,7 +96,7 @@ class OutboxPollerIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void secondPoll_skipsAlreadyProcessedRow() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Poller Once"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Poller Once"));
 
         outboxPoller.poll();
         assertThat(createdEventRecorder.events()).hasSize(1);
