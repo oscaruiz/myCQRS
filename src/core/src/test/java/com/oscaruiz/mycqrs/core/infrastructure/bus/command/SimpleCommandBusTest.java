@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -122,10 +123,15 @@ class SimpleCommandBusTest {
     }
 
     static class FakeCommand implements Command {
+        private final UUID commandId = UUID.randomUUID();
         private final String value;
 
         FakeCommand() { this(null); }
         FakeCommand(String value) { this.value = value; }
+
+        @Override
+        public UUID commandId() { return commandId; }
+
         String value() { return value; }
     }
 

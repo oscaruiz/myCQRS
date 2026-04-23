@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -27,7 +28,7 @@ class ValidationCommandInterceptorTest {
 
     @Test
     void throws_when_validator_reports_violations() {
-        FakeCommand command = new FakeCommand();
+        FakeCommand command = new FakeCommand(UUID.randomUUID());
         CommandHandlerInvoker next = mock(CommandHandlerInvoker.class);
 
         @SuppressWarnings("unchecked")
@@ -45,7 +46,7 @@ class ValidationCommandInterceptorTest {
 
     @Test
     void delegates_to_next_when_validation_passes() {
-        FakeCommand command = new FakeCommand();
+        FakeCommand command = new FakeCommand(UUID.randomUUID());
         CommandHandlerInvoker next = mock(CommandHandlerInvoker.class);
 
         when(validator.validate(command)).thenReturn(Set.of());
@@ -55,5 +56,5 @@ class ValidationCommandInterceptorTest {
         verify(next).invoke(command);
     }
 
-    record FakeCommand() implements Command {}
+    record FakeCommand(UUID commandId) implements Command {}
 }
