@@ -46,7 +46,7 @@ class AuthorCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void createAuthorCommandSavesAuthor() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(id, "George", "Orwell", 1903));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),id, "George", "Orwell", 1903));
 
         AuthorAggregate saved = authorRepository.load(id);
 
@@ -64,9 +64,9 @@ class AuthorCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void renameAuthorCommandChangesValues() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(id, "George", "Orwell", 1903));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),id, "George", "Orwell", 1903));
 
-        commandBus.send(new RenameAuthorCommand(id, "Eric", "Blair"));
+        commandBus.send(new RenameAuthorCommand(UUID.randomUUID(),id, "Eric", "Blair"));
 
         AuthorAggregate renamed = authorRepository.load(id);
         assertEquals("Eric", renamed.getFirstName());
@@ -80,9 +80,9 @@ class AuthorCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void renameNoOpWhenNothingChanges() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(id, "George", "Orwell", 1903));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),id, "George", "Orwell", 1903));
 
-        commandBus.send(new RenameAuthorCommand(id, "George", "Orwell"));
+        commandBus.send(new RenameAuthorCommand(UUID.randomUUID(),id, "George", "Orwell"));
 
         Integer outboxCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM outbox WHERE aggregate_id = ?", Integer.class, id);
@@ -92,9 +92,9 @@ class AuthorCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void deleteAuthorCommandMarksSoftDeleted() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(id, "George", "Orwell", 1903));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),id, "George", "Orwell", 1903));
 
-        commandBus.send(new DeleteAuthorCommand(id));
+        commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),id));
 
         AuthorAggregate deleted = authorRepository.load(id);
         assertTrue(deleted.isDeleted());
@@ -103,21 +103,21 @@ class AuthorCommandIntegrationTest extends AbstractFullStackIntegrationTest {
     @Test
     void deleteTwiceThrowsException() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(id, "George", "Orwell", 1903));
-        commandBus.send(new DeleteAuthorCommand(id));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),id, "George", "Orwell", 1903));
+        commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),id));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new DeleteAuthorCommand(id)));
+                () -> commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),id)));
     }
 
     @Test
     void renameAfterDeleteThrowsException() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateAuthorCommand(id, "George", "Orwell", 1903));
-        commandBus.send(new DeleteAuthorCommand(id));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),id, "George", "Orwell", 1903));
+        commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),id));
 
         assertThrows(IllegalStateException.class,
-                () -> commandBus.send(new RenameAuthorCommand(id, "Eric", "Blair")));
+                () -> commandBus.send(new RenameAuthorCommand(UUID.randomUUID(),id, "Eric", "Blair")));
     }
 
     @Test

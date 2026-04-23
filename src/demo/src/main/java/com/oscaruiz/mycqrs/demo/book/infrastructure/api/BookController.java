@@ -49,7 +49,7 @@ public class BookController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> createBook(@PathVariable UUID id, @Valid @RequestBody CreateBookRequest request) {
-        commandBus.send(request.toCommand(id));
+        commandBus.send(request.toCommand(UUID.randomUUID(), id));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header("Location", "/books/" + id)
                 .build();
@@ -57,25 +57,25 @@ public class BookController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateBook(@PathVariable UUID id, @Valid @RequestBody UpdateBookRequest request) {
-        commandBus.send(request.toCommand(id.toString()));
+        commandBus.send(request.toCommand(UUID.randomUUID(), id.toString()));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable UUID id) {
-        commandBus.send(new DeleteBookCommand(id.toString()));
+        commandBus.send(new DeleteBookCommand(UUID.randomUUID(), id.toString()));
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/authors/{authorId}")
     public ResponseEntity<Void> addAuthorToBook(@PathVariable UUID id, @PathVariable UUID authorId) {
-        commandBus.send(new AddAuthorToBookCommand(id.toString(), authorId.toString()));
+        commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(), id.toString(), authorId.toString()));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}/authors/{authorId}")
     public ResponseEntity<Void> removeAuthorFromBook(@PathVariable UUID id, @PathVariable UUID authorId) {
-        commandBus.send(new RemoveAuthorFromBookCommand(id.toString(), authorId.toString()));
+        commandBus.send(new RemoveAuthorFromBookCommand(UUID.randomUUID(), id.toString(), authorId.toString()));
         return ResponseEntity.noContent().build();
     }
 }

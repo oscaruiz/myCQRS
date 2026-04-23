@@ -25,7 +25,7 @@ public record CreateAuthorRequest(
         Integer birthYear
 
 ) {
-    public CreateAuthorCommand toCommand(UUID id) {
-        return new CreateAuthorCommand(id.toString(), firstName, lastName, birthYear);
+    public CreateAuthorCommand toCommand(UUID commandId, UUID id) {
+        return new CreateAuthorCommand(commandId, id.toString(), firstName, lastName, birthYear);
     }
 }

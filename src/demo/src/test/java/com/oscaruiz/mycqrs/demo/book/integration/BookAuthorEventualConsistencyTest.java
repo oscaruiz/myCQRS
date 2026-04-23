@@ -82,8 +82,8 @@ class BookAuthorEventualConsistencyTest extends AbstractFullStackIntegrationTest
         String authorId = UUID.randomUUID().toString();
         String bookId = UUID.randomUUID().toString();
 
-        commandBus.send(new CreateAuthorCommand(authorId, "George", "Orwell", 1903));
-        commandBus.send(new CreateBookCommand(bookId, "1984"));
+        commandBus.send(new CreateAuthorCommand(UUID.randomUUID(),authorId, "George", "Orwell", 1903));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),bookId, "1984"));
         outboxPoller.poll();
 
         CyclicBarrier start = new CyclicBarrier(2);
@@ -96,7 +96,7 @@ class BookAuthorEventualConsistencyTest extends AbstractFullStackIntegrationTest
             pool.submit(() -> {
                 try {
                     start.await(5, TimeUnit.SECONDS);
-                    commandBus.send(new AddAuthorToBookCommand(bookId, authorId));
+                    commandBus.send(new AddAuthorToBookCommand(UUID.randomUUID(),bookId, authorId));
                 } catch (Throwable t) {
                     addError.set(t);
                 } finally {
@@ -106,7 +106,7 @@ class BookAuthorEventualConsistencyTest extends AbstractFullStackIntegrationTest
             pool.submit(() -> {
                 try {
                     start.await(5, TimeUnit.SECONDS);
-                    commandBus.send(new DeleteAuthorCommand(authorId));
+                    commandBus.send(new DeleteAuthorCommand(UUID.randomUUID(),authorId));
                 } catch (Throwable t) {
                     deleteError.set(t);
                 } finally {

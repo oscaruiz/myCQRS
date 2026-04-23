@@ -41,7 +41,7 @@ class CommandQuerySmokeIntegrationTest extends AbstractFullStackIntegrationTest 
     @Test
     void createCommandThenFindQueryReturnsCreatedBook() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Clean Architecture"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Clean Architecture"));
 
         outboxPoller.poll();
 

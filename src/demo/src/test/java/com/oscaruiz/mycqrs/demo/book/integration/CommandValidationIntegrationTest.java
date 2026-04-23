@@ -34,7 +34,7 @@ class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest 
         String id = UUID.randomUUID().toString();
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> commandBus.send(new CreateBookCommand(id, "")));
+                () -> commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "")));
 
         assertTrue(ex.getMessage().contains("title"), () -> "expected message to mention 'title': " + ex.getMessage());
         Optional<BookAggregate> persisted = bookRepository.findByTitle("");
@@ -44,7 +44,7 @@ class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest 
     @Test
     void updateCommandWithBlankBookIdIsRejectedByInterceptor() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> commandBus.send(new UpdateBookCommand("", "Title")));
+                () -> commandBus.send(new UpdateBookCommand(UUID.randomUUID(),"", "Title")));
 
         assertTrue(ex.getMessage().contains("bookId"), () -> "expected message to mention 'bookId': " + ex.getMessage());
     }
@@ -52,7 +52,7 @@ class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest 
     @Test
     void deleteCommandWithBlankBookIdIsRejectedByInterceptor() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> commandBus.send(new DeleteBookCommand("")));
+                () -> commandBus.send(new DeleteBookCommand(UUID.randomUUID(),"")));
 
         assertTrue(ex.getMessage().contains("bookId"), () -> "expected message to mention 'bookId': " + ex.getMessage());
     }
@@ -61,7 +61,7 @@ class CommandValidationIntegrationTest extends AbstractFullStackIntegrationTest 
     void validCreateCommandPassesValidation() {
         String id = UUID.randomUUID().toString();
 
-        commandBus.send(new CreateBookCommand(id, "Valid Title"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Valid Title"));
 
         BookAggregate saved = bookRepository.load(id);
         assertEquals("Valid Title", saved.getTitle());

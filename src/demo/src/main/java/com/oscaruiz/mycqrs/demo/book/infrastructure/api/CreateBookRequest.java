@@ -20,7 +20,7 @@ public record CreateBookRequest(
         String title
 
 ) {
-    public CreateBookCommand toCommand(UUID id) {
-        return new CreateBookCommand(id.toString(), title);
+    public CreateBookCommand toCommand(UUID commandId, UUID id) {
+        return new CreateBookCommand(commandId, id.toString(), title);
     }
 }

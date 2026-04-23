@@ -93,7 +93,7 @@ class OptimisticLockingIntegrationTest extends AbstractFullStackIntegrationTest 
     @Test
     void concurrentUpdateCommands_exactlyOneFailsWithOptimisticLock() {
         String id = UUID.randomUUID().toString();
-        commandBus.send(new CreateBookCommand(id, "Original"));
+        commandBus.send(new CreateBookCommand(UUID.randomUUID(),id, "Original"));
 
         int workers = 2;
         CyclicBarrier bothLoaded = new CyclicBarrier(workers);
@@ -108,7 +108,7 @@ class OptimisticLockingIntegrationTest extends AbstractFullStackIntegrationTest 
                 final int idx = i;
                 pool.submit(() -> {
                     try {
-                        commandBus.send(new UpdateBookCommand(id, "Writer-" + idx));
+                        commandBus.send(new UpdateBookCommand(UUID.randomUUID(),id, "Writer-" + idx));
                     } catch (Throwable t) {
                         errors.set(idx, t);
                     } finally {

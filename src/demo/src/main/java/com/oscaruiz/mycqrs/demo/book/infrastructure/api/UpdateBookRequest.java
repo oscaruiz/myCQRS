@@ -3,6 +3,8 @@ package com.oscaruiz.mycqrs.demo.book.infrastructure.api;
 import com.oscaruiz.mycqrs.demo.book.application.command.UpdateBookCommand;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.UUID;
+
 /**
  * HTTP-layer DTO. Validation annotations here exist solely to provide
  * field-level error feedback to API clients via
@@ -18,7 +20,7 @@ public record UpdateBookRequest(
         String title
 
 ) {
-    public UpdateBookCommand toCommand(String id) {
-        return new UpdateBookCommand(id, title);
+    public UpdateBookCommand toCommand(UUID commandId, String id) {
+        return new UpdateBookCommand(commandId, id, title);
     }
 }
