@@ -24,3 +24,20 @@ retire the shell script. If residue, retire the shell script.
 
 Leaving an enforcement system in place without auditing its rules
 is worse than not having it — it provides false confidence.
+
+## Interceptor package grouping
+
+`ValidationCommandInterceptor` currently lives under
+`core.infrastructure.spring` but does not import Spring (only
+`jakarta.validation`). Colocation is historical, not principled —
+`.spring.` is reserved for classes that actually import Spring
+symbols (`TransactionalCommandInterceptor` does, via
+`PlatformTransactionManager`; the bean post-processors do, via
+`BeanPostProcessor`). `CorrelationIdCommandInterceptor` was placed
+correctly under `core.infrastructure.observability` from the start;
+`ValidationCommandInterceptor` is the remaining outlier.
+
+Re-evaluate next time interceptor packages are touched. If moved,
+the natural destination is `core.infrastructure.validation`, and
+the ArchUnit rule shape `observabilityDoesNotDependOnSpring` should
+be duplicated for the new package so the invariant is enforced.
