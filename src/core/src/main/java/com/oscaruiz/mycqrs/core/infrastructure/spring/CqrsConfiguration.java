@@ -8,6 +8,7 @@ import com.oscaruiz.mycqrs.core.idempotency.ProcessedCommandsStore;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.command.SimpleCommandBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.query.SimpleQueryBus;
+import com.oscaruiz.mycqrs.core.infrastructure.observability.CorrelationIdCommandInterceptor;
 import com.oscaruiz.mycqrs.core.infrastructure.spring.idempotency.JdbcProcessedCommandsStore;
 import jakarta.validation.Validator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -43,9 +44,11 @@ public class CqrsConfiguration {
     }
 
     /**
-     * Interceptors are applied in reverse registration order by {@link SimpleCommandBus},
-     * so this list produces the execution order Validation → Transactional → Idempotency →
-     * Handler. Idempotency must stay innermost so the {@code processed_commands} insert
+     * Interceptors are applied by {@link SimpleCommandBus} such that the first registered
+     * interceptor is the outermost wrapper, so this list produces the execution order
+     * CorrelationId → Validation → Transactional → Idempotency → Handler. CorrelationId
+     * stays outermost so validation failures and transactional rollbacks are logged with
+     * the trace key. Idempotency stays innermost so the {@code processed_commands} insert
      * commits or rolls back together with the handler's side effects.
      */
     @Bean
@@ -54,6 +57,7 @@ public class CqrsConfiguration {
                                  PlatformTransactionManager transactionManager,
                                  ProcessedCommandsStore processedCommandsStore) {
         var bus = new SimpleCommandBus();
+        bus.addInterceptor(new CorrelationIdCommandInterceptor());
         bus.addInterceptor(new ValidationCommandInterceptor(validator));
         bus.addInterceptor(new TransactionalCommandInterceptor(transactionManager));
         bus.addInterceptor(new IdempotencyCommandInterceptor(processedCommandsStore));

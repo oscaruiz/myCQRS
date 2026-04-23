@@ -33,6 +33,12 @@ class ArchitectureTest {
                     .should().dependOnClassesThat().resideInAPackage("org.springframework..");
 
     @ArchTest
+    static final ArchRule observabilityDoesNotDependOnSpring =
+            noClasses()
+                    .that().resideInAPackage("..core.infrastructure.observability..")
+                    .should().dependOnClassesThat().resideInAPackage("org.springframework..");
+
+    @ArchTest
     static final ArchRule coreSlicesAreFreeOfCycles =
             slices().matching("..core.(*)..").should().beFreeOfCycles();
 }
