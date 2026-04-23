@@ -2,6 +2,7 @@ package com.oscaruiz.mycqrs.demo.author.infrastructure.api;
 
 import com.oscaruiz.mycqrs.core.contracts.command.CommandBus;
 import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
+import com.oscaruiz.mycqrs.core.idempotency.ProcessedCommandsStore;
 import com.oscaruiz.mycqrs.demo.author.application.query.FindAuthorByIdQuery;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,9 @@ class AuthorControllerTest {
 
     @MockBean
     private QueryBus queryBus;
+
+    @MockBean
+    private ProcessedCommandsStore processedCommandsStore;
 
     @Test
     void getAuthor_whenNotFound_returns404() throws Exception {
