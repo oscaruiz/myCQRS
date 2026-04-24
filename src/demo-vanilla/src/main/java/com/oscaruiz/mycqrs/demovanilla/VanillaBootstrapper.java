@@ -6,6 +6,8 @@ import com.oscaruiz.mycqrs.core.contracts.query.QueryBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.command.SimpleCommandBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.event.SimpleEventBus;
 import com.oscaruiz.mycqrs.core.infrastructure.bus.query.SimpleQueryBus;
+import com.oscaruiz.mycqrs.demovanilla.infrastructure.bus.LoggingQueryBus;
+import com.oscaruiz.mycqrs.demovanilla.infrastructure.interceptor.LoggingCommandInterceptor;
 import com.oscaruiz.mycqrs.demovanilla.order.application.command.ConfirmOrderCommand;
 import com.oscaruiz.mycqrs.demovanilla.order.application.command.ConfirmOrderCommandHandler;
 import com.oscaruiz.mycqrs.demovanilla.order.application.command.CreateOrderCommand;
@@ -30,8 +32,11 @@ public class VanillaBootstrapper {
     private final InMemoryOrderReadModel readModel;
 
     public VanillaBootstrapper() {
-        this.commandBus = new SimpleCommandBus();
-        this.queryBus = new SimpleQueryBus();
+        var simpleCommandBus = new SimpleCommandBus();
+        simpleCommandBus.addInterceptor(new LoggingCommandInterceptor());
+
+        this.commandBus = simpleCommandBus;
+        this.queryBus = new LoggingQueryBus(new SimpleQueryBus());
         this.eventBus = new SimpleEventBus();
         this.orderRepository = new InMemoryOrderRepository();
         this.readModel = new InMemoryOrderReadModel();
