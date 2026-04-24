@@ -133,6 +133,47 @@ No transactions (in-memory), so event publication happens inline in the command 
 - **`src/demo`** — Book bounded context, Spring Boot adapter. PostgreSQL + Flyway on the write side, MongoDB on the read side, outbox poller in between.
 - **`src/demo-vanilla`** — Order bounded context, plain-Java adapter. Zero Spring. Manual bootstrap via `VanillaBootstrapper`, Javalin for HTTP, in-memory repository and read model. Logging via `LoggingCommandInterceptor` (using the core's own interceptor contract) and `LoggingQueryBus` (decorator, documented as temporary pending ADR 0014). Designed to be read as executable proof that `core` is portable. See [ADR 0013](docs/adr/0013-vanilla-adapter-demonstrating-framework-agnostic-core.md).
 
+## Consuming `core` as a library
+
+`core` is published to GitHub Packages as a versioned Maven artifact so it can be consumed from other repositories — the canonical way to prove the portability thesis at arm's length. Rationale and trade-offs in [ADR 0015](docs/adr/0015-publish-core-as-versioned-artifact.md).
+
+Coordinates:
+
+```xml
+<dependency>
+    <groupId>com.oscaruiz</groupId>
+    <artifactId>mycqrs-core</artifactId>
+    <version>1.3.1</version>
+</dependency>
+```
+
+Declare the repository in the consumer's `pom.xml`:
+
+```xml
+<repositories>
+    <repository>
+        <id>github-mycqrs</id>
+        <url>https://maven.pkg.github.com/oscaruiz/myCQRS</url>
+    </repository>
+</repositories>
+```
+
+Authenticate in `~/.m2/settings.xml` with a GitHub PAT that has the `read:packages` scope:
+
+```xml
+<servers>
+    <server>
+        <id>github-mycqrs</id>
+        <username>YOUR_GITHUB_USERNAME</username>
+        <password>YOUR_PAT_WITH_read:packages</password>
+    </server>
+</servers>
+```
+
+> **GitHub Packages requires a PAT with `read:packages` even for public packages.** This is a GitHub limitation, not a project choice — expect to spend one minute creating a fine-scoped PAT the first time you consume the artifact.
+
+Each released version is tagged `v<version>` in this repo; see [releases](https://github.com/oscaruiz/myCQRS/releases) for a list.
+
 ## Stack
 
 - Java 21, Maven (multi-module).
