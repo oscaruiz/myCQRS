@@ -8,11 +8,11 @@
     <parent>
         <groupId>com.oscaruiz</groupId>
         <artifactId>mycqrs</artifactId>
-        <version>1.0.0</version>
+        <version>1.3.1</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>core</artifactId>
+    <artifactId>mycqrs-core</artifactId>
     <packaging>jar</packaging>
     <name>mycqrs-core</name>
 
