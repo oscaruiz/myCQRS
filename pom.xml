@@ -59,6 +59,7 @@
     <modules>
         <module>src/core</module>
         <module>src/demo</module>
+        <module>src/demo-vanilla</module>
     </modules>
 
     <build>
