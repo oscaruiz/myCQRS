@@ -27,6 +27,9 @@ replay_pid*
 /target/
 **/target/
 
+# flatten-maven-plugin output (generated on every build)
+**/.flattened-pom.xml
+
 # IntelliJ IDEA project files
 .idea/
 *.iml
