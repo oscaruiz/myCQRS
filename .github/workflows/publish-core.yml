@@ -26,6 +26,6 @@ jobs:
           server-password: GITHUB_TOKEN
 
       - name: Publish core to GitHub Packages
-        run: ./mvnw -pl src/core -am deploy -DskipTests --batch-mode
+        run: ./mvnw -pl src/core deploy -DskipTests --batch-mode
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
