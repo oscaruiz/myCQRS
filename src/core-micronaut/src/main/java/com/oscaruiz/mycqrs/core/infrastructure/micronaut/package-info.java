@@ -11,8 +11,8 @@
  * <p>Interceptor chain wired by {@link CqrsFactory}:
  * {@code CorrelationId → Validation → Transactional}. Idempotency is intentionally
  * omitted from this module — see ADR 0016. Consumers who need
- * {@link com.oscaruiz.mycqrs.core.idempotency.IdempotencyCommandInterceptor} must
- * provide their own {@link com.oscaruiz.mycqrs.core.idempotency.ProcessedCommandsStore}
+ * {@link com.oscaruiz.mycqrs.core.infrastructure.idempotency.IdempotencyCommandInterceptor} must
+ * provide their own {@link com.oscaruiz.mycqrs.core.infrastructure.idempotency.ProcessedCommandsStore}
  * bean and register the interceptor manually.
  */
 package com.oscaruiz.mycqrs.core.infrastructure.micronaut;

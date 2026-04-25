@@ -29,7 +29,7 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule idempotencyDoesNotDependOnSpring =
             noClasses()
-                    .that().resideInAPackage("..core.idempotency..")
+                    .that().resideInAPackage("..core.infrastructure.idempotency..")
                     .should().dependOnClassesThat().resideInAPackage("org.springframework..");
 
     @ArchTest

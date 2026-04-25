@@ -1,6 +1,6 @@
 package com.oscaruiz.mycqrs.core.infrastructure.spring.idempotency;
 
-import com.oscaruiz.mycqrs.core.idempotency.ProcessedCommandsStore;
+import com.oscaruiz.mycqrs.core.infrastructure.idempotency.ProcessedCommandsStore;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
