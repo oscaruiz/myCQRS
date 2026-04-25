@@ -12,26 +12,76 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mycqrs-core</artifactId>
+    <artifactId>mycqrs-micronaut</artifactId>
     <packaging>jar</packaging>
-    <name>mycqrs-core</name>
-    <description>Framework-agnostic CQRS core: command/query/event buses, handler contracts, interceptors. Zero framework dependencies; integration adapters live in sibling modules (mycqrs-spring, mycqrs-micronaut).</description>
+    <name>mycqrs-micronaut</name>
+    <description>Micronaut integration module for mycqrs-core: @EnableCqrs marker, handler auto-registration via StartupEvent, and Validation/Transactional command interceptors. Idempotency wiring is deliberately out of scope in this release — see ADR 0016.</description>
     <url>https://github.com/oscaruiz/myCQRS</url>
 
+    <properties>
+        <!--
+            Governed by io.micronaut:micronaut-core-bom. Sub-modules below (validation,
+            data-tx, test) are pinned independently to versions whose own core-bom
+            import resolves into the 4.10.x line, keeping every Micronaut artifact on
+            this module's classpath coherent with the annotation processors.
+
+            NOTE: do NOT use io.micronaut.platform:micronaut-platform here. That meta-BOM
+            pins micronaut-core/micronaut-inject to a version older than the matching
+            annotation processors, which fails compile with NoSuchMethodError on
+            AbstractInitializableBeanDefinition#isMethodResolved.
+        -->
+        <micronaut.version>4.10.21</micronaut.version>
+        <micronaut.validation.version>4.12.0</micronaut.validation.version>
+        <micronaut.data.version>4.14.3</micronaut.data.version>
+        <micronaut.test.version>4.10.3</micronaut.test.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.micronaut</groupId>
+                <artifactId>micronaut-core-bom</artifactId>
+                <version>${micronaut.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <dependency>
+            <groupId>com.oscaruiz</groupId>
+            <artifactId>mycqrs-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-context</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.validation</groupId>
+            <artifactId>micronaut-validation</artifactId>
+            <version>${micronaut.validation.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.data</groupId>
+            <artifactId>micronaut-data-tx</artifactId>
+            <version>${micronaut.data.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <scope>test</scope>
-        </dependency>
+
+        <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -53,6 +103,17 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.micronaut.test</groupId>
+            <artifactId>micronaut-test-junit5</artifactId>
+            <version>${micronaut.test.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
             <scope>test</scope>
@@ -61,6 +122,24 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.micronaut</groupId>
+                            <artifactId>micronaut-inject-java</artifactId>
+                            <version>${micronaut.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.micronaut.validation</groupId>
+                            <artifactId>micronaut-validation-processor</artifactId>
+                            <version>${micronaut.validation.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
