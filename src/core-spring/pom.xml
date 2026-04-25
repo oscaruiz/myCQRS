@@ -12,16 +12,37 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mycqrs-core</artifactId>
+    <artifactId>mycqrs-spring</artifactId>
     <packaging>jar</packaging>
-    <name>mycqrs-core</name>
-    <description>Framework-agnostic CQRS core: command/query/event buses, handler contracts, interceptors. Zero framework dependencies; integration adapters live in sibling modules (mycqrs-spring, mycqrs-micronaut).</description>
+    <name>mycqrs-spring</name>
+    <description>Spring Boot integration module for mycqrs-core: @EnableCqrs, CqrsConfiguration, BeanPostProcessors for auto-registration, Validation/Transactional interceptors, and the Spring-JDBC adapter for idempotency.</description>
     <url>https://github.com/oscaruiz/myCQRS</url>
 
     <dependencies>
         <dependency>
+            <groupId>com.oscaruiz</groupId>
+            <artifactId>mycqrs-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

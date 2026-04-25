@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.idempotency;
+package com.oscaruiz.mycqrs.core.infrastructure.idempotency;
 
 import com.oscaruiz.mycqrs.core.contracts.command.Command;
 import com.oscaruiz.mycqrs.core.contracts.command.CommandInterceptor;

@@ -1,4 +1,4 @@
-name: Publish core
+name: Publish integration artifacts
 
 on:
   push:
@@ -25,7 +25,10 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
-      - name: Publish core to GitHub Packages
-        run: ./mvnw -pl src/core deploy -DskipTests --batch-mode
+      # Publishes mycqrs-core, mycqrs-spring and mycqrs-micronaut. No -am: the three
+      # modules declare each other as dependencies so the reactor builds them in the
+      # right order on its own. Adding -am would drag the demos into deploy too.
+      - name: Publish integration artifacts to GitHub Packages
+        run: ./mvnw -pl src/core,src/core-spring,src/core-micronaut deploy -DskipTests --batch-mode
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

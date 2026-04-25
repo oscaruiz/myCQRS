@@ -1,4 +1,4 @@
-package com.oscaruiz.mycqrs.core.idempotency;
+package com.oscaruiz.mycqrs.core.infrastructure.idempotency;
 
 import java.util.UUID;
 

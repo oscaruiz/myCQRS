@@ -14,7 +14,7 @@
 
     <groupId>com.oscaruiz</groupId>
     <artifactId>mycqrs</artifactId>
-    <version>1.3.1</version>
+    <version>1.4.0</version>
     <packaging>pom</packaging>
 
     <name>mycqrs-parent</name>
@@ -67,6 +67,8 @@
 
     <modules>
         <module>src/core</module>
+        <module>src/core-spring</module>
+        <module>src/core-micronaut</module>
         <module>src/demo</module>
         <module>src/demo-vanilla</module>
     </modules>

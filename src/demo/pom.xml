@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.oscaruiz</groupId>
         <artifactId>mycqrs</artifactId>
-        <version>1.3.1</version>
+        <version>1.4.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -19,6 +19,11 @@
         <dependency>
             <groupId>com.oscaruiz</groupId>
             <artifactId>mycqrs-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oscaruiz</groupId>
+            <artifactId>mycqrs-spring</artifactId>
             <version>${project.version}</version>
         </dependency>
 
