@@ -1,6 +1,6 @@
 # myCQRS
 
-**A framework-agnostic CQRS core, proven by two independent adapters: Spring Boot and plain Java.**
+**A framework-agnostic CQRS core, proven by three independent consumers: Spring Boot, plain Java, and Micronaut (in a separate repository).**
 
 ![Java 21](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
 ![Spring Boot 3.2.5](https://img.shields.io/badge/Spring%20Boot-3.2.5-6DB33F?logo=springboot&logoColor=white)
@@ -11,10 +11,11 @@
 
 ## What is this
 
-A CQRS framework where the core (command/query/event buses, handler registration, interceptors) has zero dependencies on any DI container. The thesis — that `core` is framework-agnostic — is not an assertion; it is demonstrated by two independent demos consuming the same `core` jar:
+A CQRS framework where the core (command/query/event buses, handler registration, interceptors) has zero dependencies on any DI container. The thesis — that `core` is framework-agnostic — is not an assertion; it is demonstrated by **three independent consumers** of the same `core` jar:
 
-- **`demo`** — a Book bounded context running on Spring Boot, PostgreSQL (write), MongoDB (read), and the outbox pattern. Hexagonal, production-shaped.
-- **`demo-vanilla`** — an Order bounded context bootstrapped with plain Java. No Spring, no DI container, manual handler registration, in-memory adapters, Javalin as the only web dependency.
+- **`demo`** — a Book bounded context running on Spring Boot, PostgreSQL (write), MongoDB (read), and the outbox pattern. Hexagonal, production-shaped. In-repo.
+- **`demo-vanilla`** — an Order bounded context bootstrapped with plain Java. No Spring, no DI container, manual handler registration, in-memory adapters, Javalin as the only web dependency. In-repo.
+- **[`myCQRS-micronaut`](https://github.com/oscaruiz/myCQRS-micronaut)** — a Subscription bounded context running on Micronaut 4.x, in a **separate repository**. Consumes `mycqrs-core` and `mycqrs-micronaut` only as published Maven artifacts from GitHub Packages. The strongest form of the portability claim: no shared source code, no monorepo conveniences — if the library leaks a Spring contract, that repo's `mvn compile` fails.
 
 Swapping Spring for Micronaut, Quarkus, or plain `new` requires no changes to `core.contracts` or `core.ddd` — verified by ArchUnit and made executable by three separately packaged integration artifacts (`mycqrs-core`, `mycqrs-spring`, `mycqrs-micronaut`). `mvn dependency:tree -pl src/demo-vanilla | grep springframework` returns empty.
 
@@ -193,6 +194,8 @@ Activate with `@EnableCqrs` on a `@Configuration` class (usually the `@SpringBoo
 
 Activation is implicit — Micronaut's annotation processor discovers `CqrsFactory` and `MicronautHandlerRegistrar` at compile time. The `@EnableCqrs` marker is provided for source-level symmetry with the Spring variant and has no runtime effect. Idempotency interceptor wiring is out of scope in this release; see [ADR 0016](docs/adr/0016-extract-framework-integrations-into-modules.md) for details.
 
+A complete external consumer using this variant is published as a separate repository: [`myCQRS-micronaut`](https://github.com/oscaruiz/myCQRS-micronaut).
+
 ### Repository and authentication
 
 Declare the repository in the consumer's `pom.xml`:
@@ -314,7 +317,7 @@ Significant decisions — including deliberate non-adoptions such as Event Sourc
 
 **Implemented**
 - Framework-agnostic core published as three sibling artifacts (`mycqrs-core`, `mycqrs-spring`, `mycqrs-micronaut`) sharing a single version axis. The `mycqrs-core` POM is free of any Spring or Micronaut dependencies; consumers add the adapter they use explicitly. Rationale: [ADR 0016](docs/adr/0016-extract-framework-integrations-into-modules.md).
-- **Framework independence demonstrated by three consuming surfaces: `demo-vanilla` on the bare `mycqrs-core` jar (no DI container), `demo` on `mycqrs-core + mycqrs-spring` (Spring Boot), and `core-micronaut`'s own integration test on `mycqrs-core + mycqrs-micronaut`. Proves by example what ArchUnit proves by assertion.**
+- **Framework independence demonstrated by four consuming surfaces: `demo-vanilla` on the bare `mycqrs-core` jar (no DI container), `demo` on `mycqrs-core + mycqrs-spring` (Spring Boot), `core-micronaut`'s own integration test on `mycqrs-core + mycqrs-micronaut`, and the [`myCQRS-micronaut`](https://github.com/oscaruiz/myCQRS-micronaut) repo as an external Maven consumer. Proves by example — including by external consumption from a separate repository — what ArchUnit proves by assertion.**
 - Handler auto-registration via `BeanPostProcessor`s for commands, queries, and events (`demo`); via a `StartupEvent` listener in the Micronaut adapter; manual registration in `VanillaBootstrapper` (`demo-vanilla`).
 - Chainable command interceptors in a fixed order: **validation → transaction → handler**. `TransactionalCommandInterceptor` uses `PlatformTransactionManager` with `PROPAGATION_REQUIRED` and commits outside the `try` block so a failing commit cannot trigger an invalid rollback.
 - Outbox pattern (in `demo`): `OutboxEventBus` (marked `@Primary`) writes events to the outbox table inside the aggregate's transaction; `OutboxPoller` drains the table asynchronously and dispatches to the internal in-memory bus, where Mongo projectors subscribe.
@@ -329,7 +332,6 @@ Significant decisions — including deliberate non-adoptions such as Event Sourc
 
 **Planned**
 - Symmetric `QueryInterceptor` pipeline in core (ADR 0014) — currently `demo-vanilla` uses a decorator as a tactical workaround for query-side cross-cutting concerns.
-- Idempotency: command deduplication on the write side and projection idempotency on the read side.
 - End-to-end correlation ID propagated from HTTP request through command, event, and projection.
 - Idempotency interceptor wiring in the Micronaut adapter (parity with Spring, currently out of scope in the first cut of `mycqrs-micronaut`; see [ADR 0016](docs/adr/0016-extract-framework-integrations-into-modules.md)).
 
