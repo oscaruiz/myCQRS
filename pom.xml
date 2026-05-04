@@ -14,7 +14,7 @@
 
     <groupId>com.oscaruiz</groupId>
     <artifactId>mycqrs</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
     <packaging>pom</packaging>
 
     <name>mycqrs-parent</name>
