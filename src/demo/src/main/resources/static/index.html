@@ -263,14 +263,14 @@
       line.textContent = "no operation yet";
       line.className = "";
     } else {
-      const { code, reason, label } = state.lastStatus;
+      const { code, reason, label, domainOk } = state.lastStatus;
       line.textContent = code + " " + reason + " (" + label + ")";
-      line.className = code >= 200 && code < 300 ? "ok" : "err";
+      line.className = (code >= 200 && code < 300 && domainOk !== false) ? "ok" : "err";
     }
   }
 
-  function setStatus(code, reason, label) {
-    state.lastStatus = { code, reason, label };
+  function setStatus(code, reason, label, domainOk = true) {
+    state.lastStatus = { code, reason, label, domainOk };
     syncUI();
   }
 
@@ -432,23 +432,29 @@
     const r = await call("GET", "/books?title=" + encodeURIComponent(title));
     const statusEl = $("book-search-status");
     const jsonEl = $("book-search-json");
+    let label = "search book";
+    let domainOk = true;
     if (r.ok) {
       const count = Array.isArray(r.body) ? r.body.length : 0;
+      const matches = count + (count === 1 ? " match" : " matches");
       if (count === 0) {
         statusEl.textContent = "No books found";
         statusEl.className = "read-status err";
         jsonEl.textContent = "";
+        label = "search book — 0 matches";
+        domainOk = false;
       } else {
-        statusEl.textContent = count + (count === 1 ? " match" : " matches");
+        statusEl.textContent = matches;
         statusEl.className = "read-status ok";
         jsonEl.textContent = JSON.stringify(r.body, null, 2);
+        label = "search book — " + matches;
       }
     } else {
       statusEl.textContent = (r.code || "—") + " " + (r.reason || "error");
       statusEl.className = "read-status err";
       jsonEl.textContent = "";
     }
-    setStatus(r.code, r.reason, "search book");
+    setStatus(r.code, r.reason, label, domainOk);
   });
 
   // ---- Outbox polling ----
